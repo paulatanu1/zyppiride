@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/services.dart';
 
 class VehicleEditScreen extends StatefulWidget {
   final String userId;
@@ -101,13 +102,11 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
 
   Future<void> _loadData() async {
     try {
-      // Load catalog data
       final catalogDoc = await FirebaseFirestore.instance
           .collection('vehicleCatalog')
           .doc('india2025')
           .get();
 
-      // Load vehicle data
       final vehicleDoc = await FirebaseFirestore.instance
           .collection('vehicles')
           .doc(widget.vehicleId)
@@ -309,7 +308,6 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
       );
       int uploadedImages = 0;
 
-      // Upload new images
       for (var entry in _newImages.entries) {
         for (var image in entry.value) {
           final ref = storage.ref().child(
@@ -339,7 +337,6 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
         }
       }
 
-      // Delete marked images from storage
       for (var entry in _imagesToDelete.entries) {
         for (var imageUrl in entry.value) {
           try {
@@ -351,7 +348,6 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
         }
       }
 
-      // Update Firestore
       await FirebaseFirestore.instance
           .collection('vehicles')
           .doc(widget.vehicleId)
@@ -538,121 +534,142 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
     );
   }
 
+  // ------------------ MODERN DROPDOWN ------------------
+  Widget _buildDropdown({
+    required String label,
+    required String? value,
+    required List<String> items,
+    required ValueChanged<String?>? onChanged,
+    String Function(String)? displayText,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      onChanged: onChanged,
+      validator: (v) => v == null ? 'Required' : null,
+      dropdownColor: Colors.grey[50],
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: Colors.grey[100],
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+      icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
+      style: const TextStyle(
+        fontFamily: 'Poppins',
+        fontSize: 14,
+        color: Colors.black87,
+      ),
+      items: items.map((item) {
+        return DropdownMenuItem<String>(
+          value: item,
+          child: Text(
+            displayText?.call(item) ?? item,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ------------------ MODERN TEXT FIELD ------------------
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      validator: validator ?? (v) => v == null || v.isEmpty ? 'Required' : null,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Colors.grey[100],
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+      style: const TextStyle(fontFamily: 'Poppins', fontSize: 14),
+    );
+  }
+
   Widget _buildVehicleDetailsCard() {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Colors.white,
+      elevation: 3,
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.directions_car, color: Colors.blue[700], size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Vehicle Details',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
             _buildDropdown(
-              label: 'Vehicle Category *',
+              label: 'Vehicle Category',
               value: selectedVehicleCategory,
-              items: ['private', 'commercial'],
-              onChanged: (value) {
+              items: catalogData?.keys.toList() ?? [],
+              onChanged: (val) {
                 setState(() {
-                  selectedVehicleCategory = value;
+                  selectedVehicleCategory = val;
                   selectedBrand = null;
                   selectedModel = null;
+                  brands.clear();
+                  models.clear();
                 });
                 _updateBrandsAndModels();
               },
-              displayText: (item) =>
-              item[0].toUpperCase() + item.substring(1),
             ),
             const SizedBox(height: 16),
             _buildDropdown(
-              label: 'Brand *',
+              label: 'Brand',
               value: selectedBrand,
               items: brands,
-              onChanged: brands.isEmpty
-                  ? null
-                  : (value) {
+              onChanged: (val) {
                 setState(() {
-                  selectedBrand = value;
+                  selectedBrand = val;
                   selectedModel = null;
+                  models.clear();
                 });
                 _updateModels();
               },
             ),
             const SizedBox(height: 16),
             _buildDropdown(
-              label: 'Model *',
+              label: 'Model',
               value: selectedModel,
               items: models,
-              onChanged: models.isEmpty
-                  ? null
-                  : (value) => setState(() => selectedModel = value),
+              onChanged: (val) {
+                setState(() => selectedModel = val);
+              },
             ),
             const SizedBox(height: 16),
             _buildDropdown(
-              label: 'Color *',
+              label: 'Color',
               value: selectedColor,
               items: colors,
-              onChanged: (value) => setState(() => selectedColor = value),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
-                    controller: _yearController,
-                    label: 'Year *',
-                    hint: '2024',
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      final year = int.tryParse(value);
-                      if (year == null ||
-                          year < 1900 ||
-                          year > DateTime.now().year + 1) {
-                        return 'Invalid year';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildTextField(
-                    controller: _seatingController,
-                    label: 'Seating *',
-                    hint: '5',
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      if (int.tryParse(value) == null) return 'Invalid';
-                      return null;
-                    },
-                  ),
-                ),
-              ],
+              onChanged: (val) => setState(() => selectedColor = val),
             ),
             const SizedBox(height: 16),
             _buildTextField(
+              label: 'Year of Manufacture',
+              controller: _yearController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Registration Number',
               controller: _registrationController,
-              label: 'Registration Number *',
-              hint: 'WB 01 AB 1234',
-              textCapitalization: TextCapitalization.characters,
-              validator: (value) =>
-              value == null || value.isEmpty ? 'Required' : null,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Seating Capacity',
+              controller: _seatingController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
           ],
         ),
@@ -662,334 +679,135 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
 
   Widget _buildDocumentsCard() {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Colors.white,
+      elevation: 3,
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.upload_file, color: Colors.blue[700], size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Documents',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Add or remove images. New images will be compressed automatically.',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 20),
-            _buildImageSection('Vehicle Photos *', 'vehicle', Icons.directions_car),
+            _buildDocumentUploadRow('Vehicle Images', 'vehicle'),
             const SizedBox(height: 16),
-            _buildImageSection('RC Certificate', 'rc', Icons.description),
+            _buildDocumentUploadRow('RC Images', 'rc'),
             const SizedBox(height: 16),
-            _buildImageSection('Driving License', 'license', Icons.credit_card),
+            _buildDocumentUploadRow('License Images', 'license'),
             const SizedBox(height: 16),
-            _buildImageSection('Insurance', 'insurance', Icons.security),
+            _buildDocumentUploadRow('Insurance Images', 'insurance'),
             const SizedBox(height: 16),
-            _buildImageSection('PUC Certificate', 'puc', Icons.verified),
+            _buildDocumentUploadRow('PUC Images', 'puc'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildImageSection(String label, String type, IconData icon) {
-    final existingImages = _existingImageUrls[type]!;
-    final newImages = _newImages[type]!;
-    final totalImages = existingImages.length + newImages.length;
-
+  Widget _buildDocumentUploadRow(String title, String type) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Text(
+          title,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
           children: [
-            Icon(icon, size: 18, color: Colors.grey[700]),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            ..._existingImageUrls[type]!.map(
+                  (url) => Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: CachedNetworkImage(
+                      imageUrl: url,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _removeExistingImage(type, url),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close, size: 20, color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const Spacer(),
-            Text(
-              '$totalImages file(s)',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 12,
-                color: Colors.grey[600],
+            ..._newImages[type]!.asMap().entries.map(
+                  (entry) => Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      entry.value,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _removeNewImage(type, entry.key),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close, size: 20, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: () => _pickImages(type),
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey[200],
+                ),
+                child: const Icon(Icons.add_a_photo, color: Colors.grey, size: 32),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        if (totalImages > 0)
-          Container(
-            height: 100,
-            margin: const EdgeInsets.only(bottom: 8),
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                // Existing images from server
-                ...existingImages.map((imageUrl) {
-                  return Stack(
-                    children: [
-                      Container(
-                        width: 100,
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: CachedNetworkImage(
-                            imageUrl: imageUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(
-                              color: Colors.grey[300],
-                              child: const Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => Container(
-                              color: Colors.grey[300],
-                              child: const Icon(Icons.error),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 4,
-                        right: 12,
-                        child: GestureDetector(
-                          onTap: () => _removeExistingImage(type, imageUrl),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.close,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                }),
-                // New images from device
-                ...newImages.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final image = entry.value;
-                  return Stack(
-                    children: [
-                      Container(
-                        width: 100,
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.green, width: 2),
-                          image: DecorationImage(
-                            image: FileImage(image),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 4,
-                        left: 4,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            'NEW',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 4,
-                        right: 12,
-                        child: GestureDetector(
-                          onTap: () => _removeNewImage(type, index),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.close,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                }),
-              ],
-            ),
-          ),
-        OutlinedButton.icon(
-          onPressed: () => _pickImages(type),
-          icon: const Icon(Icons.add_photo_alternate),
-          label: Text(totalImages == 0 ? 'Add Photos' : 'Add More'),
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 44),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
       ],
-    );
-  }
-
-  Widget _buildDropdown({
-    required String label,
-    required String? value,
-    required List<String> items,
-    required ValueChanged<String?>? onChanged,
-    String Function(String)? displayText,
-  }) {
-    return DropdownButtonFormField<String>(
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-      value: value,
-      items: items
-          .map((item) => DropdownMenuItem<String>(
-        value: item,
-        child: Text(displayText?.call(item) ?? item),
-      ))
-          .toList(),
-      onChanged: onChanged,
-      validator: (value) => value == null ? 'Required' : null,
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    TextInputType? keyboardType,
-    TextCapitalization? textCapitalization,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-      keyboardType: keyboardType,
-      textCapitalization: textCapitalization ?? TextCapitalization.none,
-      validator: validator,
     );
   }
 
   Widget _buildSubmitButton() {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: isSubmitting
-                ? null
-                : () {
-              context.go(
-                '/vehicle-view?userId=${widget.userId}&vehicleId=${widget.vehicleId}',
-              );
-            },
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              foregroundColor: Colors.grey[700],
-              side: BorderSide(color: Colors.grey[400]!),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
-              ),
-            ),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: isSubmitting ? null : _submitForm,
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: Colors.blue[700],
+        ),
+        child: Text(
+          isSubmitting ? 'Updating...' : 'Update Vehicle',
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 2,
-          child: ElevatedButton(
-            onPressed: isSubmitting ? null : _submitForm,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.blue[700],
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 2,
-            ),
-            child: isSubmitting
-                ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
-                : const Text(
-              'Save Changes',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

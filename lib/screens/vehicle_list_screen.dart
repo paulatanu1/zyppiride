@@ -123,7 +123,7 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
           final vehicles = snapshot.data?.docs ?? [];
 
           if (vehicles.isEmpty) {
-            return _buildEmptyState();
+            return _buildEmptyState(); // FloatingActionButton hidden automatically
           }
 
           return Column(
@@ -144,23 +144,36 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          _analytics.logEvent(
-            name: 'add_vehicle_clicked',
-            parameters: {'user_id': widget.userId},
+
+      // Show FAB only if there is at least one vehicle AND vehicles.length <= 1
+      floatingActionButton: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('vehicles')
+            .where('userId', isEqualTo: widget.userId)
+            .snapshots(),
+        builder: (context, snapshot) {
+          final vehicles = snapshot.data?.docs ?? [];
+          if (vehicles.isEmpty || vehicles.length > 1) return const SizedBox.shrink();
+
+          return FloatingActionButton.extended(
+            onPressed: () {
+              _analytics.logEvent(
+                name: 'add_vehicle_clicked',
+                parameters: {'user_id': widget.userId},
+              );
+              context.push('/vehicle-registration?userId=${widget.userId}');
+            },
+            backgroundColor: Colors.blue[700],
+            icon: const Icon(Icons.add),
+            label: const Text(
+              'Add Vehicle',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           );
-          context.push('/vehicle-registration?userId=${widget.userId}');
         },
-        backgroundColor: Colors.blue[700],
-        icon: const Icon(Icons.add),
-        label: const Text(
-          'Add Vehicle',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w600,
-          ),
-        ),
       ),
     );
   }
@@ -312,7 +325,6 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Section
             if (imageUrl != null)
               ClipRRect(
                 borderRadius: const BorderRadius.only(
@@ -339,7 +351,6 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                         child: const Icon(Icons.error, size: 48),
                       ),
                     ),
-                    // Status Badge Overlay
                     Positioned(
                       top: 12,
                       right: 12,
@@ -366,14 +377,11 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                   ),
                 ),
               ),
-
-            // Details Section
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Registration Number
                   Text(
                     registrationNumber,
                     style: const TextStyle(
@@ -384,8 +392,6 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-
-                  // Brand & Model
                   if (brand.isNotEmpty || model.isNotEmpty)
                     Row(
                       children: [
@@ -406,8 +412,6 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                       ],
                     ),
                   const SizedBox(height: 6),
-
-                  // Category
                   if (category.isNotEmpty)
                     Row(
                       children: [
@@ -423,16 +427,12 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                         ),
                       ],
                     ),
-
                   const SizedBox(height: 12),
                   const Divider(),
                   const SizedBox(height: 12),
-
-                  // Footer Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Registration Date
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -456,8 +456,6 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                           ),
                         ],
                       ),
-
-                      // Action Button
                       if (status.toLowerCase() != 'approved')
                         TextButton.icon(
                           onPressed: () {

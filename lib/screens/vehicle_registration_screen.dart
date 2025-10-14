@@ -548,8 +548,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
           'Vehicle registered successfully! Awaiting approval.',
           isSuccess: true,
         );
-        // Navigate back to vehicle list
-        context.go('/vehicle-list?userId=${widget.userId}');
+        context.go('/dashboard?userId=${widget.userId}');
       }
     } catch (e) {
       _showSnackBar('Failed to register vehicle: $e', isError: true);
@@ -594,7 +593,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             _saveDraft();
-            context.go('/vehicle-list?userId=${widget.userId}');
+            context.go('/dashboard?userId=${widget.userId}');
           },
         ),
         title: const Text(
