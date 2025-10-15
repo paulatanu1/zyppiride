@@ -1,174 +1,97 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-admin.initializeApp();
 
-exports.seedVehicleCatalog = functions.https.onRequest(async (req, res) => {
-  const catalogData = {
-    colors: [
-      "White",
-      "Silver",
-      "Grey",
-      "Black",
-      "Blue",
-      "Red",
-      "Maroon",
-      "Brown",
-      "Beige",
-      "Green",
-      "Yellow",
-      "Orange",
-      "Purple",
-      "Pink",
-      "Gold",
-    ],
-    private: {
-      "Maruti Suzuki": [
-        "Swift",
-        "Dzire",
-        "Baleno",
-        "Wagon R",
-        "Alto K10",
-        "Ertiga",
-        "Vitara Brezza",
-        "Grand Vitara",
-        "Fronx",
-        "Jimny",
-        "Celerio",
-        "Ignis",
-        "XL6",
-      ],
-      "Tata": [
-        "Tiago",
-        "Nexon",
-        "Punch",
-        "Altroz",
-        "Harrier",
-        "Safari",
-        "Tigor EV",
-        "Nexon EV",
-        "Punch EV",
-      ],
-      "Hyundai": [
-        "Creta",
-        "Venue",
-        "i20",
-        "Grand i10 Nios",
-        "Verna",
-        "Alcazar",
-        "Exter",
-      ],
-      "Mahindra": [
-        "Thar",
-        "XUV700",
-        "Scorpio N",
-        "Bolero",
-        "Bolero Neo",
-        "XUV300",
-        "XUV400 EV",
-      ],
-      "Kia": ["Seltos", "Sonet", "Carens", "Carnival", "EV6"],
-      "Toyota": [
-        "Innova Crysta",
-        "Fortuner",
-        "Urban Cruiser Hyryder",
-        "Glanza",
-        "Rumion",
-      ],
-      "Honda": ["City", "Amaze", "Elevate", "WR-V"],
-      "MG": ["Hector", "Astor", "ZS EV", "Comet EV", "Windsor EV"],
-      "Skoda": ["Kushaq", "Slavia", "Kodiaq"],
-      "Volkswagen": ["Virtus", "Taigun", "Tiguan"],
-      "Jeep": ["Compass", "Meridian"],
-      "Renault": ["Kiger", "Triber", "Duster"],
-      "Nissan": ["Magnite"],
-      "Citroen": ["C3", "C3 Aircross", "eC3"],
-      "BYD": ["Atto 3", "Seal", "e6"],
-      "Maruti Suzuki Victoris": ["Victoris"],
-      "Luxury Brands": {
-        "Mercedes-Benz": [
-          "A-Class",
-          "C-Class",
-          "E-Class",
-          "GLA",
-          "GLC",
-          "GLE",
-          "GLS",
-        ],
-        "BMW": ["X1", "X3", "X5", "3 Series", "5 Series"],
-        "Audi": ["Q3", "Q5", "A4", "A6", "e-tron"],
-        "Volvo": ["XC40", "XC60", "XC90", "C40 Recharge"],
-        "Lexus": ["NX350h", "RX500h"],
-        "Jaguar Land Rover": ["Discovery Sport", "Range Rover Evoque"],
-      },
-      "EV Startups": {
-        "Pravaig": ["Defy EV"],
-        "Strom Motors": ["Strom R3"],
-        "Ola Electric": ["Ola EV Car (Upcoming)"],
-      },
-    },
-    commercial: {
-      "Tata": [
-        "Ace Gold",
-        "Intra",
-        "407 Gold",
-        "Prima",
-        "Signa 4825.C",
-        "Ultra EV",
-        "Starbus",
-        "T.11 EV",
-      ],
-      "Mahindra": [
-        "Jeeto",
-        "Bolero Pik-Up",
-        "Bolero Maxitruck Plus",
-        "Blazo XPR",
-        "e-Alfa",
-        "Treo Zor",
-      ],
-      "Ashok Leyland": [
-        "Dost",
-        "BADA DOST",
-        "Partner",
-        "Ecomet",
-        "AVSR Tipper",
-        "Circuit Electric Bus",
-      ],
-      "Eicher": [
-        "Pro 2049",
-        "Pro 6028T Tanker",
-        "Skyline Bus",
-        "Eicher Electric Truck",
-      ],
-      "BharatBenz": [
-        "Medium Duty Trucks",
-        "Heavy Duty Trucks",
-        "Staff Bus",
-        "School Bus",
-      ],
-      "Force": ["Urbania", "Traveller Delivery Van", "Traveller School Bus"],
-      "Maruti Suzuki": ["Super Carry"],
-      "Bajaj": ["RE Tempo", "Ape 3-Wheeler"],
-      "Piaggio": ["Ape City", "Porter", "Ape Electric"],
-      "OSM": ["Swayamgati EV"],
-      "Montra Electric": ["Rhino 5538 EV"],
-      "Euler Motors": ["Turbo EV 1000"],
-      "Isuzu": ["D-Max Pickup"],
-      "Volvo": ["FMX Tanker", "B11R Coach"],
-      "Scania": ["G Series Container", "Intercity Bus"],
-      "BYD": ["e6 Cargo", "T3 Electric Van"],
-      "Altigreen": ["NeEV Cargo EV"],
-      "Agricultural": {
-        "Mahindra Tractors": ["275 DI TU", "Arjun Novo 605", "Yuvo Tech+"],
-        "Swaraj": ["744 FE", "735 FE"],
-        "Sonalika": ["DI 750 III", "Tiger 55"],
-        "Eicher Tractors": ["485 Super Plus", "5660"],
-      },
-    },
-  };
-  await admin
-      .firestore()
-      .collection("vehicleCatalog")
-      .doc("india2025")
-      .set(catalogData);
-  res.status(200).send("Vehicle catalog seeded successfully.");
+admin.initializeApp();
+const db = admin.firestore();
+
+exports.createComplaint = functions.https.onCall(async (data, context) => {
+  // Add logging
+  console.log("=== createComplaint called ===");
+  console.log("context.auth:", context.auth ? "EXISTS" : "NULL");
+  console.log("context.auth.uid:", context.auth ? context.auth.uid : "N/A");
+  console.log("data.userId:", data.userId);
+  console.log("=============================");
+
+  // Get userId from auth if available, otherwise from data
+  let userId;
+  if (context.auth) {
+    userId = context.auth.uid;
+    console.log("Using auth userId:", userId);
+  } else if (data.userId) {
+    userId = data.userId;
+    console.log("Using data userId:", userId);
+  } else {
+    console.log("ERROR: No userId available!");
+    throw new functions.https.HttpsError(
+        "unauthenticated",
+        "User must be authenticated or provide userId to create a complaint",
+    );
+  }
+
+  const subject = data.subject || "General";
+  const description = data.description || "";
+  const priority = data.priority || "Medium";
+  const imageUrl = data.imageUrl || null;
+
+  // Generate ticket ID
+  const now = new Date();
+  const dateStr = now.toISOString().split("T")[0].replace(/-/g, "");
+  const seq = Math.floor(Math.random() * 900) + 100;
+  const ticketId = `ZY-${dateStr}-${String(seq)}`;
+
+  console.log("Generated ticketId:", ticketId);
+
+  // Save to Firestore
+  const complaintRef = db.collection("complaints").doc();
+  await complaintRef.set({
+    ticketId,
+    userId,
+    subject,
+    description,
+    priority,
+    imageUrl,
+    status: "Pending",
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  console.log("Complaint saved successfully");
+  return {ticketId, success: true};
+});
+
+exports.createFeedback = functions.https.onCall(async (data, context) => {
+  // Get userId from auth if available, otherwise from data
+  let userId;
+  if (context.auth) {
+    userId = context.auth.uid;
+  } else if (data.userId) {
+    userId = data.userId;
+  } else {
+    throw new functions.https.HttpsError(
+        "unauthenticated",
+        "User must be authenticated or provide userId to submit feedback",
+    );
+  }
+
+  const rating = data.rating || 0;
+  const message = data.message || "";
+  const imageUrl = data.imageUrl || null;
+
+  // Generate feedback ID
+  const now = new Date();
+  const dateStr = now.toISOString().split("T")[0].replace(/-/g, "");
+  const seq = Math.floor(Math.random() * 900) + 100;
+  const feedbackId = `FB-${dateStr}-${String(seq)}`;
+
+  // Save to Firestore
+  const feedbackRef = db.collection("feedbacks").doc();
+  await feedbackRef.set({
+    feedbackId,
+    userId,
+    rating,
+    message,
+    imageUrl,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return {feedbackId, success: true};
 });
