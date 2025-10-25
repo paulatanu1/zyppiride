@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'dashboard_screen.dart'; // Import the new dashboard
-import 'package:go_router/go_router.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
   final String userId;
@@ -145,7 +144,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               ),
               const SizedBox(height: 20),
               DropdownButtonFormField<String>(
-                value: _role,
+                initialValue: _role,
                 hint: const Text('Select Role', style: TextStyle(fontFamily: 'Poppins')),
                 items: ['User', 'Vehicle Owner', 'Driver'].map((String role) {
                   return DropdownMenuItem<String>(

@@ -145,7 +145,7 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
         },
       ),
 
-      // Show FAB only if there is at least one vehicle AND vehicles.length <= 1
+      // Show FAB when there are more than 1 vehicle
       floatingActionButton: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('vehicles')
@@ -153,7 +153,8 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
             .snapshots(),
         builder: (context, snapshot) {
           final vehicles = snapshot.data?.docs ?? [];
-          if (vehicles.isEmpty || vehicles.length > 1) return const SizedBox.shrink();
+          // Show FAB only when vehicles count is greater than 1
+          if (vehicles.length <= 1) return const SizedBox.shrink();
 
           return FloatingActionButton.extended(
             onPressed: () {
@@ -164,12 +165,13 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
               context.push('/vehicle-registration?userId=${widget.userId}');
             },
             backgroundColor: Colors.blue[700],
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add,color: Colors.white,),
             label: const Text(
               'Add Vehicle',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.w600,
+                color: Colors.white,
               ),
             ),
           );
@@ -526,7 +528,7 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

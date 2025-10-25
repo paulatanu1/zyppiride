@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:zyppi_ride/screens/main_dashboard.dart';
 import 'package:go_router/go_router.dart';
 
 
 class EmergencyScreen extends StatelessWidget {
   final String? userId;
-  
+
   const EmergencyScreen({super.key, this.userId});
 
   Future<void> _callAmbulance() async {
-    final Uri launchUri = Uri(scheme: 'tel', path: '108');
+    final Uri launchUri = Uri(scheme: 'tel', path: '101');
     if (await canLaunchUrl(launchUri)) {
       await launchUrl(launchUri);
-    } else {
-      print('Could not launch dial pad');
     }
   }
 
@@ -26,7 +23,6 @@ class EmergencyScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            print('Back button pressed on EmergencyScreen - navigating to Dashboard');
             if (userId != null) {
               // Clear navigation stack and go to Dashboard
               Navigator.pushAndRemoveUntil(
@@ -34,7 +30,7 @@ class EmergencyScreen extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) => const MainDashboard(),
                 ),
-                (route) => false, // Remove all previous routes
+                    (route) => false, // Remove all previous routes
               );
             } else {
               // If no userId provided, try to pop or go to a default route
@@ -72,7 +68,7 @@ class EmergencyScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Tap to call Ambulance (108)',
+              'Tap to call Ambulance (101)',
               style: TextStyle(fontFamily: 'Poppins'),
             ),
             const SizedBox(height: 30),

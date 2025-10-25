@@ -6,6 +6,7 @@ import 'package:zyppi_ride/screens/dashboard_screen.dart';
 import 'profile_screen.dart'; // New profile screen
 import 'emergency_screen.dart'; // New emergency screen
 
+
 class MainDashboard extends StatefulWidget {
   const MainDashboard({super.key});
 

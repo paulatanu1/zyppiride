@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart'; // Or use local Poppins
-import 'register_screen.dart'; // Your registration screen
-import 'login_screen.dart'; // You'll need to create this (see below)
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});

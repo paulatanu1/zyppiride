@@ -1021,7 +1021,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
-      value: value,
+      initialValue: value,
       items: items
           .map((item) => DropdownMenuItem<String>(
         value: item,

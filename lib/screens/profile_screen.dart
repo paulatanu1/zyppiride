@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:animations/animations.dart';
-import 'package:zyppi_ride/screens/main_dashboard.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
@@ -36,25 +34,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _userData = data;
         _isDataLoaded = true;
       });
-    }
-  }
-
-  void _navigateToDashboard() {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              FadeThroughTransition(
-                animation: animation,
-                secondaryAnimation: secondaryAnimation,
-                child: const MainDashboard(),
-              ),
-        ),
-      );
-    } else {
-      Navigator.pushReplacementNamed(context, '/auth');
     }
   }
 
@@ -227,7 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Card(
       elevation: 8,
-      shadowColor: Colors.deepPurple.withOpacity(0.2),
+      shadowColor: Colors.deepPurple.withValues(alpha: 0.2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       color: Colors.white,
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
@@ -236,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           collapsedBackgroundColor: Colors.deepPurple.shade50,
-          backgroundColor: Colors.deepPurple.shade50.withOpacity(0.5),
+          backgroundColor: Colors.deepPurple.shade50.withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           collapsedShape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),

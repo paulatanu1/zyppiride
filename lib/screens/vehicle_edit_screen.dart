@@ -171,7 +171,7 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
   void _updateModels() {
     if (selectedVehicleCategory == null ||
         selectedBrand == null ||
-        catalogData == null) return;
+        catalogData == null) {return;}
 
     final categoryData =
     catalogData?[selectedVehicleCategory] as Map<String, dynamic>?;
@@ -543,7 +543,7 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
     String Function(String)? displayText,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       onChanged: onChanged,
       validator: (v) => v == null ? 'Required' : null,
       dropdownColor: Colors.grey[50],

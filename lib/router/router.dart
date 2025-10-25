@@ -1,6 +1,5 @@
 // lib/router/router.dart
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zyppi_ride/screens/emergency_screen.dart';
 import 'package:zyppi_ride/screens/login_screen.dart';

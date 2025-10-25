@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/dashboard_tiles.dart'; // Import the new widget
+import 'dart:developer';
 
 class DashboardScreen extends StatefulWidget {
   final String userId;
@@ -18,7 +18,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isDataLoaded = false;
 
   Future<void> _callAmbulance() async {
-    final Uri uri = Uri(scheme: 'tel', path: '108');
+    final Uri uri = Uri(scheme: 'tel', path: '101');
     if (!await launchUrl(uri)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not launch dialer')),
@@ -29,7 +29,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    print('DashboardScreen initState with userId: ${widget.userId}');
     _loadUserData();
   }
 
@@ -47,14 +46,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _isDataLoaded = true;
         });
       }
-    } catch (e) {
-      print('Error loading user data: $e');
+    } catch (e, stackTrace) {
+      log('Error occurred', error: e, stackTrace: stackTrace);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    print('DashboardScreen build with userId: ${widget.userId}');
     return Scaffold(
 
       body: SingleChildScrollView(
@@ -66,13 +64,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               .doc(widget.userId)
               .get(),
           builder: (context, snapshot) {
-            print('Loading data for userId: ${widget.userId}');
             if (snapshot.connectionState == ConnectionState.waiting) {
-              print('Waiting for data...');
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              print('Error: ${snapshot.error}');
               return Center(
                 child: Text(
                   'Error loading data: ${snapshot.error}',
@@ -81,7 +76,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               );
             }
             if (!snapshot.hasData || !snapshot.data!.exists) {
-              print('No data or document does not exist');
               return const Center(
                 child: Text(
                   'No data available',
@@ -110,7 +104,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildDashboardContent(Map<String, dynamic> data) {
     final fullName = data['fullName'] ?? 'User';
-    final email = data['email'] ?? 'No email';
     final role = data['role'] ?? 'Passenger'; // Default to Passenger if no role
 
     return Padding(

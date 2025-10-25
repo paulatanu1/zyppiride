@@ -56,11 +56,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
-    final user = FirebaseAuth.instance.currentUser;
-    print('=== Support Center Init ===');
-    print('User ID: ${user?.uid}');
-    print('Email: ${user?.email}');
-    print('========================');
+    // final user = FirebaseAuth.instance.currentUser;
   }
 
   @override
@@ -88,7 +84,6 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
       final snapshot = await uploadTask;
       return await snapshot.ref.getDownloadURL();
     } catch (e) {
-      print('Error uploading file: $e');
       return null;
     }
   }
@@ -114,12 +109,10 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
     try {
       String? imageUrl;
       if (_complaintImage != null) {
-        print('📤 Uploading image...');
         imageUrl = await _uploadFile(
           _complaintImage!,
           'support/complaints/${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
-        print('✅ Image uploaded: $imageUrl');
       }
 
       final now = DateTime.now();
@@ -176,7 +169,6 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
       });
 
     } catch (e) {
-      print('❌ Error submitting complaint: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -213,12 +205,10 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
     try {
       String? imageUrl;
       if (_feedbackImage != null) {
-        print('📤 Uploading image...');
         imageUrl = await _uploadFile(
           _feedbackImage!,
           'support/feedbacks/${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
-        print('✅ Image uploaded: $imageUrl');
       }
 
       final now = DateTime.now();
@@ -272,7 +262,6 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
       });
 
     } catch (e) {
-      print('❌ Error submitting feedback: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -302,7 +291,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _subject,
+              initialValue: _subject,
               items: subjects
                   .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                   .toList(),
@@ -327,7 +316,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _priority,
+              initialValue: _priority,
               items: ['Low', 'Medium', 'High']
                   .map((p) => DropdownMenuItem(value: p, child: Text(p)))
                   .toList(),
@@ -591,7 +580,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.2),
+                    color: statusColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: statusColor, width: 1),
                   ),
@@ -928,7 +917,7 @@ class ComplaintDetailScreen extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.2),
+                        color: statusColor.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: statusColor, width: 1),
                       ),
