@@ -43,3 +43,16 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Reports
+*.xlsx
+*.xls
+*.docx
+*.doc
+
+# Test/CI reports
+*.xcresult
+*.junit.xml
+reports/
+coverage/
+test_reports/

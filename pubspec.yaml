@@ -11,11 +11,11 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # build by specifying --build-name and --build-number, respectively.
 # In Android, build-name is used as versionName while build-number used as versionCode.
 # Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
-# of the product and file versions while build-number is used as the build suffix.
+# of the product and file versions while build-number used as build suffix.
 version: 1.0.0+1
 
 environment:
@@ -42,7 +42,7 @@ dependencies:
   lottie: ^3.3.2
   intl: ^0.20.2
   url_launcher: ^6.3.1
-  go_router: ^9.0.3
+  go_router: ^16.3.0
   modal_bottom_sheet: ^3.0.0
   animations: ^2.0.11
   flutter_animate: ^4.0.0
@@ -52,12 +52,15 @@ dependencies:
   path_provider: ^2.1.1
   path: ^1.8.3
   shared_preferences: ^2.2.2
-  connectivity_plus: ^5.0.2
+  connectivity_plus: ^7.0.0
   cached_network_image: ^3.3.1
-  signature: ^5.5.0
+  signature: ^6.3.0  # Updated to latest stable (safe upgrade from 5.5.0; no breaking changes for standard Signature widget/controller usage)
   flutter_rating_bar: ^4.0.0
-  uuid: ^3.0.7
+  uuid: ^4.5.1
   cloud_functions: ^6.0.3
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  google_places_flutter: ^2.0.8
 
 dev_dependencies:
   flutter_test:
@@ -79,6 +82,7 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
 #  assets:
 #    - assets/animations/splash_animation.json
 

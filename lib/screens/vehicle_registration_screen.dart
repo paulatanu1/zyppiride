@@ -11,6 +11,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:google_places_flutter/model/prediction.dart';
 
 class VehicleRegistrationScreen extends StatefulWidget {
   final String userId;
@@ -26,6 +30,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _scrollController = ScrollController();
   final _analytics = FirebaseAnalytics.instance;
+  final _manualAddressController = TextEditingController();
 
   // Image lists
   final Map<String, List<File>> _imageGroups = {
@@ -39,6 +44,17 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   // Upload progress tracking
   final Map<String, double> _uploadProgress = {};
   bool _showUploadProgress = false;
+
+  // Location tracking
+  double? _latitude;
+  double? _longitude;
+  String? _locationAddress;
+  String? _city;
+  String? _state;
+  String? _postalCode;
+  bool _isLoadingLocation = false;
+  bool _locationPermissionDenied = false;
+  bool _useManualAddress = false;
 
   // Form fields
   String? selectedVehicleCategory;
@@ -62,6 +78,12 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   DateTime _lastSaveTime = DateTime.now();
   static const _autoSaveInterval = Duration(seconds: 30);
 
+  // Google Places API Key - REPLACE WITH YOUR KEY
+  static const String _googleApiKey = 'AIzaSyABUF7GCEM6h1n3isugLj2qOEySpTtxd1I';
+
+  // Key to rebuild Google Places widget
+  int _googlePlacesKey = 0;
+
   @override
   void initState() {
     super.initState();
@@ -70,6 +92,10 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     _loadDraft();
     _logScreenView();
     _setupAutoSave();
+    // Auto-fetch location on init
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _getCurrentLocation();
+    });
   }
 
   @override
@@ -78,6 +104,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     _registrationController.dispose();
     _seatingController.dispose();
     _scrollController.dispose();
+    _manualAddressController.dispose();
     super.dispose();
   }
 
@@ -103,7 +130,6 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       isOffline = connectivityResult == ConnectivityResult.none;
     });
 
-    // Listen for connectivity changes
     Connectivity().onConnectivityChanged.listen((result) {
       setState(() {
         isOffline = result == ConnectivityResult.none;
@@ -115,9 +141,135 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     });
   }
 
+  // ============ LOCATION SERVICES ============
+  Future<void> _getCurrentLocation() async {
+    setState(() {
+      _isLoadingLocation = true;
+      _locationPermissionDenied = false;
+    });
+
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() {
+          _isLoadingLocation = false;
+          _locationPermissionDenied = true;
+        });
+        _showSnackBar('Location services are disabled. Please enable them in settings.', isError: true);
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() {
+            _isLoadingLocation = false;
+            _locationPermissionDenied = true;
+          });
+          _showSnackBar('Location permission denied. Please enter address manually.', isError: true);
+          await _logEvent('location_permission_denied');
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        setState(() {
+          _isLoadingLocation = false;
+          _locationPermissionDenied = true;
+        });
+        _showSnackBar('Location permissions are permanently denied. Please enable in settings.', isError: true);
+        await _logEvent('location_permission_denied_forever');
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty && mounted) {
+        Placemark place = placemarks[0];
+        setState(() {
+          _latitude = position.latitude;
+          _longitude = position.longitude;
+          _city = place.locality ?? place.subLocality;
+          _state = place.administrativeArea;
+          _postalCode = place.postalCode;
+          _locationAddress = _formatAddress(place);
+          _isLoadingLocation = false;
+          _useManualAddress = false;
+        });
+        _showSnackBar('Location detected successfully!', isSuccess: true);
+        _saveDraft();
+        await _logEvent('location_detected', parameters: {
+          'city': _city,
+          'state': _state,
+        });
+      }
+    } catch (e) {
+      setState(() => _isLoadingLocation = false);
+      _showSnackBar('Failed to get location: $e', isError: true);
+      await _logEvent('location_error', parameters: {'error': e.toString()});
+    }
+  }
+
+  String _formatAddress(Placemark place) {
+    List<String> parts = [];
+    if (place.subLocality?.isNotEmpty == true) parts.add(place.subLocality!);
+    if (place.locality?.isNotEmpty == true) parts.add(place.locality!);
+    if (place.administrativeArea?.isNotEmpty == true) parts.add(place.administrativeArea!);
+    if (place.postalCode?.isNotEmpty == true) parts.add(place.postalCode!);
+    return parts.join(', ');
+  }
+
+  void _onPlaceSelected(Prediction prediction) async {
+    setState(() => _isLoadingLocation = true);
+
+    try {
+      List<Location> locations = await locationFromAddress(prediction.description ?? '');
+
+      if (locations.isNotEmpty && mounted) {
+        Location location = locations[0];
+
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          location.latitude,
+          location.longitude,
+        );
+
+        if (placemarks.isNotEmpty && mounted) {
+          Placemark place = placemarks[0];
+          setState(() {
+            _latitude = location.latitude;
+            _longitude = location.longitude;
+            _city = place.locality ?? place.subLocality;
+            _state = place.administrativeArea;
+            _postalCode = place.postalCode;
+            _locationAddress = prediction.description ?? _formatAddress(place);
+            _isLoadingLocation = false;
+            _useManualAddress = false;
+          });
+          _manualAddressController.clear();
+          _showSnackBar('Location selected successfully!', isSuccess: true);
+          _saveDraft();
+          await _logEvent('manual_location_selected', parameters: {
+            'city': _city,
+            'state': _state,
+          });
+        }
+      }
+    } catch (e) {
+      setState(() => _isLoadingLocation = false);
+      _showSnackBar('Failed to get coordinates for selected place: $e', isError: true);
+    }
+  }
+
   // ============ OFFLINE SUPPORT - DRAFT SAVING ============
   void _setupAutoSave() {
-    // Listen to text field changes
     _yearController.addListener(_scheduleAutoSave);
     _registrationController.addListener(_scheduleAutoSave);
     _seatingController.addListener(_scheduleAutoSave);
@@ -142,6 +294,11 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         'year': _yearController.text,
         'registrationNumber': _registrationController.text,
         'seatingCapacity': _seatingController.text,
+        'latitude': _latitude,
+        'longitude': _longitude,
+        'locationAddress': _locationAddress,
+        'city': _city,
+        'state': _state,
         'imageCount': {
           'vehicle': _imageGroups['vehicle']!.length,
           'rc': _imageGroups['rc']!.length,
@@ -155,6 +312,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       await prefs.setString('vehicle_draft_${widget.userId}', json.encode(draftData));
 
       await _logEvent('draft_saved', parameters: {
+        'has_location': _latitude != null,
         'has_vehicle_images': _imageGroups['vehicle']!.isNotEmpty,
         'total_images': _imageGroups.values.fold(0, (sum, list) => sum + list.length),
       });
@@ -171,7 +329,6 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       if (draftString != null) {
         final draftData = json.decode(draftString) as Map<String, dynamic>;
 
-        // Check if draft is recent (within 7 days)
         final timestamp = DateTime.parse(draftData['timestamp'] as String);
         if (DateTime.now().difference(timestamp).inDays <= 7) {
           final shouldRestore = await _showRestoreDraftDialog();
@@ -185,6 +342,11 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
               _yearController.text = draftData['year'] as String? ?? '';
               _registrationController.text = draftData['registrationNumber'] as String? ?? '';
               _seatingController.text = draftData['seatingCapacity'] as String? ?? '';
+              _latitude = draftData['latitude'] as double?;
+              _longitude = draftData['longitude'] as double?;
+              _locationAddress = draftData['locationAddress'] as String?;
+              _city = draftData['city'] as String?;
+              _state = draftData['state'] as String?;
             });
 
             _showSnackBar('Draft restored successfully');
@@ -233,7 +395,6 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     try {
       DocumentSnapshot<Map<String, dynamic>>? doc;
 
-      // Try cache first
       try {
         doc = await FirebaseFirestore.instance
             .collection('vehicleCatalog')
@@ -244,7 +405,6 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         doc = null;
       }
 
-      // Fetch from server if cache miss
       if (doc == null && !isOffline) {
         doc = await FirebaseFirestore.instance
             .collection('vehicleCatalog')
@@ -286,8 +446,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       return;
     }
 
-    final categoryData =
-    catalogData?[selectedVehicleCategory] as Map<String, dynamic>?;
+    final categoryData = catalogData?[selectedVehicleCategory] as Map<String, dynamic>?;
     if (categoryData != null) {
       setState(() {
         brands = categoryData.keys.map((e) => e.toString()).toList();
@@ -303,9 +462,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   }
 
   void _updateModels() {
-    if (selectedVehicleCategory == null ||
-        selectedBrand == null ||
-        catalogData == null) {
+    if (selectedVehicleCategory == null || selectedBrand == null || catalogData == null) {
       setState(() {
         models = [];
         selectedModel = null;
@@ -313,8 +470,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       return;
     }
 
-    final categoryData =
-    catalogData?[selectedVehicleCategory] as Map<String, dynamic>?;
+    final categoryData = catalogData?[selectedVehicleCategory] as Map<String, dynamic>?;
     final brandData = categoryData?[selectedBrand];
 
     if (brandData is Map) {
@@ -421,7 +577,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         _imageGroups[type]!.addAll(compressedImages);
       });
       _showSnackBar('${compressedImages.length} image(s) added successfully');
-      _saveDraft(); // Save draft after adding images
+      _saveDraft();
 
       final processingTime = DateTime.now().difference(startTime).inMilliseconds;
       await _logEvent('images_compressed', parameters: {
@@ -444,6 +600,16 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   Future<void> _submitForm() async {
     if (isOffline) {
       _showSnackBar('No internet connection. Please try again when online.', isError: true);
+      return;
+    }
+
+    if (_latitude == null || _longitude == null) {
+      _showSnackBar('Please set your location before submitting', isError: true);
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
       return;
     }
 
@@ -479,7 +645,6 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       int totalImages = _imageGroups.values.fold(0, (sum, list) => sum + list.length);
       int uploadedImages = 0;
 
-      // Upload all images with progress tracking
       for (var entry in _imageGroups.entries) {
         for (var image in entry.value) {
           final ref = storage.ref().child(
@@ -487,11 +652,9 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
           final uploadTask = ref.putFile(image);
 
-          // Track upload progress
           uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
             setState(() {
-              _uploadProgress[entry.key] =
-                  snapshot.bytesTransferred / snapshot.totalBytes;
+              _uploadProgress[entry.key] = snapshot.bytesTransferred / snapshot.totalBytes;
             });
           });
 
@@ -508,9 +671,18 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         }
       }
 
-      // Save to Firestore
       final docRef = await FirebaseFirestore.instance.collection('vehicles').add({
         'userId': widget.userId,
+        'location': {
+          'latitude': _latitude,
+          'longitude': _longitude,
+          'address': _locationAddress,
+          'city': _city,
+          'state': _state,
+          'postalCode': _postalCode,
+          'geopoint': GeoPoint(_latitude!, _longitude!),
+          'timestamp': FieldValue.serverTimestamp(),
+        },
         'vehicleDetails': {
           'category': selectedVehicleCategory,
           'brand': selectedBrand,
@@ -536,6 +708,8 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       await _logEvent('vehicle_registered', parameters: {
         'category': selectedVehicleCategory,
         'brand': selectedBrand,
+        'city': _city,
+        'state': _state,
         'total_images': totalImages,
         'submission_time_ms': submissionTime,
         'vehicle_id': docRef.id,
@@ -566,8 +740,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     }
   }
 
-  void _showSnackBar(String message,
-      {bool isError = false, bool isSuccess = false}) {
+  void _showSnackBar(String message, {bool isError = false, bool isSuccess = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -629,6 +802,8 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
               padding: const EdgeInsets.all(16.0),
               children: [
                 _buildHeaderSection(),
+                const SizedBox(height: 20),
+                _buildLocationCard(),
                 const SizedBox(height: 24),
                 _buildVehicleDetailsCard(),
                 const SizedBox(height: 24),
@@ -641,6 +816,469 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
           ),
           if (_showUploadProgress) _buildUploadProgressOverlay(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Register Your Vehicle',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Start by setting your location, then fill in vehicle details',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocationCard() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue[700]!, Colors.blue[500]!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -30,
+              top: -30,
+              child: Icon(
+                Icons.location_on,
+                size: 150,
+                color: Colors.white.withOpacity(0.1),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.location_on,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Vehicle Location',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Required for nearby search',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red[400],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'REQUIRED',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  if (_isLoadingLocation)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Detecting your location...',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (_latitude != null && _longitude != null)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                color: Colors.greenAccent[400],
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Location Set',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _locationAddress ?? 'Address not available',
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              height: 1.3,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.gps_fixed,
+                                size: 14,
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'Lat: ${_latitude!.toStringAsFixed(4)}, Lng: ${_longitude!.toStringAsFixed(4)}',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 11,
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (_locationPermissionDenied)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.orange.withOpacity(0.5),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.orange[200],
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Location permission denied. Please use manual entry.',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'No location set. Please detect or enter manually.',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  const SizedBox(height: 16),
+                  if (!_useManualAddress)
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: (_isLoadingLocation || isOffline)
+                                ? null
+                                : _getCurrentLocation,
+                            icon: const Icon(Icons.my_location, size: 20),
+                            label: const Text(
+                              'Use Current Location',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.blue[700],
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              elevation: 0,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: isOffline
+                                ? null
+                                : () {
+                              setState(() => _useManualAddress = true);
+                            },
+                            icon: const Icon(Icons.edit_location_alt, size: 20),
+                            label: const Text(
+                              'Enter Address Manually',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: const BorderSide(color: Colors.white, width: 2),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Column(
+                      children: [
+                        Container(
+                          key: const ValueKey('google_places_container'),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: GooglePlaceAutoCompleteTextField(
+                            textEditingController: _manualAddressController,
+                            googleAPIKey: _googleApiKey,
+                            inputDecoration: InputDecoration(
+                              hintText: 'Search for your location...',
+                              hintStyle: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: Colors.grey[400],
+                              ),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: Colors.blue[700],
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                            ),
+                            debounceTime: 600,
+                            countries: const ["in"],
+                            isLatLngRequired: true,
+                            getPlaceDetailWithLatLng: (Prediction prediction) {
+                              _onPlaceSelected(prediction);
+                            },
+                            itemClick: (Prediction prediction) {
+                              _manualAddressController.text = prediction.description ?? '';
+                              _manualAddressController.selection = TextSelection.fromPosition(
+                                TextPosition(offset: prediction.description?.length ?? 0),
+                              );
+                            },
+                            itemBuilder: (context, index, Prediction prediction) {
+                              return Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: Colors.grey[200]!,
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.location_on,
+                                      color: Colors.blue[700],
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        prediction.description ?? '',
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            seperatedBuilder: const Divider(height: 0),
+                            isCrossBtnShown: true,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _useManualAddress = false;
+                                _manualAddressController.clear();
+                              });
+                            },
+                            icon: const Icon(Icons.arrow_back, size: 18),
+                            label: const Text(
+                              'Back to Auto-detect',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -680,72 +1318,11 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                     fontFamily: 'Poppins',
                   ),
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Please wait...',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHeaderSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Register Your Vehicle',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Fill in the details below to register your vehicle',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            color: Colors.grey[600],
-          ),
-        ),
-        if (!isOffline) ...[
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.green[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.green[200]!),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.save, size: 16, color: Colors.green[700]),
-                const SizedBox(width: 8),
-                Text(
-                  'Auto-saving draft',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    color: Colors.green[700],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
     );
   }
 
@@ -776,7 +1353,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
             _buildDropdown(
               label: 'Vehicle Category *',
               value: selectedVehicleCategory,
-              items: ['private', 'commercial'],
+              items: const ['private', 'commercial'],
               onChanged: (value) {
                 setState(() => selectedVehicleCategory = value);
                 _updateBrandsAndModels();
@@ -831,9 +1408,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                     validator: (value) {
                       if (value == null || value.isEmpty) return 'Required';
                       final year = int.tryParse(value);
-                      if (year == null ||
-                          year < 1900 ||
-                          year > DateTime.now().year + 1) {
+                      if (year == null || year < 1900 || year > DateTime.now().year + 1) {
                         return 'Invalid year';
                       }
                       return null;
@@ -862,8 +1437,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
               label: 'Registration Number *',
               hint: 'WB 01 AB 1234',
               textCapitalization: TextCapitalization.characters,
-              validator: (value) =>
-              value == null || value.isEmpty ? 'Required' : null,
+              validator: (value) => value == null || value.isEmpty ? 'Required' : null,
             ),
           ],
         ),
@@ -1021,7 +1595,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
-      initialValue: value,
+      value: value,
       items: items
           .map((item) => DropdownMenuItem<String>(
         value: item,

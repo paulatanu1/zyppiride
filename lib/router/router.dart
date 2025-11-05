@@ -85,7 +85,7 @@ class AppRouter {
         path: '/profile',
         name: 'profile',
         builder: (context, state) {
-          String userId = state.queryParameters["userId"] as String;
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return ProfileScreen(userId: userId);
         },
       ),
@@ -93,7 +93,7 @@ class AppRouter {
         path: '/emergency',
         name: 'emergency',
         builder: (context, state) {
-          String userId = state.queryParameters["userId"] as String;
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return EmergencyScreen(userId: userId);
         },
       ),
@@ -115,7 +115,7 @@ class AppRouter {
         path: '/vehicle-list',
         name: 'vehicle-list',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return VehicleListScreen(userId: userId);
         },
       ),
@@ -125,7 +125,7 @@ class AppRouter {
         path: '/vehicle-registration',
         name: 'vehicle-registration',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return VehicleRegistrationScreen(userId: userId);
         },
       ),
@@ -135,8 +135,8 @@ class AppRouter {
         path: '/vehicle-view',
         name: 'vehicle-view',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
-          final vehicleId = state.queryParameters['vehicleId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
+          final vehicleId = state.uri.queryParameters['vehicleId'] ?? '';
           return VehicleViewScreen(
             userId: userId,
             vehicleId: vehicleId,
@@ -149,8 +149,8 @@ class AppRouter {
         path: '/vehicle-edit',
         name: 'vehicle-edit',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
-          final vehicleId = state.queryParameters['vehicleId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
+          final vehicleId = state.uri.queryParameters['vehicleId'] ?? '';
           return VehicleEditScreen(
             userId: userId,
             vehicleId: vehicleId,
@@ -166,7 +166,7 @@ class AppRouter {
         path: '/document-upload',
         name: 'document-upload',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return DocumentUploadScreen(userId: userId);
         },
       ),
@@ -174,7 +174,7 @@ class AppRouter {
         path: '/agreement-signing',
         name: 'agreement-signing',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return AgreementSigningScreen(userId: userId);
         },
       ),
@@ -182,7 +182,7 @@ class AppRouter {
         path: '/ride-history',
         name: 'ride-history',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return RideHistoryScreen(userId: userId);
         },
       ),
@@ -190,7 +190,7 @@ class AppRouter {
         path: '/notifications',
         name: 'notifications',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return NotificationsScreen(userId: userId);
         },
       ),
@@ -198,7 +198,7 @@ class AppRouter {
         path: '/active-vehicles',
         name: 'active-vehicles',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return ActiveVehiclesScreen(userId: userId);
         },
       ),
@@ -206,7 +206,7 @@ class AppRouter {
         path: '/delivery-requests',
         name: 'delivery-requests',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return DeliveryRequestsScreen(userId: userId);
         },
       ),
@@ -214,7 +214,7 @@ class AppRouter {
         path: '/support-center',
         name: 'support-center',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return SupportCenterScreen(userId: userId);
         },
       ),
@@ -222,7 +222,7 @@ class AppRouter {
         path: '/availability',
         name: 'availability',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return AvailabilityScreen(userId: userId);
         },
       ),
@@ -230,7 +230,7 @@ class AppRouter {
         path: '/promotions',
         name: 'promotions',
         builder: (context, state) {
-          final userId = state.queryParameters['userId'] ?? '';
+          final userId = state.uri.queryParameters['userId'] ?? '';
           return PromotionsScreen(userId: userId);
         },
       ),
