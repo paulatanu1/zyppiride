@@ -5,10 +5,17 @@ import 'package:go_router/go_router.dart';
 class DashboardTiles extends StatelessWidget {
   final String userId;
   final String role;
+  final VoidCallback? onReturn; // NEW: Callback to notify parent
 
-  const DashboardTiles({super.key, required this.userId, required this.role});
+  const DashboardTiles({
+    super.key,
+    required this.userId,
+    required this.role,
+    this.onReturn, // NEW
+  });
 
   static final List<Map<String, dynamic>> _tiles = [
+    // ... your tiles remain the same
     {
       'title': 'Vehicle Registration',
       'icon': Icons.directions_car,
@@ -17,7 +24,7 @@ class DashboardTiles extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      'route': '/vehicle-list',
+      'route': 'vehicle-list',
     },
     {
       'title': 'Document Upload',
@@ -27,7 +34,7 @@ class DashboardTiles extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      'route': '/document-upload',
+      'route': 'document-upload',
     },
     {
       'title': 'Agreement Signing',
@@ -37,7 +44,7 @@ class DashboardTiles extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      'route': '/agreement-signing',
+      'route': 'agreement-signing',
     },
     {
       'title': 'Ride History',
@@ -47,7 +54,7 @@ class DashboardTiles extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      'route': '/ride-history',
+      'route': 'ride-history',
     },
     {
       'title': 'Notifications',
@@ -57,7 +64,7 @@ class DashboardTiles extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      'route': '/notifications',
+      'route': 'notifications',
     },
     {
       'title': 'Active Vehicles',
@@ -67,7 +74,7 @@ class DashboardTiles extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      'route': '/active-vehicles',
+      'route': 'active-vehicles',
     },
     {
       'title': 'Delivery Requests',
@@ -77,7 +84,7 @@ class DashboardTiles extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      'route': '/delivery-requests',
+      'route': 'delivery-requests',
     },
     {
       'title': 'Support Center',
@@ -87,7 +94,7 @@ class DashboardTiles extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      'route': '/support-center',
+      'route': 'support-center',
     },
     {
       'title': 'Availability',
@@ -97,7 +104,7 @@ class DashboardTiles extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      'route': '/availability',
+      'route': 'availability',
     },
     {
       'title': 'Promotions',
@@ -107,7 +114,7 @@ class DashboardTiles extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      'route': '/promotions',
+      'route': 'promotions',
     },
   ];
 
@@ -134,6 +141,7 @@ class DashboardTiles extends StatelessWidget {
           tile: tile,
           userId: userId,
           index: index,
+          key: ValueKey('tile_$index'), // NEW: Ensure proper rebuild
         );
       },
     );
@@ -185,9 +193,22 @@ class _ModernTileCardState extends State<ModernTileCard>
       ),
     );
 
+    // Start animation with staggered delay
+    _startAnimation();
+  }
+
+  void _startAnimation() {
     Future.delayed(Duration(milliseconds: widget.index * 80), () {
       if (mounted) _controller.forward();
     });
+  }
+
+  // NEW: Reset and replay animation
+  void _resetAnimation() {
+    if (mounted) {
+      _controller.reset();
+      _startAnimation();
+    }
   }
 
   @override
@@ -217,7 +238,11 @@ class _ModernTileCardState extends State<ModernTileCard>
             name: 'tile_tapped',
             parameters: {'tile': widget.tile['title'], 'userId': widget.userId},
           );
-          context.go('${widget.tile['route']}?userId=${widget.userId}');
+
+          context.pushNamed(
+            widget.tile['route'],
+            queryParameters: {'userId': widget.userId},
+          );
         },
         onTapCancel: () => setState(() => _isPressed = false),
         child: AnimatedScale(

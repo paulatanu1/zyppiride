@@ -69,7 +69,14 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard?userId=${widget.userId}'),
+          onPressed: () {
+            // Use pop if possible, otherwise go to dashboard
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/dashboard?userId=${widget.userId}');
+            }
+          },
         ),
         title: const Text(
           'My Vehicles',
@@ -123,7 +130,7 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
           final vehicles = snapshot.data?.docs ?? [];
 
           if (vehicles.isEmpty) {
-            return _buildEmptyState(); // FloatingActionButton hidden automatically
+            return _buildEmptyState();
           }
 
           return Column(
@@ -145,7 +152,7 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
         },
       ),
 
-      // Show FAB when there are more than 1 vehicle
+      // FIXED: Show FAB only when there are vehicles (>= 1)
       floatingActionButton: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('vehicles')
@@ -153,8 +160,9 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
             .snapshots(),
         builder: (context, snapshot) {
           final vehicles = snapshot.data?.docs ?? [];
-          // Show FAB only when vehicles count is greater than 1
-          if (vehicles.length <= 1) return const SizedBox.shrink();
+
+          // Hide FAB when no vehicles (empty state button shows instead)
+          if (vehicles.isEmpty) return const SizedBox.shrink();
 
           return FloatingActionButton.extended(
             onPressed: () {
@@ -162,10 +170,13 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                 name: 'add_vehicle_clicked',
                 parameters: {'user_id': widget.userId},
               );
-              context.push('/vehicle-registration?userId=${widget.userId}');
+              context.pushNamed(
+                'vehicle-registration',
+                queryParameters: {'userId': widget.userId},
+              );
             },
             backgroundColor: Colors.blue[700],
-            icon: const Icon(Icons.add,color: Colors.white,),
+            icon: const Icon(Icons.add, color: Colors.white),
             label: const Text(
               'Add Vehicle',
               style: TextStyle(
@@ -263,7 +274,10 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                   name: 'add_first_vehicle_clicked',
                   parameters: {'user_id': widget.userId},
                 );
-                context.push('/vehicle-registration?userId=${widget.userId}');
+                context.pushNamed(
+                  'vehicle-registration',
+                  queryParameters: {'userId': widget.userId},
+                );
               },
               icon: const Icon(Icons.add),
               label: const Text(
@@ -319,8 +333,12 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
               'status': status,
             },
           );
-          context.push(
-            '/vehicle-view?userId=${widget.userId}&vehicleId=$vehicleId',
+          context.pushNamed(
+            'vehicle-view',
+            queryParameters: {
+              'userId': widget.userId,
+              'vehicleId': vehicleId,
+            },
           );
         },
         borderRadius: BorderRadius.circular(16),
@@ -402,7 +420,7 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            '$brand ${model}'.trim(),
+                            '$brand $model'.trim(),
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 14,
@@ -461,8 +479,12 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                       if (status.toLowerCase() != 'approved')
                         TextButton.icon(
                           onPressed: () {
-                            context.push(
-                              '/vehicle-edit?userId=${widget.userId}&vehicleId=$vehicleId',
+                            context.pushNamed(
+                              'vehicle-edit',
+                              queryParameters: {
+                                'userId': widget.userId,
+                                'vehicleId': vehicleId,
+                              },
                             );
                           },
                           icon: const Icon(Icons.edit, size: 16),
