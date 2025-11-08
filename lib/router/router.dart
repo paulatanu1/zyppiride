@@ -21,6 +21,7 @@ import '../screens/delivery_requests_screen.dart';
 import '../screens/support_center_screen.dart';
 import '../screens/availability_screen.dart';
 import '../screens/promotions_screen.dart';
+import '../screens/weekly_schedule_screen.dart';
 
 class PlaceholderScreen extends StatelessWidget {
   final String title;
@@ -224,6 +225,20 @@ class AppRouter {
         builder: (context, state) {
           final userId = state.uri.queryParameters['userId'] ?? '';
           return AvailabilityScreen(userId: userId);
+        },
+      ),
+
+      // ============================================
+      // SCHEDULE MANAGEMENT ROUTE - ADDED ✅
+      // ============================================
+
+      GoRoute(
+        path: '/manage-schedule',
+        name: 'manage-schedule',
+        builder: (context, state) {
+          final userId = state.uri.queryParameters['userId'] ?? '';
+          final vehicleId = state.uri.queryParameters['vehicleId'] ?? '';
+          return WeeklyScheduleScreen(userId: userId, vehicleId: vehicleId);
         },
       ),
       GoRoute(

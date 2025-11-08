@@ -61,6 +61,7 @@ dependencies:
   geolocator: ^14.0.2
   geocoding: ^4.0.0
   google_places_flutter: ^2.1.1
+  flutter_riverpod: ^2.5.1
 #  google_places_flutter: ^2.0.8
 
 dev_dependencies:

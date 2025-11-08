@@ -32,7 +32,6 @@ class VehicleModel {
       int docCount,
       int blockedCount,
       ) {
-    // Safely get documentStatus with proper null handling
     final docStatus = data['documentStatus'];
     final String status = (docStatus is String && docStatus.isNotEmpty)
         ? docStatus
@@ -159,7 +158,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
         return;
       }
 
-      // Load all vehicles with their counts
       List<VehicleModel> vehicles = [];
       for (var doc in snapshot.docs) {
         final docsSnapshot = await FirebaseFirestore.instance
@@ -256,7 +254,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
   Future<void> _toggleActive(bool value) async {
     if (selectedVehicleId == null || vehicleData == null) return;
 
-    // Check if document is approved before allowing activation
     if (value && !vehicleData!.isApproved) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -298,7 +295,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
             documentStatus: vehicleData!.documentStatus,
           );
 
-          // Update in the list as well
           final index = allVehicles.indexWhere((v) => v.vehicleId == selectedVehicleId);
           if (index != -1) {
             allVehicles[index] = vehicleData!;
@@ -335,7 +331,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
   Future<void> _updateAvailabilityMode(String mode) async {
     if (selectedVehicleId == null || vehicleData == null) return;
 
-    // Check if document is approved
     if (!vehicleData!.isApproved) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -369,7 +364,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
           documentStatus: vehicleData!.documentStatus,
         );
 
-        // Update in the list as well
         final index = allVehicles.indexWhere((v) => v.vehicleId == selectedVehicleId);
         if (index != -1) {
           allVehicles[index] = vehicleData!;
@@ -408,7 +402,14 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard?userId=${widget.userId}'),
+          onPressed: () {
+            // FIXED: Use pop() with fallback to go()
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/dashboard?userId=${widget.userId}');
+            }
+          },
         ),
         title: const Text(
           'Availability Dashboard',
@@ -615,8 +616,14 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                // Navigate to document upload/management screen
-                context.go('/vehicle-documents?userId=${widget.userId}&vehicleId=$selectedVehicleId');
+                // FIXED: Use pushNamed instead of go
+                context.pushNamed(
+                  'document-upload',
+                  queryParameters: {
+                    'userId': widget.userId,
+                    'vehicleId': selectedVehicleId ?? '',
+                  },
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: color,
@@ -716,7 +723,13 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () => context.go('/vehicle-registration?userId=${widget.userId}'),
+            onPressed: () {
+              // FIXED: Use pushNamed instead of go
+              context.pushNamed(
+                'vehicle-registration',
+                queryParameters: {'userId': widget.userId},
+              );
+            },
             child: const Text('Add Vehicle', style: TextStyle(fontFamily: 'Poppins')),
           ),
         ],
@@ -1072,25 +1085,25 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
         'title': 'Manage Schedule',
         'icon': Icons.calendar_today,
         'color': Colors.blue,
-        'route': '/manage-schedule',
+        'routeName': 'manage-schedule',
       },
       {
         'title': 'Blocked Dates',
         'icon': Icons.block,
         'color': Colors.orange,
-        'route': '/blocked-dates',
+        'routeName': 'blocked-dates',
       },
       {
         'title': 'Pricing Rules',
         'icon': Icons.attach_money,
         'color': Colors.green,
-        'route': '/pricing-rules',
+        'routeName': 'pricing-rules',
       },
       {
         'title': 'Booking Settings',
         'icon': Icons.settings,
         'color': Colors.purple,
-        'route': '/booking-settings',
+        'routeName': 'booking-settings',
       },
     ];
 
@@ -1123,7 +1136,14 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: InkWell(
                 onTap: () {
-                  context.go('${action['route']}?userId=${widget.userId}&vehicleId=$selectedVehicleId');
+                  // FIXED: Use pushNamed instead of go
+                  context.pushNamed(
+                    action['routeName'] as String,
+                    queryParameters: {
+                      'userId': widget.userId,
+                      'vehicleId': selectedVehicleId ?? '',
+                    },
+                  );
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
