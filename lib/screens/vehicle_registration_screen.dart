@@ -83,7 +83,7 @@
     static const String _googleApiKey = 'AIzaSyABUF7GCEM6h1n3isugLj2qOEySpTtxd1I';
 
     // Key to rebuild Google Places widget
-    int _googlePlacesKey = 0;
+    final int _googlePlacesKey = 0;
 
     @override
     void initState() {
@@ -129,12 +129,12 @@
     Future<void> _checkConnectivity() async {
       final connectivityResult = await Connectivity().checkConnectivity();
       setState(() {
-        isOffline = connectivityResult == ConnectivityResult.none;
+        isOffline = connectivityResult.contains(ConnectivityResult.none);
       });
 
-      Connectivity().onConnectivityChanged.listen((result) {
+      Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> result) {
         setState(() {
-          isOffline = result == ConnectivityResult.none;
+          isOffline = result.contains(ConnectivityResult.none);
         });
 
         if (!isOffline && mounted) {
@@ -186,7 +186,10 @@
         }
 
         Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 0,
+          ),
         );
 
         List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -316,7 +319,7 @@
         await _logEvent('draft_saved', parameters: {
           'has_location': _latitude != null,
           'has_vehicle_images': _imageGroups['vehicle']!.isNotEmpty,
-          'total_images': _imageGroups.values.fold(0, (sum, list) => sum + list.length),
+          'total_images': _imageGroups.values.fold(0, (total, list) => total + list.length),
         });
       } catch (e) {
         debugPrint('Failed to save draft: $e');
@@ -395,19 +398,28 @@
       final startTime = DateTime.now();
 
       try {
-        DocumentSnapshot<Map<String, dynamic>>? doc;
+        DocumentSnapshot<Map<String, dynamic>?>? doc;
 
-        try {
+        if(!isOffline){
           doc = await FirebaseFirestore.instance
               .collection('vehicleCatalog')
               .doc('india2025')
-              .get(const GetOptions(source: Source.cache));
-          if (!doc.exists) doc = null;
-        } catch (e) {
-          doc = null;
+              .get(const GetOptions(source: Source.server));
+        }
+        if(doc == null || !doc.exists){
+          try {
+            doc = await FirebaseFirestore.instance
+                .collection('vehicleCatalog')
+                .doc('india2025')
+                .get(const GetOptions(source: Source.cache));
+            if (!doc.exists) doc = null;
+          } catch (e) {
+            doc = null;
+          }
         }
 
-        if (doc == null && !isOffline) {
+
+        if (doc?.exists == true && mounted) {
           doc = await FirebaseFirestore.instance
               .collection('vehicleCatalog')
               .doc('india2025')
@@ -981,7 +993,7 @@
                           color: Colors.white.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -1599,7 +1611,7 @@
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
-        value: value,
+        initialValue: value,
         items: items
             .map((item) => DropdownMenuItem<String>(
           value: item,

@@ -1,97 +1,842 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-
 admin.initializeApp();
-const db = admin.firestore();
 
-exports.createComplaint = functions.https.onCall(async (data, context) => {
-  // Add logging
-  console.log("=== createComplaint called ===");
-  console.log("context.auth:", context.auth ? "EXISTS" : "NULL");
-  console.log("context.auth.uid:", context.auth ? context.auth.uid : "N/A");
-  console.log("data.userId:", data.userId);
-  console.log("=============================");
+exports.seedVehicleCatalog = functions.https.onRequest(async (req, res) => {
+  const catalogData = {
+    colors: [
+      "White",
+      "Silver",
+      "Grey",
+      "Black",
+      "Blue",
+      "Red",
+      "Maroon",
+      "Brown",
+      "Beige",
+      "Green",
+      "Yellow",
+      "Orange",
+      "Purple",
+      "Pink",
+      "Gold",
+    ],
+    private: {
+      "Maruti Suzuki": [
+        "Alto K10",
+        "S-Presso",
+        "Celerio",
+        "Wagon R",
+        "Swift",
+        "Dzire",
+        "Baleno",
+        "Ignis",
+        "Fronx",
+        "Brezza",
+        "Ertiga",
+        "XL6",
+        "Jimny",
+        "Grand Vitara",
+        "Invicto",
+        "e Vitara",
+        "Eeco",
+      ],
+      "Tata": [
+        "Tiago",
+        "Tiago NRG",
+        "Tiago EV",
+        "Tigor",
+        "Tigor EV",
+        "Punch",
+        "Punch EV",
+        "Altroz",
+        "Nexon",
+        "Nexon EV",
+        "Harrier",
+        "Harrier EV",
+        "Safari",
+        "Safari EV",
+        "Curvv",
+        "Curvv EV",
+      ],
+      "Hyundai": [
+        "Exter",
+        "Grand i10 Nios",
+        "i20",
+        "i20 N Line",
+        "Aura",
+        "Venue",
+        "Venue N Line",
+        "Verna",
+        "Creta",
+        "Creta N Line",
+        "Creta Electric",
+        "Alcazar",
+        "Tucson",
+        "Ioniq 5",
+      ],
+      "Mahindra": [
+        "Bolero",
+        "Bolero Neo",
+        "Bolero Neo Plus",
+        "Thar",
+        "Thar Roxx",
+        "XUV300",
+        "XUV 3XO",
+        "Scorpio Classic",
+        "Scorpio N",
+        "XUV700",
+        "XUV400 EV",
+        "BE 6",
+        "XEV 9e",
+      ],
+      "Kia": [
+        "Sonet",
+        "Seltos",
+        "Carens",
+        "Carens Clavis EV",
+        "Syros",
+        "Carnival",
+        "EV6",
+        "EV9",
+      ],
+      "Toyota": [
+        "Glanza",
+        "Urban Cruiser Taisor",
+        "Rumion",
+        "Urban Cruiser Hyryder",
+        "Innova Crysta",
+        "Innova HyCross",
+        "Hilux",
+        "Fortuner",
+        "Camry",
+        "Vellfire",
+      ],
+      "Honda": [
+        "Amaze",
+        "City",
+        "City e:HEV",
+        "Elevate",
+      ],
+      "MG": [
+        "Comet EV",
+        "Windsor EV",
+        "ZS EV",
+        "Astor",
+        "Hector",
+        "Hector Plus",
+        "Gloster",
+        "M9",
+        "Cyberster",
+      ],
+      "Skoda": [
+        "Kylaq",
+        "Kushaq",
+        "Slavia",
+        "Kodiaq",
+        "Superb",
+        "Octavia RS",
+      ],
+      "Volkswagen": [
+        "Taigun",
+        "Virtus",
+        "Tiguan",
+      ],
+      "Jeep": [
+        "Compass",
+        "Meridian",
+        "Wrangler",
+      ],
+      "Renault": [
+        "Kwid",
+        "Triber",
+        "Kiger",
+      ],
+      "Nissan": [
+        "Magnite",
+        "X-Trail",
+      ],
+      "Citroen": [
+        "C3",
+        "C3 Aircross",
+        "Basalt",
+        "eC3",
+      ],
+      "BYD": [
+        "Atto 3",
+        "e6",
+        "Seal",
+        "Sealion 7",
+        "eMax 7",
+      ],
+      "Vinfast": [
+        "VF 6",
+        "VF 7",
+        "VF 8",
+        "VF 9",
+      ],
+      "Tesla": [
+        "Model 3",
+        "Model Y",
+      ],
+      "Force": [
+        "Gurkha",
+        "Gurkha 5-Door",
+      ],
+      "Luxury Brands": {
+        "Mercedes-Benz": [
+          "A-Class Limousine",
+          "C-Class",
+          "E-Class",
+          "E-Class LWB",
+          "S-Class",
+          "Maybach S-Class",
+          "EQS",
+          "EQE",
+          "GLA",
+          "GLB",
+          "GLC",
+          "GLE",
+          "GLS",
+          "Maybach GLS",
+          "EQB",
+          "EQS SUV",
+          "AMG GT",
+          "G-Class",
+        ],
+        "BMW": [
+          "2 Series Gran Coupe",
+          "3 Series",
+          "3 Series Gran Limousine",
+          "5 Series",
+          "5 Series LWB",
+          "7 Series",
+          "X1",
+          "X3",
+          "X4",
+          "X5",
+          "X6",
+          "X7",
+          "Z4",
+          "i4",
+          "i5",
+          "i7",
+          "iX",
+          "iX1",
+          "iX1 LWB",
+        ],
+        "Audi": [
+          "A4",
+          "A6",
+          "A8 L",
+          "Q3",
+          "Q3 Sportback",
+          "Q5",
+          "Q7",
+          "Q8",
+          "e-tron",
+          "e-tron GT",
+          "RS Q8",
+          "RS e-tron GT",
+        ],
+        "Volvo": [
+          "C40 Recharge",
+          "EX30",
+          "EX40",
+          "XC40",
+          "XC60",
+          "XC90",
+          "S90",
+        ],
+        "Lexus": [
+          "ES",
+          "NX",
+          "RX",
+          "LM",
+          "LX",
+        ],
+        "Jaguar Land Rover": [
+          "Range Rover Evoque",
+          "Range Rover Velar",
+          "Range Rover Sport",
+          "Range Rover",
+          "Discovery Sport",
+          "Discovery",
+          "Defender",
+          "Jaguar F-Pace",
+          "Jaguar I-Pace",
+        ],
+        "Porsche": [
+          "Macan",
+          "Cayenne",
+          "Cayenne Coupe",
+          "Panamera",
+          "Taycan",
+          "911",
+        ],
+        "Maserati": [
+          "Ghibli",
+          "Levante",
+          "Quattroporte",
+          "Grecale",
+        ],
+        "Lamborghini": [
+          "Huracan",
+          "Urus",
+          "Revuelto",
+        ],
+        "Ferrari": [
+          "Roma",
+          "Portofino",
+          "SF90 Stradale",
+          "296 GTB",
+          "812 GTS",
+          "Purosangue",
+        ],
+        "Bentley": [
+          "Flying Spur",
+          "Continental GT",
+          "Bentayga",
+        ],
+        "Rolls-Royce": [
+          "Ghost",
+          "Phantom",
+          "Cullinan",
+          "Spectre",
+        ],
+      },
+    },
+    commercial: {
+      // ALL PRIVATE VEHICLES (Convertible to Commercial Use - Yellow Plate)
+      "Maruti Suzuki": [
+        // Private models convertible to commercial
+        "Alto K10",
+        "S-Presso",
+        "Celerio",
+        "Wagon R",
+        "Swift",
+        "Dzire",
+        "Baleno",
+        "Ignis",
+        "Fronx",
+        "Brezza",
+        "Ertiga",
+        "XL6",
+        "Jimny",
+        "Grand Vitara",
+        "Invicto",
+        "e Vitara",
+        "Eeco",
+        // Commercial-specific variants
+        "Super Carry",
+        "Eeco Cargo",
+      ],
+      "Tata": [
+        // Private models convertible to commercial
+        "Tiago",
+        "Tiago NRG",
+        "Tiago EV",
+        "Tigor",
+        "Tigor EV",
+        "Punch",
+        "Punch EV",
+        "Altroz",
+        "Nexon",
+        "Nexon EV",
+        "Harrier",
+        "Harrier EV",
+        "Safari",
+        "Safari EV",
+        "Curvv",
+        "Curvv EV",
+        // Commercial-specific variants
+        "Ace Gold",
+        "Ace HT Plus",
+        "Intra V10",
+        "Intra V30",
+        "Intra V50",
+        "Yodha",
+        "407 Gold SFC",
+        "709g LPT",
+        "Ultra EV",
+        "Prima",
+        "Signa 4825.C",
+        "Starbus",
+        "Starbus EV",
+        "Winger",
+        "Winger Tourist",
+        "Magic Express",
+      ],
+      "Hyundai": [
+        // Private models convertible to commercial
+        "Exter",
+        "Grand i10 Nios",
+        "i20",
+        "i20 N Line",
+        "Aura",
+        "Venue",
+        "Venue N Line",
+        "Verna",
+        "Creta",
+        "Creta N Line",
+        "Creta Electric",
+        "Alcazar",
+        "Tucson",
+        "Ioniq 5",
+      ],
+      "Mahindra": [
+        // Private models convertible to commercial
+        "Bolero",
+        "Bolero Neo",
+        "Bolero Neo Plus",
+        "Thar",
+        "Thar Roxx",
+        "XUV300",
+        "XUV 3XO",
+        "Scorpio Classic",
+        "Scorpio N",
+        "XUV700",
+        "XUV400 EV",
+        "BE 6",
+        "XEV 9e",
+        // Commercial-specific variants
+        "Jeeto",
+        "Jeeto Plus",
+        "Supro Profit Mini Truck",
+        "Supro Profit Passenger",
+        "Bolero Pik-Up",
+        "Bolero Pik-Up Extra Long",
+        "Bolero Camper",
+        "Bolero Maxitruck Plus",
+        "Furio 7",
+        "Furio 11",
+        "Furio 14",
+        "Furio 17",
+        "JAYO",
+        "Blazo X 28",
+        "Blazo X 35",
+        "Blazo X 42",
+        "Blazo X 49",
+        "e-Alfa Mini",
+        "e-Alfa Cargo",
+        "Treo",
+        "Treo Zor",
+      ],
+      "Kia": [
+        // Private models convertible to commercial
+        "Sonet",
+        "Seltos",
+        "Carens",
+        "Carens Clavis EV",
+        "Syros",
+        "Carnival",
+        "EV6",
+        "EV9",
+      ],
+      "Toyota": [
+        // Private models convertible to commercial
+        "Glanza",
+        "Urban Cruiser Taisor",
+        "Rumion",
+        "Urban Cruiser Hyryder",
+        "Innova Crysta",
+        "Innova HyCross",
+        "Hilux",
+        "Fortuner",
+        "Camry",
+        "Vellfire",
+      ],
+      "Honda": [
+        // Private models convertible to commercial
+        "Amaze",
+        "City",
+        "City e:HEV",
+        "Elevate",
+      ],
+      "MG": [
+        // Private models convertible to commercial
+        "Comet EV",
+        "Windsor EV",
+        "ZS EV",
+        "Astor",
+        "Hector",
+        "Hector Plus",
+        "Gloster",
+        "M9",
+        "Cyberster",
+      ],
+      "Skoda": [
+        // Private models convertible to commercial
+        "Kylaq",
+        "Kushaq",
+        "Slavia",
+        "Kodiaq",
+        "Superb",
+        "Octavia RS",
+      ],
+      "Volkswagen": [
+        // Private models convertible to commercial
+        "Taigun",
+        "Virtus",
+        "Tiguan",
+      ],
+      "Jeep": [
+        // Private models convertible to commercial
+        "Compass",
+        "Meridian",
+        "Wrangler",
+      ],
+      "Renault": [
+        // Private models convertible to commercial
+        "Kwid",
+        "Triber",
+        "Kiger",
+      ],
+      "Nissan": [
+        // Private models convertible to commercial
+        "Magnite",
+        "X-Trail",
+      ],
+      "Citroen": [
+        // Private models convertible to commercial
+        "C3",
+        "C3 Aircross",
+        "Basalt",
+        "eC3",
+      ],
+      "BYD": [
+        // Private models convertible to commercial
+        "Atto 3",
+        "e6",
+        "Seal",
+        "Sealion 7",
+        "eMax 7",
+        // Commercial-specific variants
+        "e6 Cargo",
+        "T3 Electric Van",
+      ],
+      "Vinfast": [
+        // Private models convertible to commercial
+        "VF 6",
+        "VF 7",
+        "VF 8",
+        "VF 9",
+      ],
+      "Tesla": [
+        // Private models convertible to commercial
+        "Model 3",
+        "Model Y",
+      ],
+      "Force": [
+        // Private models convertible to commercial
+        "Gurkha",
+        "Gurkha 5-Door",
+        // Commercial-specific variants
+        "Urbania",
+        "Trax Cruiser",
+        "Trax Kargo King",
+        "Traveller 3050",
+        "Traveller 3350",
+        "Traveller 3700",
+        "Traveller 4020",
+        "Citiline School Bus",
+      ],
+      "Luxury Brands": {
+        "Mercedes-Benz": [
+          // Private models convertible to commercial
+          "A-Class Limousine",
+          "C-Class",
+          "E-Class",
+          "E-Class LWB",
+          "S-Class",
+          "Maybach S-Class",
+          "EQS",
+          "EQE",
+          "GLA",
+          "GLB",
+          "GLC",
+          "GLE",
+          "GLS",
+          "Maybach GLS",
+          "EQB",
+          "EQS SUV",
+          "AMG GT",
+          "G-Class",
+        ],
+        "BMW": [
+          // Private models convertible to commercial
+          "2 Series Gran Coupe",
+          "3 Series",
+          "3 Series Gran Limousine",
+          "5 Series",
+          "5 Series LWB",
+          "7 Series",
+          "X1",
+          "X3",
+          "X4",
+          "X5",
+          "X6",
+          "X7",
+          "Z4",
+          "i4",
+          "i5",
+          "i7",
+          "iX",
+          "iX1",
+          "iX1 LWB",
+        ],
+        "Audi": [
+          // Private models convertible to commercial
+          "A4",
+          "A6",
+          "A8 L",
+          "Q3",
+          "Q3 Sportback",
+          "Q5",
+          "Q7",
+          "Q8",
+          "e-tron",
+          "e-tron GT",
+          "RS Q8",
+          "RS e-tron GT",
+        ],
+        "Volvo": [
+          // Private models convertible to commercial
+          "C40 Recharge",
+          "EX30",
+          "EX40",
+          "XC40",
+          "XC60",
+          "XC90",
+          "S90",
+          // Commercial-specific variants
+          "FM Series",
+          "FMX Series",
+          "B8R Coach",
+          "B11R Coach",
+          "9600 Bus",
+        ],
+        "Lexus": [
+          // Private models convertible to commercial
+          "ES",
+          "NX",
+          "RX",
+          "LM",
+          "LX",
+        ],
+        "Jaguar Land Rover": [
+          // Private models convertible to commercial
+          "Range Rover Evoque",
+          "Range Rover Velar",
+          "Range Rover Sport",
+          "Range Rover",
+          "Discovery Sport",
+          "Discovery",
+          "Defender",
+          "Jaguar F-Pace",
+          "Jaguar I-Pace",
+        ],
+        "Porsche": [
+          // Private models convertible to commercial
+          "Macan",
+          "Cayenne",
+          "Cayenne Coupe",
+          "Panamera",
+          "Taycan",
+          "911",
+        ],
+        "Maserati": [
+          // Private models convertible to commercial
+          "Ghibli",
+          "Levante",
+          "Quattroporte",
+          "Grecale",
+        ],
+        "Lamborghini": [
+          // Private models convertible to commercial
+          "Huracan",
+          "Urus",
+          "Revuelto",
+        ],
+        "Ferrari": [
+          // Private models convertible to commercial
+          "Roma",
+          "Portofino",
+          "SF90 Stradale",
+          "296 GTB",
+          "812 GTS",
+          "Purosangue",
+        ],
+        "Bentley": [
+          // Private models convertible to commercial
+          "Flying Spur",
+          "Continental GT",
+          "Bentayga",
+        ],
+        "Rolls-Royce": [
+          // Private models convertible to commercial
+          "Ghost",
+          "Phantom",
+          "Cullinan",
+          "Spectre",
+        ],
+      },
+      // COMMERCIAL-ONLY VEHICLES
+      "Ashok Leyland": [
+        "Dost",
+        "Dost +",
+        "Dost Strong",
+        "BADA DOST",
+        "BADA DOST i2",
+        "BADA DOST i4",
+        "Partner",
+        "MiTR",
+        "Ecomet",
+        "Boss",
+        "AVTR",
+        "Captain",
+        "Circuit Electric Bus",
+        "Lynx Electric Bus",
+      ],
+      "Eicher": [
+        "Pro 1049",
+        "Pro 2049",
+        "Pro 2059",
+        "Pro 2095 XP",
+        "Pro 3015",
+        "Pro 6028T",
+        "Pro 6031T",
+        "Pro 8049",
+        "Skyline Pro Bus",
+        "Starline Bus",
+        "Eicher Electric Truck",
+      ],
+      "BharatBenz": [
+        "1617R Truck",
+        "1917R Truck",
+        "2823R Tipper",
+        "3123R Tipper",
+        "Staff Bus 917",
+        "School Bus 917",
+        "Tourist Bus 1623",
+      ],
+      "Bajaj": [
+        "RE Compact",
+        "RE Optima",
+        "RE Maxima Z",
+        "RE Maxima Cargo",
+        "Ape HT Auto",
+        "Ape Xtra LD",
+        "Ape Xtra LDX",
+      ],
+      "Piaggio": [
+        "Ape Auto",
+        "Ape City",
+        "Ape Xtra LDX",
+        "Porter 700",
+        "Porter 1000",
+        "Ape E-City",
+        "Ape E-Xtra FX",
+      ],
+      "Isuzu": [
+        "D-Max V-Cross",
+        "D-Max S-Cab",
+        "D-Max Regular Cab",
+      ],
+      "OSM": [
+        "Rage+",
+        "Stream",
+      ],
+      "Euler Motors": [
+        "HiLoad EV",
+      ],
+      "Altigreen": [
+        "NeEV Cargo",
+        "NeEV HD",
+      ],
+      "Omega Seiki": [
+        "Rage+ Frost",
+        "Rage+ Tipper",
+      ],
+      "Montra Electric": [
+        "Rhino EV",
+      ],
+      "Scania": [
+        "P Series",
+        "G Series",
+        "R Series",
+        "Touring Coach",
+        "Intercity Bus",
+      ],
+      "Daimler India": [
+        "BharatBenz 914R",
+        "BharatBenz 1215R",
+      ],
+      "SML Isuzu": [
+        "Sartaj GS",
+        "Supreme BS-VI",
+      ],
+      "Agricultural": {
+        "Mahindra Tractors": [
+          "275 DI TU",
+          "475 DI",
+          "575 DI",
+          "Arjun Novo 605 DI",
+          "Arjun Ultra 1",
+          "Yuvo Tech+ 415",
+          "OJA 3136",
+        ],
+        "Swaraj": [
+          "735 FE",
+          "744 FE",
+          "843 XM",
+          "855 FE",
+        ],
+        "Sonalika": [
+          "DI 35 RX",
+          "DI 47 RX",
+          "DI 60 RX",
+          "DI 750 III",
+          "Tiger 55",
+          "Tiger 65",
+        ],
+        "Eicher Tractors": [
+          "242 NH",
+          "380 Super Plus",
+          "485 Super Plus",
+          "551 Super Plus",
+          "5660 Super DI",
+        ],
+        "John Deere": [
+          "5050 D",
+          "5055 E",
+          "5075 E",
+          "5310",
+        ],
+        "New Holland": [
+          "3230 NX",
+          "3630 TX Super Plus",
+          "5620 TX Plus",
+        ],
+        "Massey Ferguson": [
+          "1035 DI Maha Shakti",
+          "7250 DI Power Up",
+          "9500",
+        ],
+        "Kubota": [
+          "MU4501 2WD",
+          "MU5501 2WD",
+          "Neostar A211N",
+        ],
+      },
+    },
+  };
 
-  // Get userId from auth if available, otherwise from data
-  let userId;
-  if (context.auth) {
-    userId = context.auth.uid;
-    console.log("Using auth userId:", userId);
-  } else if (data.userId) {
-    userId = data.userId;
-    console.log("Using data userId:", userId);
-  } else {
-    console.log("ERROR: No userId available!");
-    throw new functions.https.HttpsError(
-        "unauthenticated",
-        "User must be authenticated or provide userId to create a complaint",
-    );
-  }
+  await admin
+      .firestore()
+      .collection("vehicleCatalog")
+      .doc("india2025")
+      .set(catalogData);
 
-  const subject = data.subject || "General";
-  const description = data.description || "";
-  const priority = data.priority || "Medium";
-  const imageUrl = data.imageUrl || null;
-
-  // Generate ticket ID
-  const now = new Date();
-  const dateStr = now.toISOString().split("T")[0].replace(/-/g, "");
-  const seq = Math.floor(Math.random() * 900) + 100;
-  const ticketId = `ZY-${dateStr}-${String(seq)}`;
-
-  console.log("Generated ticketId:", ticketId);
-
-  // Save to Firestore
-  const complaintRef = db.collection("complaints").doc();
-  await complaintRef.set({
-    ticketId,
-    userId,
-    subject,
-    description,
-    priority,
-    imageUrl,
-    status: "Pending",
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
-
-  console.log("Complaint saved successfully");
-  return {ticketId, success: true};
-});
-
-exports.createFeedback = functions.https.onCall(async (data, context) => {
-  // Get userId from auth if available, otherwise from data
-  let userId;
-  if (context.auth) {
-    userId = context.auth.uid;
-  } else if (data.userId) {
-    userId = data.userId;
-  } else {
-    throw new functions.https.HttpsError(
-        "unauthenticated",
-        "User must be authenticated or provide userId to submit feedback",
-    );
-  }
-
-  const rating = data.rating || 0;
-  const message = data.message || "";
-  const imageUrl = data.imageUrl || null;
-
-  // Generate feedback ID
-  const now = new Date();
-  const dateStr = now.toISOString().split("T")[0].replace(/-/g, "");
-  const seq = Math.floor(Math.random() * 900) + 100;
-  const feedbackId = `FB-${dateStr}-${String(seq)}`;
-
-  // Save to Firestore
-  const feedbackRef = db.collection("feedbacks").doc();
-  await feedbackRef.set({
-    feedbackId,
-    userId,
-    rating,
-    message,
-    imageUrl,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
-
-  return {feedbackId, success: true};
+  res.status(200).send("Vehicle catalog seeded successfully.");
 });

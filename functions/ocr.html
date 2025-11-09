@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR: All Text as Line-by-Line JSON</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #preview { max-width: 100%; height: auto; border: 1px solid #ccc; }
+        #output { width: 100%; height: 400px; margin-top: 10px; font-family: monospace; font-size: 12px; }
+        progress { width: 100%; }
+        button { margin: 10px 0; padding: 10px; }
+        #status { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Upload Image & Get All Text as JSON Pairs</h1>
+    <p>Upload any image—extracts all text into individual line-based key-value pairs (e.g., {"line1": "text", "line2": "..."}).</p>
+    
+    <input type="file" id="imageInput" accept="image/*">
+    <br>
+    <button onclick="processImage()">Process & Get JSON</button>
+    <label><input type="checkbox" id="preprocess" checked> Preprocess (Grayscale + Resize)</label>
+    
+    <img id="preview" style="display: none;">
+    
+    <progress id="progress" value="0" max="100" style="display: none;"></progress>
+    <p id="status">Ready—upload anything!</p>
+    
+    <textarea id="output" placeholder='{"line1": "Hello World", "line2": "This is line 2", "total_lines": 2}'></textarea>
+
+    <script>
+        let worker = null;
+
+        // v5 Init with logger (unchanged)
+        async function initWorker() {
+            if (!worker) {
+                console.log('Initializing Tesseract v5 worker...');
+                const statusEl = document.getElementById('status');
+                const progressEl = document.getElementById('progress');
+                
+                worker = await Tesseract.createWorker('eng', 1, {
+                    logger: (m) => {
+                        console.log('Progress:', m);
+                        statusEl.textContent = `${m.status}...`;
+                        if (m.status === 'recognizing text') {
+                            progressEl.value = m.progress * 100;
+                        }
+                    }
+                });
+                console.log('Worker ready!');
+            }
+            return worker;
+        }
+
+        // Preprocess: Unchanged
+        function preprocessImage(file) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                img.onload = () => {
+                    console.log('Image loaded for preprocess');
+                    let { width, height } = img;
+                    if (width > 800) {
+                        height = (height * 800) / width;
+                        width = 800;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Grayscale
+                    const imageData = ctx.getImageData(0, 0, width, height);
+                    const data = imageData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                        data[i] = data[i + 1] = data[i + 2] = avg;
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                    
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = () => resolve(null);
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        // Parse all text into line-by-line (or word-by-word) key-value pairs
+        function parseAllTextToPairs(rawText) {
+            const lines = rawText.split('\n').filter(line => line.trim());  // Split into lines
+            const kvPairs = {};
+            
+            if (lines.length > 0) {
+                // Line-by-line pairs
+                lines.forEach((line, index) => {
+                    kvPairs[`line${index + 1}`] = line.trim();
+                });
+            } else {
+                // Fallback to word-by-word if no lines
+                const words = rawText.split(/\s+/).filter(word => word.trim());
+                words.forEach((word, index) => {
+                    kvPairs[`word${index + 1}`] = word.trim();
+                });
+            }
+            
+            return {
+                ...kvPairs,
+                total_items: lines.length > 0 ? lines.length : rawText.split(/\s+/).length,
+                raw_text: rawText  // Include full raw for completeness
+            };
+        }
+
+        // Main process: Full JSON with all text pairs
+        async function processImage() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Upload an image first!');
+                return;
+            }
+
+            const preview = document.getElementById('preview');
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+
+            const status = document.getElementById('status');
+            const progress = document.getElementById('progress');
+            const output = document.getElementById('output');
+            progress.style.display = 'block';
+            status.textContent = 'Starting...';
+            progress.value = 0;
+
+            try {
+                await initWorker();
+                
+                let imageToUse = URL.createObjectURL(file);
+                if (document.getElementById('preprocess').checked) {
+                    status.textContent = 'Preprocessing...';
+                    imageToUse = await preprocessImage(file);
+                    if (!imageToUse) throw new Error('Preprocess failed');
+                }
+                
+                console.log('Starting recognition...');
+                const { data } = await worker.recognize(imageToUse);
+
+                // Parse all text to individual pairs
+                const allPairs = parseAllTextToPairs(data.text || '');
+                
+                output.value = JSON.stringify(allPairs, null, 2);
+                status.textContent = `Done! (${allPairs.total_items} items extracted)`;
+                console.log('Full JSON:', allPairs);
+
+            } catch (error) {
+                const jsonError = {
+                    error: error.message,
+                    total_items: 0,
+                    raw_text: ''
+                };
+                output.value = JSON.stringify(jsonError, null, 2);
+                status.textContent = `Error: ${error.message}`;
+                console.error('OCR Error:', error);
+            } finally {
+                progress.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
