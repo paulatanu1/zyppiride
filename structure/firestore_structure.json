@@ -1,0 +1,360 @@
+{
+  "agreements": {
+    "cehCOvnqMaOJ6dvDqD46XivPOTT2_9dWpe47bPTMGzatuO6Lg": {
+      "fields": {
+        "vehicleRegistrationNumber": null,
+        "signatureData": null,
+        "vehicleBrand": null,
+        "ownerName": null,
+        "ipAddress": null,
+        "vehicleModel": null,
+        "vehicleId": null,
+        "userId": null,
+        "vehicleCategory": null,
+        "agreedToTerms": null,
+        "deviceInfo": null,
+        "signedAt": null
+      }
+    },
+    "ctGMTdzuzAdcVZqXpBY2dA36SJF3_fNVvH2WkmFMoDVuFXeuo": {
+      "fields": {
+        "vehicleRegistrationNumber": null,
+        "signatureData": null,
+        "vehicleBrand": null,
+        "ownerName": null,
+        "ipAddress": null,
+        "vehicleModel": null,
+        "vehicleId": null,
+        "userId": null,
+        "vehicleCategory": null,
+        "agreedToTerms": null,
+        "deviceInfo": null,
+        "signedAt": null
+      }
+    }
+  },
+  "complaints": {
+    "Bvl8g1gm2I590xQSBjvb": {
+      "fields": {
+        "subject": null,
+        "imageUrl": null,
+        "description": null,
+        "priority": null,
+        "userId": null,
+        "ticketId": null,
+        "status": null,
+        "createdAt": null
+      }
+    },
+    "UKuGreoiix9nPY1v6Iyc": {
+      "fields": {
+        "subject": null,
+        "imageUrl": null,
+        "description": null,
+        "priority": null,
+        "userId": null,
+        "ticketId": null,
+        "status": null,
+        "createdAt": null
+      }
+    }
+  },
+  "feedbacks": {
+    "9rfBiwQBAmhAzZAVJ0K4": {
+      "fields": {
+        "imageUrl": null,
+        "rating": null,
+        "feedbackId": null,
+        "message": null,
+        "userId": null,
+        "createdAt": null
+      }
+    },
+    "MAveNedvfNVXuHPIZwY8": {
+      "fields": {
+        "imageUrl": null,
+        "rating": null,
+        "feedbackId": null,
+        "message": null,
+        "userId": null,
+        "createdAt": null
+      }
+    },
+    "b0VL3STRYp5A0G99V4xf": {
+      "fields": {
+        "imageUrl": null,
+        "rating": null,
+        "feedbackId": null,
+        "message": null,
+        "userId": null,
+        "createdAt": null
+      }
+    },
+    "qWgTRrlXSGG84DzHirhr": {
+      "fields": {
+        "imageUrl": null,
+        "rating": null,
+        "feedbackId": null,
+        "message": null,
+        "userId": null,
+        "createdAt": null
+      }
+    }
+  },
+  "users": {
+    "98mlUOC0bbeGgLRoyDBsQZlAVcA2": {
+      "fields": {
+        "mobile": null,
+        "email": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    },
+    "A86fpemVR6ZF6mZkB1746yGXNu53": {
+      "fields": {
+        "mobile": null,
+        "email": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    },
+    "GuwhX7XlZdcPh1jTQi7FVdVmIe72": {
+      "fields": {
+        "email": null,
+        "mobile": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    },
+    "NqjxEyx3BzWtNio7fOBXZ7Cwvpf2": {
+      "fields": {
+        "email": null,
+        "mobile": null,
+        "createdAt": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    },
+    "P3yvMevMUEZDQFp5T09WB9e3FXz2": {
+      "fields": {
+        "email": null,
+        "mobile": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    },
+    "UUsIBTlDuRZfelCdk0jhnjcEzko1": {
+      "fields": {
+        "email": null,
+        "mobile": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    },
+    "UcqgEK2C9jMhaNwbAwo3TwDlJKt1": {
+      "fields": {
+        "email": null,
+        "mobile": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    },
+    "VQPqBVO6IiRkj9gJQczEc6wxlXV2": {
+      "fields": {
+        "mobile": null,
+        "email": null,
+        "createdAt": null,
+        "role": null,
+        "fullName": null,
+        "dob": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    },
+    "ZaPTOCLVxuRFUvH6if91OnCsePD3": {
+      "fields": {
+        "mobile": null,
+        "email": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    },
+    "cehCOvnqMaOJ6dvDqD46XivPOTT2": {
+      "fields": {
+        "is_admin": null,
+        "mobile": null,
+        "email": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null
+      }
+    },
+    "ctGMTdzuzAdcVZqXpBY2dA36SJF3": {
+      "fields": {
+        "is_admin": null,
+        "mobile": null,
+        "email": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null
+      }
+    },
+    "dWl3RrOdCybxSDun9JSWjuTpBot2": {
+      "fields": {
+        "mobile": null,
+        "email": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    },
+    "goaZsfPxIfRkrLa9d5YrTJnwxBg1": {
+      "fields": {
+        "mobile": null,
+        "email": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    },
+    "qnvEWc2ZMwNgldaxHsWK5QF6p0k2": {
+      "fields": {
+        "email": null,
+        "mobile": null,
+        "createdAt": null,
+        "role": null,
+        "dob": null,
+        "fullName": null,
+        "user_status": null,
+        "is_admin": null
+      }
+    }
+  },
+  "vehicleCatalog": {
+    "india2025": {
+      "fields": {
+        "colors": null,
+        "private": null,
+        "commercial": null
+      }
+    }
+  },
+  "vehicles": {
+    "9dWpe47bPTMGzatuO6Lg": {
+      "fields": {
+        "vehicleDetails": null,
+        "documents": null,
+        "userId": null,
+        "createdAt": null,
+        "location": null,
+        "agreementSigned": null,
+        "agreementSignedAt": null,
+        "documentStatus": null
+      }
+    },
+    "CwHEoiiuyKSqTVuRpNpl": {
+      "fields": {
+        "userId": null,
+        "vehicleDetails.brand": null,
+        "status": null
+      }
+    },
+    "LuUdzEe2TbdLdeSoTO9T": {
+      "fields": {
+        "vehicleDetails": null,
+        "documents": null,
+        "documentStatus": null,
+        "userId": null,
+        "createdAt": null
+      }
+    },
+    "Oxl4LmfDijCksZpAIDLd": {
+      "fields": {
+        "vehicleDetails": null,
+        "documents": null,
+        "userId": null,
+        "createdAt": null,
+        "documentStatus": null,
+        "availabilityMode": null,
+        "isActive": null
+      },
+      "schedules": {
+        "weekly": {
+          "fields": {
+            "dayActive": null,
+            "dayTimes": null,
+            "updatedAt": null
+          }
+        }
+      }
+    },
+    "fNVvH2WkmFMoDVuFXeuo": {
+      "fields": {
+        "vehicleDetails": null,
+        "documentStatus": null,
+        "userId": null,
+        "createdAt": null,
+        "documents": null,
+        "updatedAt": null,
+        "agreementSigned": null,
+        "agreementSignedAt": null,
+        "isActive": null
+      }
+    },
+    "sfkNpO7Zhjg7fiWikPuK": {
+      "fields": {
+        "vehicleDetails": null,
+        "documents": null,
+        "documentStatus": null,
+        "userId": null,
+        "createdAt": null,
+        "location": null
+      }
+    },
+    "zye8kpRH2ag1Ike5J8MQ": {
+      "fields": {
+        "vehicleDetails": null,
+        "documents": null,
+        "userId": null,
+        "createdAt": null,
+        "documentStatus": null
+      }
+    }
+  }
+}
