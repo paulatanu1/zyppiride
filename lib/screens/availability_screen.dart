@@ -470,7 +470,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
 
     return Card(
       elevation: 2,
-      color: statusColor.withOpacity(0.1),
+      color: statusColor.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: statusColor, width: 1),
@@ -935,7 +935,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
             Switch(
               value: vehicle.isActive,
               onChanged: _toggleActive,
-              activeColor: Colors.blue,
+              activeThumbColor: Colors.blue,
             ),
           ],
         ),
