@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
@@ -17,6 +16,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:intl/intl.dart';
+import '../services/vehicle_service.dart';
 
 class VehicleRegistrationScreen extends StatefulWidget {
   final String userId;
@@ -34,6 +34,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   final _analytics = FirebaseAnalytics.instance;
   final _manualAddressController = TextEditingController();
   final _searchFocusNode = FocusNode();
+  final _vehicleService = VehicleService();
 
   // NEW CONTROLLERS for new fields
   final TextEditingController _licenseNumberController = TextEditingController();
@@ -70,6 +71,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   final yearController = TextEditingController();
   final registrationController = TextEditingController();
   final seatingController = TextEditingController();
+  final _passengerCapacityController = TextEditingController();
 
   List<String> colors = [];
   List<String> brands = [];
@@ -108,6 +110,8 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     yearController.dispose();
     registrationController.dispose();
     seatingController.dispose();
+    _passengerCapacityController.dispose();
+    _passengerCapacityController.dispose();
     _scrollController.dispose();
     _manualAddressController.dispose();
     _searchFocusNode.dispose();
@@ -345,6 +349,8 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     yearController.addListener(_scheduleAutoSave);
     registrationController.addListener(_scheduleAutoSave);
     seatingController.addListener(_scheduleAutoSave);
+    _passengerCapacityController.addListener(_scheduleAutoSave);
+    _passengerCapacityController.addListener(_scheduleAutoSave);
     _licenseNumberController.addListener(_scheduleAutoSave);
   }
 
@@ -367,6 +373,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         'year': yearController.text,
         'registrationNumber': registrationController.text,
         'seatingCapacity': seatingController.text,
+        'passengerCapacity': _passengerCapacityController.text,
         'latitude': latitude,
         'longitude': longitude,
         'locationAddress': locationAddress,
@@ -413,6 +420,8 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
               yearController.text = draftData['year'] as String? ?? '';
               registrationController.text = draftData['registrationNumber'] as String? ?? '';
               seatingController.text = draftData['seatingCapacity'] as String? ?? '';
+              _passengerCapacityController.text = draftData['passengerCapacity'] as String? ?? '';
+              _passengerCapacityController.text = draftData['passengerCapacity'] as String? ?? '';
               latitude = draftData['latitude'] as double?;
               longitude = draftData['longitude'] as double?;
               locationAddress = draftData['locationAddress'] as String?;
@@ -472,63 +481,36 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
   // CATALOG DATA
   Future<void> _loadCatalogData() async {
-    final startTime = DateTime.now();
-    try {
-      DocumentSnapshot<Map<String, dynamic>?>? doc;
+  final startTime = DateTime.now();
+  try {
+    final data = await _vehicleService.fetchVehicleCatalog(useCache: isOffline);
 
-      if (!isOffline) {
-        doc = await FirebaseFirestore.instance
-            .collection('vehicleCatalog')
-            .doc('india2025')
-            .get(const GetOptions(source: Source.server));
+    if (data != null && mounted) {
+      setState(() {
+        catalogData = data;
+        colors = List<String>.from(catalogData?['colors'] ?? []);
+        isLoading = false;
+      });
 
-        if (doc == null || !doc.exists) {
-          try {
-            doc = await FirebaseFirestore.instance
-                .collection('vehicleCatalog')
-                .doc('india2025')
-                .get(const GetOptions(source: Source.cache));
-
-            if (!doc.exists) doc = null;
-          } catch (e) {
-            doc = null;
-          }
-        }
-      }
-
-      if (doc?.exists == true && mounted) {
-        doc = await FirebaseFirestore.instance
-            .collection('vehicleCatalog')
-            .doc('india2025')
-            .get(const GetOptions(source: Source.server));
-      }
-
-      if (doc?.exists == true && mounted) {
-        setState(() {
-          catalogData = doc!.data();
-          colors = List<String>.from(catalogData?['colors'] ?? []);
-          isLoading = false;
-        });
-
-        final loadTime = DateTime.now().difference(startTime).inMilliseconds;
-        await _logEvent('catalog_loaded', parameters: {
-          'load_time_ms': loadTime,
-          'source': doc?.metadata.isFromCache == true ? 'cache' : 'server',
-        });
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        _showSnackBar('Vehicle catalog not found', isError: true);
-      }
-    } catch (e) {
+      final loadTime = DateTime.now().difference(startTime).inMilliseconds;
+      await _logEvent('catalog_loaded', parameters: {
+        'load_time_ms': loadTime,
+      });
+    } else {
       setState(() {
         isLoading = false;
       });
-      _showSnackBar('Failed to load catalog: $e', isError: true);
-      await _logEvent('catalog_load_error', parameters: {'error': e.toString()});
+      _showSnackBar('Vehicle catalog not found', isError: true);
     }
+  } catch (e) {
+    setState(() {
+      isLoading = false;
+    });
+    _showSnackBar('Failed to load catalog: $e', isError: true);
+    await _logEvent('catalog_load_error', parameters: {'error': e.toString()});
   }
+}
+
 
   void updateBrandsAndModels() {
     if (selectedVehicleCategory == null || catalogData == null) {
@@ -737,124 +719,113 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       return;
     }
 
-    setState(() {
-      isSubmitting = true;
-      _showUploadProgress = true;
-    });
+    // Check duplicate registration
+final isDuplicate = await _vehicleService.isRegistrationNumberExists(
+    registrationController.text);
+if (isDuplicate) {
+  _showSnackBar('This registration number is already registered!', isError: true);
+  return;
+}
 
-    final startTime = DateTime.now();
+setState(() {
+  isSubmitting = true;
+  _showUploadProgress = true;
+});
 
-    try {
-      final storage = FirebaseStorage.instance;
-      final Map<String, List<String>> uploadedUrls = {
-        'vehicle': [],
-      };
+final startTime = DateTime.now();
 
-      int totalImages = _imageGroups['vehicle']!.length;
-      int uploadedImages = 0;
-
-      // Upload vehicle images
-      for (var image in _imageGroups['vehicle']!) {
-        final ref = storage
-            .ref()
-            .child('vehicles/${widget.userId}/vehicle/${DateTime.now().millisecondsSinceEpoch}.jpg');
-
-        final uploadTask = ref.putFile(image);
-
-        uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-          setState(() {
-            _uploadProgress['vehicle'] = snapshot.bytesTransferred / snapshot.totalBytes;
-          });
-        });
-
-        await uploadTask;
-        final url = await ref.getDownloadURL();
-        uploadedUrls['vehicle']!.add(url);
-
-        uploadedImages++;
-        if (mounted) {
-          setState(() {
-            _uploadProgress['overall'] = uploadedImages / totalImages;
-          });
-        }
-      }
-
-      // Save to Firestore
-      final docRef = await FirebaseFirestore.instance.collection('vehicles').add({
-        'userId': widget.userId,
-        'location': {
-          'latitude': latitude,
-          'longitude': longitude,
-          'address': locationAddress,
-          'city': city,
-          'state': state,
-          'postalCode': postalCode,
-          'geopoint': GeoPoint(latitude!, longitude!),
-          'timestamp': FieldValue.serverTimestamp(),
-        },
-        'vehicleDetails': {
-          'category': selectedVehicleCategory,
-          'brand': selectedBrand,
-          'model': selectedModel,
-          'color': selectedColor,
-          'year': yearController.text,
-          'registrationNumber': registrationController.text.toUpperCase(),
-          'seatingCapacity': int.parse(seatingController.text),
-          'isAC': _isACVariant,
-          'pucValidUpto': Timestamp.fromDate(_pucValidUptoDate!),
-          'insuranceValidUpto': Timestamp.fromDate(_insuranceValidUptoDate!),
-        },
-        'documents': {
-          'vehicleImages': uploadedUrls['vehicle'],
-          'rcImages': [],
-          'licenseImages': [],
-          'insuranceImages': [],
-          'pucImages': [],
-        },
-        'documentStatus': 'pending',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      // Update user collection with license details
-      await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
-        'drivingLicenseNumber': _licenseNumberController.text.trim(),
-        'drivingLicenseValidUpto': Timestamp.fromDate(_licenseValidUptoDate!),
-      });
-
-      final submissionTime = DateTime.now().difference(startTime).inMilliseconds;
-      await _logEvent('vehicle_registered', parameters: {
-        'category': selectedVehicleCategory,
-        'brand': selectedBrand,
-        'city': city,
-        'state': state,
-        'total_images': totalImages,
-        'submission_time_ms': submissionTime,
-        'vehicle_id': docRef.id,
-      });
-
-      await _clearDraft();
-
-      if (mounted) {
-        _showSnackBar(
-          'Vehicle registered successfully! Awaiting approval.',
-          isSuccess: true,
-        );
-        context.go('/dashboard?userId=${widget.userId}');
-      }
-    } catch (e) {
-      _showSnackBar('Failed to register vehicle: $e', isError: true);
-      await _logEvent('registration_failed', parameters: {
-        'error': e.toString(),
-      });
-    } finally {
+try {
+  // Upload images using service
+  final vehicleImageUrls = await _vehicleService.uploadVehicleImages(
+    images: _imageGroups['vehicle']!,
+    userId: widget.userId,
+    onProgress: (progress, type) {
       if (mounted) {
         setState(() {
-          isSubmitting = false;
-          _showUploadProgress = false;
-          _uploadProgress.clear();
+          _uploadProgress['overall'] = progress;
+          _uploadProgress[type] = progress;
         });
       }
-    }
+    },
+  );
+
+  // Prepare location data
+  final locationData = {
+    'latitude': latitude,
+    'longitude': longitude,
+    'address': locationAddress,
+    'city': city,
+    'state': state,
+    'postalCode': postalCode,
+    'geopoint': GeoPoint(latitude!, longitude!),
+    'timestamp': FieldValue.serverTimestamp(),
+  };
+
+  // Prepare vehicle details WITH NEW PASSENGER CAPACITY FIELD
+  final vehicleDetails = {
+    'category': selectedVehicleCategory,
+    'brand': selectedBrand,
+    'model': selectedModel,
+    'color': selectedColor,
+    'year': yearController.text,
+    'registrationNumber': registrationController.text.toUpperCase(),
+    'seatingCapacity': int.parse(seatingController.text),
+    'maxPassengers': int.parse(_passengerCapacityController.text), // NEW FIELD
+    'isAC': _isACVariant,
+    'pucValidUpto': Timestamp.fromDate(_pucValidUptoDate!),
+    'insuranceValidUpto': Timestamp.fromDate(_insuranceValidUptoDate!),
+  };
+
+  // Register vehicle using service
+  final vehicleId = await _vehicleService.registerVehicle(
+    userId: widget.userId,
+    locationData: locationData,
+    vehicleDetails: vehicleDetails,
+    vehicleImageUrls: vehicleImageUrls,
+  );
+
+  // Update user license using service
+  await _vehicleService.updateUserLicenseDetails(
+    userId: widget.userId,
+    licenseNumber: _licenseNumberController.text.trim(),
+    licenseValidUpto: _licenseValidUptoDate!,
+  );
+
+  final submissionTime = DateTime.now().difference(startTime).inMilliseconds;
+  await _logEvent('vehicle_registered', parameters: {
+    'category': selectedVehicleCategory,
+    'brand': selectedBrand,
+    'city': city,
+    'state': state,
+    'total_images': _imageGroups['vehicle']!.length,
+    'submission_time_ms': submissionTime,
+    'vehicle_id': vehicleId,
+  });
+
+  await _clearDraft();
+
+  if (mounted) {
+    _showSnackBar(
+      'Vehicle registered successfully! Awaiting approval.',
+      isSuccess: true,
+    );
+    context.go('/dashboard?userId=${widget.userId}');
+  }
+} catch (e) {
+  _showSnackBar('Failed to register vehicle: $e', isError: true);
+  await _logEvent('registration_failed', parameters: {
+    'error': e.toString(),
+  });
+} finally {
+  if (mounted) {
+    setState(() {
+      isSubmitting = false;
+      _showUploadProgress = false;
+      _uploadProgress.clear();
+    });
+  }
+}
+
   }
 
   void _showSnackBar(String message, {bool isError = false, bool isSuccess = false}) {
@@ -1413,146 +1384,185 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.directions_car, color: Colors.blue[700], size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Vehicle Details',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _buildDropdown(
-              label: 'Vehicle Category',
-              value: selectedVehicleCategory,
-              items: const ['private', 'commercial'],
-              onChanged: (value) {
-                setState(() {
-                  selectedVehicleCategory = value;
-                  updateBrandsAndModels();
-                  _saveDraft();
-                });
-              },
-              displayText: (item) =>
-              item[0].toUpperCase() + item.substring(1),
-            ),
-            const SizedBox(height: 16),
-            _buildDropdown(
-              label: 'Brand',
-              value: selectedBrand,
-              items: brands,
-              onChanged: brands.isEmpty
-                  ? null
-                  : (value) {
-                setState(() {
-                  selectedBrand = value;
-                  updateModels();
-                  _saveDraft();
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            _buildDropdown(
-              label: 'Model',
-              value: selectedModel,
-              items: models,
-              onChanged: models.isEmpty
-                  ? null
-                  : (value) {
-                setState(() {
-                  selectedModel = value;
-                  _saveDraft();
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            _buildDropdown(
-              label: 'Color',
-              value: selectedColor,
-              items: colors,
-              onChanged: (value) {
-                setState(() {
-                  selectedColor = value;
-                  _saveDraft();
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
-                    controller: yearController,
-                    label: 'Year',
-                    hint: '2024',
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      final year = int.tryParse(value);
-                      if (year == null ||
-                          year < 1900 ||
-                          year > DateTime.now().year + 1) {
-                        return 'Invalid year';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildTextField(
-                    controller: seatingController,
-                    label: 'Seating',
-                    hint: '5',
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      if (int.tryParse(value) == null) return 'Invalid';
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: registrationController,
-              decoration: InputDecoration(
-                labelText: 'Registration Number',
-                hintText: 'WB-01-AB-1234',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                prefixIcon: const Icon(Icons.credit_card),
-              ),
-              textCapitalization: TextCapitalization.characters,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9-]')),
-                TextInputFormatter.withFunction((oldValue, newValue) {
-                  final formatted = _formatRegistrationNumber(newValue.text);
-                  return TextEditingValue(
-                    text: formatted,
-                    selection: TextSelection.collapsed(offset: formatted.length),
-                  );
-                }),
-                LengthLimitingTextInputFormatter(13),
-              ],
-              validator: _validateRegistrationNumber,
-            ),
-          ],
+           Row(
+  children: [
+    Expanded(
+      child: _buildTextField(
+        controller: yearController,
+        label: 'Year',
+        hint: '2024',
+        keyboardType: TextInputType.number,
+        validator: (value) {
+          if (value == null || value.isEmpty) return 'Required';
+          final year = int.tryParse(value);
+          if (year == null || year < 1900 || year > DateTime.now().year + 1) {
+            return 'Invalid year';
+          }
+          return null;
+        },
+      ),
+    ),
+    const SizedBox(width: 12),
+    Expanded(
+      child: _buildTextField(
+        controller: seatingController,
+        label: 'Seating',
+        hint: '5',
+        keyboardType: TextInputType.number,
+        validator: (value) {
+          if (value == null || value.isEmpty) return 'Required';
+          if (int.tryParse(value) == null) return 'Invalid';
+          return null;
+        },
+      ),
+    ),
+    const SizedBox(width: 12),
+    Expanded(
+      child: _buildTextField(
+        controller: _passengerCapacityController,
+        label: 'Passengers',
+        hint: '4',
+        keyboardType: TextInputType.number,
+        validator: (value) {
+          if (value == null || value.isEmpty) return 'Required';
+          final passengers = int.tryParse(value);
+          if (passengers == null || passengers < 1) return 'Invalid';
+          final seating = int.tryParse(seatingController.text);
+          if (seating != null && passengers > seating) {
+            return 'Cannot exceed seating';
+          }
+          return null;
+        },
+      ),
+    ),
+  ],
+),
+const SizedBox(height: 16),
+  _buildDropdown(
+    label: 'Vehicle Category',
+    value: selectedVehicleCategory,
+    items: const ['private', 'commercial'],
+    onChanged: (value) {
+      setState(() {
+        selectedVehicleCategory = value;
+        updateBrandsAndModels();
+        _saveDraft();
+      });
+    },
+    displayText: (item) =>
+    item[0].toUpperCase() + item.substring(1),
+  ),
+  const SizedBox(height: 16),
+  _buildDropdown(
+    label: 'Brand',
+    value: selectedBrand,
+    items: brands,
+    onChanged: brands.isEmpty
+        ? null
+        : (value) {
+      setState(() {
+        selectedBrand = value;
+        updateModels();
+        _saveDraft();
+      });
+    },
+  ),
+  const SizedBox(height: 16),
+  _buildDropdown(
+    label: 'Model',
+    value: selectedModel,
+    items: models,
+    onChanged: models.isEmpty
+        ? null
+        : (value) {
+      setState(() {
+        selectedModel = value;
+        _saveDraft();
+      });
+    },
+  ),
+  const SizedBox(height: 16),
+  _buildDropdown(
+    label: 'Color',
+    value: selectedColor,
+    items: colors,
+    onChanged: (value) {
+      setState(() {
+        selectedColor = value;
+        _saveDraft();
+      });
+    },
+  ),
+  const SizedBox(height: 16),
+  Row(
+    children: [
+      Expanded(
+        child: _buildTextField(
+          controller: yearController,
+          label: 'Year',
+          hint: '2024',
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Required';
+            final year = int.tryParse(value);
+            if (year == null ||
+                year < 1900 ||
+                year > DateTime.now().year + 1) {
+              return 'Invalid year';
+            }
+            return null;
+          },
         ),
       ),
-    );
+      const SizedBox(width: 12),
+      Expanded(
+        child: _buildTextField(
+          controller: seatingController,
+          label: 'Seating',
+          hint: '5',
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Required';
+            if (int.tryParse(value) == null) return 'Invalid';
+            return null;
+          },
+        ),
+      ),
+    ],
+  ),
+  const SizedBox(height: 16),
+  TextFormField(
+    controller: registrationController,
+    decoration: InputDecoration(
+      labelText: 'Registration Number',
+      hintText: 'WB-01-AB-1234',
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
+      ),
+      prefixIcon: const Icon(Icons.credit_card),
+    ),
+    textCapitalization: TextCapitalization.characters,
+    inputFormatters: [
+      FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9-]')),
+      TextInputFormatter.withFunction((oldValue, newValue) {
+        final formatted = _formatRegistrationNumber(newValue.text);
+        return TextEditingValue(
+          text: formatted,
+          selection: TextSelection.collapsed(offset: formatted.length),
+        );
+      }),
+      LengthLimitingTextInputFormatter(13),
+    ],
+    validator: _validateRegistrationNumber,
+  ),
+      ],
+    ),
+  ),
+  );
   }
 
   // NEW FIELDS CARD
