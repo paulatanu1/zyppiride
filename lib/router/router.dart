@@ -23,7 +23,7 @@ import '../screens/availability_screen.dart';
 import '../screens/promotions_screen.dart';
 import '../screens/weekly_schedule_screen.dart';
 import '../screens/driver_availability_screen.dart';
-
+import 'package:zyppi_ride/screens/user/user_dashboard.dart';
 class PlaceholderScreen extends StatelessWidget {
   final String title;
   final String userId;
@@ -264,6 +264,18 @@ class AppRouter {
           return PromotionsScreen(userId: userId);
         },
       ),
+
+      // ============================================
+      // USER DASHBOARD ROUTE
+      // ============================================
+      GoRoute(
+        path: '/user-dashboard',
+        name: 'user-dashboard',
+        builder: (context, state) {
+          return const UserDashboard();
+        },
+      ),
+
     ],
 
     errorBuilder: (context, state) => Scaffold(

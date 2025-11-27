@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:go_router/go_router.dart'; // ✅ Import GoRouter
+import 'package:go_router/go_router.dart';
+import 'package:zyppi_ride/router/routes_name.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,7 +37,9 @@ class _LoginScreenState extends State<LoginScreen> {
           );
 
           // ✅ Use GoRouter navigation instead of Navigator
-          context.go('/dashboard');
+          // context.go('/dashboard');
+          context.goNamed(RoutesName.userDashboard);
+
         }
       } on FirebaseAuthException catch (e) {
         setState(() {
