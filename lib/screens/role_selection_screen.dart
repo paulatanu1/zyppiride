@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import 'dashboard_screen.dart'; // Import the new dashboard
 
 class RoleSelectionScreen extends StatefulWidget {
@@ -92,12 +93,19 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         });
 
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DashboardScreen(userId: widget.userId),
-            ),
-          );
+          // Navigator.pushReplacement(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (context) => DashboardScreen(userId: widget.userId),
+          //   ),
+          // );
+          if (_role == 'User') {
+            // context.go('/user-dashboard', extra: {'userId': widget.userId});
+            context.goNamed('user-dashboard',extra: {'userId': widget.userId});
+          } else if (_role == 'Vehicle Owner' || _role == 'Driver') {
+            // context.go('/dashboard', extra: {'userId': widget.userId});
+            context.goNamed('mainDashboard',extra: {'userId': widget.userId});
+          }
         }
       } catch (e) {
         setState(() {
