@@ -24,6 +24,8 @@ import '../screens/promotions_screen.dart';
 import '../screens/weekly_schedule_screen.dart';
 import '../screens/driver_availability_screen.dart';
 import 'package:zyppi_ride/screens/user/user_dashboard.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 class PlaceholderScreen extends StatelessWidget {
   final String title;
   final String userId;
@@ -273,6 +275,14 @@ class AppRouter {
         name: 'user-dashboard',
         builder: (context, state) {
           return const UserDashboard();
+        },
+        redirect: (context, state) {
+          // Check if user is authenticated
+          final user = FirebaseAuth.instance.currentUser;
+          if (user == null) {
+            return '/login'; // Redirect to login if not authenticated
+          }
+          return null; // Allow access if authenticated
         },
       ),
 

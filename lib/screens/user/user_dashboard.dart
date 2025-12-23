@@ -5,10 +5,15 @@ import 'package:go_router/go_router.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../models/user_model.dart';
+import '../../models/active_booking_model.dart';
+import '../../models/offer_model.dart';
+import '../../models/banner_model.dart';
 import '../../providers/user_dashboard_provider.dart';
 import '../../router/routes_name.dart';
 import '../../widgets/quick_action_button.dart';
 import '../../widgets/banner_slider.dart';
+import '../../widgets/user-dashboard/modern_drawer.dart';
 
 class UserDashboard extends ConsumerStatefulWidget {
   const UserDashboard({super.key});
@@ -39,15 +44,13 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
       ),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
+          ),
+        );
 
     _animationController.forward();
   }
@@ -62,7 +65,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
     final now = DateTime.now();
     final backButtonHasNotBeenPressedOrHasBeenPressedLongTimeAgo =
         _lastPressedAt == null ||
-            now.difference(_lastPressedAt!) > const Duration(seconds: 2);
+        now.difference(_lastPressedAt!) > const Duration(seconds: 2);
 
     if (backButtonHasNotBeenPressedOrHasBeenPressedLongTimeAgo) {
       _lastPressedAt = now;
@@ -111,7 +114,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
 
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (bool didPop, Object? result) async {
         if (didPop) return;
 
         final shouldPop = await _onWillPop();
@@ -124,57 +127,35 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
         appBar: AppBar(
           elevation: 0,
           backgroundColor: Colors.transparent,
-          leading: null,
-          automaticallyImplyLeading: false,
+          leading: Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            ),
+          ),
           title: userState.when(
-            data: (user) => Row(
+            data: (user) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    context.goNamed(
-                      RoutesName.profile,
-                      queryParameters: {'userId': user.userId},
-                    );
-                  },
-                  child: Hero(
-                    tag: 'profile-avatar',
-                    child: CircleAvatar(
-                      radius: 22,
-                      backgroundColor: Colors.white.withValues(alpha: 0.3),
-                      backgroundImage: user.profileImageUrl != null
-                          ? NetworkImage(user.profileImageUrl!)
-                          : null,
-                      child: user.profileImageUrl == null
-                          ? const Icon(Icons.person, color: Colors.white)
-                          : null,
-                    ),
+                Text(
+                  _getGreeting(),
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _getGreeting(),
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      Text(
-                        'Hi, ${user.userName} 👋',
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ],
+                Text(
+                  'Hi, ${user.userName} 👋',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ],
             ),
@@ -227,6 +208,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
             const SizedBox(width: 8),
           ],
         ),
+        drawer: const ModernDrawer(),
         body: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -242,7 +224,9 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
           child: SafeArea(
             child: RefreshIndicator(
               onRefresh: () async {
-                await ref.read(userDashboardProvider.notifier).refreshUserData();
+                await ref
+                    .read(userDashboardProvider.notifier)
+                    .refreshUserData();
               },
               child: FadeTransition(
                 opacity: _fadeAnimation,
@@ -257,12 +241,14 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                           padding: const EdgeInsets.symmetric(vertical: 20),
                           child: BannerSlider(
                             banners: banners
-                                .map((b) => BannerItem(
-                              imageUrl: b.imageUrl,
-                              title: b.title,
-                              subtitle: b.subtitle,
-                              actionRoute: b.actionRoute,
-                            ))
+                                .map(
+                                  (b) => BannerItem(
+                                    imageUrl: b.imageUrl,
+                                    title: b.title,
+                                    subtitle: b.subtitle,
+                                    actionRoute: b.actionRoute,
+                                  ),
+                                )
                                 .toList(),
                             onBannerTap: (route) {
                               if (route != null) {
@@ -361,7 +347,9 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
                               child: Text(
                                 'Offers & Rewards',
                                 style: GoogleFonts.poppins(
@@ -376,8 +364,9 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                               height: 185,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
-                                padding:
-                                const EdgeInsets.symmetric(horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
                                 itemCount: offers.length,
                                 itemBuilder: (context, index) {
                                   final offer = offers[index];
@@ -407,9 +396,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              ClipRect(
-                                child: _buildWhyChooseUs(),
-                              ),
+                              _buildWhyChooseUs(),
                             ],
                           ),
                         ),
@@ -696,11 +683,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.inbox_outlined,
-            size: 64,
-            color: Colors.white70,
-          ),
+          const Icon(Icons.inbox_outlined, size: 64, color: Colors.white70),
           const SizedBox(height: 16),
           Text(
             'No Active Bookings',
@@ -713,10 +696,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
           const SizedBox(height: 8),
           Text(
             'Book a ride to get started',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.white70,
-            ),
+            style: GoogleFonts.poppins(fontSize: 14, color: Colors.white70),
           ),
           const SizedBox(height: 20),
           ElevatedButton(
@@ -726,10 +706,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.deepPurple,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -897,10 +874,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFFD194),
-            Color(0xFFFF6F91),
-          ],
+          colors: [Color(0xFFFFD194), Color(0xFFFF6F91)],
         ),
         boxShadow: [
           BoxShadow(
@@ -941,11 +915,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(
-                Icons.local_offer,
-                color: Colors.white,
-                size: 24,
-              ),
+              const Icon(Icons.local_offer, color: Colors.white, size: 24),
             ],
           ),
           const SizedBox(height: 12),
@@ -983,10 +953,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 1,
-                    ),
+                    border: Border.all(color: Colors.white, width: 1),
                   ),
                   child: Text(
                     'Code: ${offer.code}',
@@ -1010,22 +977,10 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
 
   Widget _buildWhyChooseUs() {
     final features = [
-      {
-        'icon': Icons.verified_user,
-        'title': 'Verified\nDrivers',
-      },
-      {
-        'icon': Icons.support_agent,
-        'title': '24×7\nSupport',
-      },
-      {
-        'icon': Icons.gps_fixed,
-        'title': 'Live\nTracking',
-      },
-      {
-        'icon': Icons.shield,
-        'title': 'Safe &\nInsured',
-      },
+      {'icon': Icons.verified_user, 'title': 'Verified\nDrivers'},
+      {'icon': Icons.support_agent, 'title': '24×7\nSupport'},
+      {'icon': Icons.gps_fixed, 'title': 'Live\nTracking'},
+      {'icon': Icons.shield, 'title': 'Safe &\nInsured'},
     ];
 
     return Row(
