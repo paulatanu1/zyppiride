@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:animations/animations.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:ui';
+
+import '../router/routes_name.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
@@ -15,6 +21,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isDataLoaded = false;
   Map<String, dynamic>? _userData;
+  String? _effectiveUserId;
 
   @override
   void initState() {
@@ -23,17 +30,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserData() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.userId)
-        .get();
+    // Use widget.userId if provided, otherwise get from FirebaseAuth
+    _effectiveUserId = widget.userId.isNotEmpty
+        ? widget.userId
+        : FirebaseAuth.instance.currentUser?.uid;
 
-    if (snapshot.exists && mounted) {
-      final data = snapshot.data() as Map<String, dynamic>;
-      setState(() {
-        _userData = data;
-        _isDataLoaded = true;
-      });
+    if (_effectiveUserId == null || _effectiveUserId!.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _isDataLoaded = true;
+        });
+      }
+      return;
+    }
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_effectiveUserId)
+          .get();
+
+      if (snapshot.exists && mounted) {
+        final data = snapshot.data() as Map<String, dynamic>;
+        setState(() {
+          _userData = data;
+          _isDataLoaded = true;
+        });
+      } else if (mounted) {
+        setState(() {
+          _isDataLoaded = true;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isDataLoaded = true;
+        });
+      }
     }
   }
 
@@ -131,18 +164,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () async {
+                    final userId = _effectiveUserId;
+                    if (userId == null || userId.isEmpty) return;
+
                     await FirebaseFirestore.instance
                         .collection('users')
-                        .doc(widget.userId)
+                        .doc(userId)
                         .update({
                       'fullName': fullNameController.text.trim(),
                       'dob': dob,
                     });
-                    Navigator.pop(context);
+                    if (context.mounted) Navigator.pop(context);
                     _loadUserData();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Profile updated!")),
-                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Profile updated!")),
+                      );
+                    }
                   },
                   child: const Text(
                     "Save Changes",
@@ -166,36 +204,153 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final userData = _userData;
 
     return Scaffold(
+      backgroundColor: Colors.deepPurple.shade700,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            'Profile',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              color: Colors.black,
-              fontWeight: FontWeight.w600,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          ),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.goNamed(RoutesName.userDashboard);
+            }
+          },
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.deepPurple.shade700,
+                Colors.deepPurple.shade500,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
         ),
-        elevation: 0,
-        backgroundColor: Colors.white,
-      ),
-      body: _isDataLoaded && userData != null
-          ? Padding(
-        padding: const EdgeInsets.all(16),
-        child: FadeThroughTransition(
-          animation: kAlwaysCompleteAnimation,
-          secondaryAnimation: kAlwaysDismissedAnimation,
-          child: _buildAccordion(userData),
+        title: Text(
+          'Profile',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
         ),
-      )
-          : const Center(child: CircularProgressIndicator()),
+        centerTitle: true,
+      ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.deepPurple.shade700,
+              Colors.deepPurple.shade500,
+              Colors.deepPurple.shade300,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: _isDataLoaded
+              ? userData != null
+                  ? SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.all(16),
+                      child: FadeThroughTransition(
+                        animation: kAlwaysCompleteAnimation,
+                        secondaryAnimation: kAlwaysDismissedAnimation,
+                        child: _buildProfileContent(userData),
+                      ),
+                    )
+                  : _buildNoDataView()
+              : const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+        ),
+      ),
     );
   }
 
-  Widget _buildAccordion(Map<String, dynamic> data) {
+  Widget _buildNoDataView() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          gradient: LinearGradient(
+            colors: [
+              Colors.white.withValues(alpha: 0.2),
+              Colors.white.withOpacity(0.1),
+            ],
+          ),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.2),
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.person_off_outlined,
+              size: 64,
+              color: Colors.white70,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Profile Not Found',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Unable to load your profile data.\nPlease try again.',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.white70,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _loadUserData,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.deepPurple,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: const Icon(Icons.refresh),
+              label: Text(
+                'Retry',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileContent(Map<String, dynamic> data) {
     final email = data['email'] ?? 'No email';
     final mobile = data['mobile'] ?? 'No mobile';
     final role = data['role'] ?? 'No role';
@@ -204,108 +359,211 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ? (data['dob'] as Timestamp).toDate()
         : null;
 
-    return Card(
-      elevation: 8,
-      shadowColor: Colors.deepPurple.withValues(alpha: 0.2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      color: Colors.white,
-      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          collapsedBackgroundColor: Colors.deepPurple.shade50,
-          backgroundColor: Colors.deepPurple.shade50.withValues(alpha: 0.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          collapsedShape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          title: const Text(
-            "Profile Details",
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.deepPurple,
+    return Column(
+      children: [
+        // Profile Avatar Section
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withValues(alpha: 0.2),
+                Colors.white.withOpacity(0.1),
+              ],
+            ),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1.5,
             ),
           ),
-          trailing: Container(
-            decoration: BoxDecoration(
-              color: Colors.deepPurple.shade100,
-              borderRadius: BorderRadius.circular(12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                    ),
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.white.withOpacity(0.3),
+                      child: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                        style: GoogleFonts.poppins(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    name,
+                    style: GoogleFonts.poppins(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    email,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      role,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            padding: const EdgeInsets.all(6),
-            child: const Icon(Icons.keyboard_arrow_down, color: Colors.deepPurple),
           ),
-          onExpansionChanged: (expanded) {
-            if (expanded) {
-              FocusScope.of(context).unfocus();
-            }
-          },
-          childrenPadding:
-          const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          children: [
-            const Divider(thickness: 0.5, color: Colors.deepPurpleAccent),
-            const SizedBox(height: 8),
-            _buildInfoRow("Full Name", name),
-            _buildInfoRow("Email", email),
-            _buildInfoRow("Mobile", "+91 $mobile"),
-            _buildInfoRow("Role", role),
-            _buildInfoRow(
-              "Date of Birth",
-              dob != null ? DateFormat('yyyy-MM-dd').format(dob) : 'Not set',
-            ),
-            const SizedBox(height: 15),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding:
-                const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-              ),
-              onPressed: () => _openEditModal(data),
-              icon: const Icon(Icons.edit, color: Colors.white),
-              label: const Text(
-                "Edit Profile",
-                style: TextStyle(
-                    fontFamily: 'Poppins',
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 10),
+        ),
+        const SizedBox(height: 20),
+        // Profile Details Card
+        _buildAccordion(data),
+      ],
+    );
+  }
+
+  Widget _buildAccordion(Map<String, dynamic> data) {
+    final mobile = data['mobile'] ?? 'No mobile';
+    final dob = (data['dob'] is Timestamp)
+        ? (data['dob'] as Timestamp).toDate()
+        : null;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          colors: [
+            Colors.deepPurple.withOpacity(0.2),
+            Colors.deepPurple.withOpacity(0.1),
           ],
         ),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Profile Details",
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(6),
+                child: const Icon(Icons.person_outline, color: Colors.white, size: 20),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Divider(thickness: 0.5, color: Colors.white.withOpacity(0.3)),
+          const SizedBox(height: 12),
+          _buildInfoRow(Icons.phone_outlined, "Mobile", "+91 $mobile"),
+          _buildInfoRow(
+            Icons.cake_outlined,
+            "Date of Birth",
+            dob != null ? DateFormat('dd MMM yyyy').format(dob) : 'Not set',
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.deepPurple,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+              ),
+              onPressed: () => _openEditModal(data),
+              icon: const Icon(Icons.edit),
+              label: Text(
+                "Edit Profile",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Icon(icon, color: Colors.white, size: 20),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                color: Colors.deepPurple.shade400,
-                fontWeight: FontWeight.w500,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

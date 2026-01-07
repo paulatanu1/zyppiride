@@ -5,14 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../models/user_model.dart';
 import '../../models/active_booking_model.dart';
 import '../../models/offer_model.dart';
-import '../../models/banner_model.dart';
 import '../../providers/user_dashboard_provider.dart';
 import '../../router/routes_name.dart';
 import '../../widgets/quick_action_button.dart';
-import '../../widgets/banner_slider.dart';
+import '../../widgets/offer_banner_slider.dart';
 import '../../widgets/user-dashboard/modern_drawer.dart';
 
 class UserDashboard extends ConsumerStatefulWidget {
@@ -109,8 +107,8 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
   Widget build(BuildContext context) {
     final userState = ref.watch(userDashboardProvider);
     final activeBooking = ref.watch(activeBookingProvider);
-    final banners = ref.watch(bannerDataProvider);
     final offers = ref.watch(offersProvider);
+    final offerBanners = ref.watch(offerBannersProvider);
 
     return PopScope(
       canPop: false,
@@ -160,7 +158,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
               ],
             ),
             loading: () => const SizedBox(),
-            error: (_, __) => const SizedBox(),
+            error: (e, st) => const SizedBox(),
           ),
           actions: [
             userState.maybeWhen(
@@ -224,9 +222,11 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
           child: SafeArea(
             child: RefreshIndicator(
               onRefresh: () async {
-                await ref
-                    .read(userDashboardProvider.notifier)
-                    .refreshUserData();
+                // Invalidate all providers to refresh data
+                ref.invalidate(userDashboardProvider);
+                ref.invalidate(activeBookingProvider);
+                ref.invalidate(offersProvider);
+                ref.invalidate(offerBannersProvider);
               },
               child: FadeTransition(
                 opacity: _fadeAnimation,
@@ -235,31 +235,33 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                   child: CustomScrollView(
                     physics: const BouncingScrollPhysics(),
                     slivers: [
-                      // Banner Section
+                      // Offer Banner Section
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          child: BannerSlider(
-                            banners: banners
-                                .map(
-                                  (b) => BannerItem(
-                                    imageUrl: b.imageUrl,
-                                    title: b.title,
-                                    subtitle: b.subtitle,
-                                    actionRoute: b.actionRoute,
-                                  ),
-                                )
-                                .toList(),
-                            onBannerTap: (route) {
-                              if (route != null) {
-                                userState.whenData((user) {
-                                  context.goNamed(
-                                    route,
-                                    queryParameters: {'userId': user.userId},
-                                  );
-                                });
-                              }
-                            },
+                          padding: const EdgeInsets.only(top: 20, bottom: 24),
+                          child: offerBanners.when(
+                            data: (offerBannerList) => OfferBannerSlider(
+                              offerBanners: offerBannerList,
+                              onBannerTap: (banner) {
+                                if (banner.actionRoute != null) {
+                                  userState.whenData((user) {
+                                    context.goNamed(
+                                      banner.actionRoute!,
+                                      queryParameters: {'userId': user.userId},
+                                    );
+                                  });
+                                }
+                              },
+                            ),
+                            loading: () => const SizedBox(
+                              height: 220,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            error: (error, _) => const SizedBox(),
                           ),
                         ),
                       ),
@@ -287,7 +289,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                                     color: Colors.white,
                                   ),
                                 ),
-                                error: (_, __) => const SizedBox(),
+                                error: (e, st) => const SizedBox(),
                               ),
                             ],
                           ),
@@ -305,7 +307,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                                 ? _buildActiveBookingCard(booking)
                                 : _buildNoBookingCard(),
                             loading: () => _buildLoadingBookingCard(),
-                            error: (_, __) => const SizedBox(),
+                            error: (e, st) => const SizedBox(),
                           ),
                         ),
                       ),
@@ -332,7 +334,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                                 data: (user) =>
                                     _buildServiceCategories(user.userId),
                                 loading: () => const SizedBox(),
-                                error: (_, __) => const SizedBox(),
+                                error: (e, st) => const SizedBox(),
                               ),
                             ],
                           ),
@@ -360,19 +362,40 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                               ),
                             ),
                             const SizedBox(height: 16),
-                            SizedBox(
-                              height: 185,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                itemCount: offers.length,
-                                itemBuilder: (context, index) {
-                                  final offer = offers[index];
-                                  return _buildOfferCard(offer);
-                                },
+                            offers.when(
+                              data: (offerList) => SizedBox(
+                                height: 185,
+                                child: offerList.isEmpty
+                                    ? Center(
+                                        child: Text(
+                                          'No offers available',
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.white70,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      )
+                                    : ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                        ),
+                                        itemCount: offerList.length,
+                                        itemBuilder: (context, index) {
+                                          final offer = offerList[index];
+                                          return _buildOfferCard(offer);
+                                        },
+                                      ),
                               ),
+                              loading: () => const SizedBox(
+                                height: 185,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              error: (error, _) => const SizedBox(),
                             ),
                           ],
                         ),

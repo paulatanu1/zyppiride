@@ -5,6 +5,7 @@ import '../models/user_model.dart';
 import '../models/active_booking_model.dart';
 import '../models/banner_model.dart';
 import '../models/offer_model.dart';
+import '../models/offer_banner_model.dart';
 
 // ============================================
 // FIREBASE INSTANCES
@@ -146,9 +147,33 @@ final bannerDataProvider = StreamProvider<List<BannerData>>((ref) {
       .orderBy('priority', descending: true)
       .snapshots()
       .map((snapshot) {
+    if (snapshot.docs.isEmpty) {
+      return _getMockBanners();
+    }
     return snapshot.docs.map((doc) => BannerData.fromJson(doc.data())).toList();
+  }).handleError((error) {
+    // Return mock data on permission or other errors
+    return _getMockBanners();
   });
 });
+
+// Mock banners for testing
+List<BannerData> _getMockBanners() {
+  return [
+    BannerData(
+      imageUrl: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800',
+      title: 'Book Your Ride',
+      subtitle: 'Safe & comfortable travel',
+      actionRoute: 'reserveVehicle',
+    ),
+    BannerData(
+      imageUrl: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800',
+      title: 'Premium Vehicles',
+      subtitle: 'Travel in style',
+      actionRoute: 'reserveVehicle',
+    ),
+  ];
+}
 
 // ============================================
 // OFFERS PROVIDER
@@ -159,15 +184,17 @@ final offersProvider = StreamProvider<List<OfferData>>((ref) {
   return firestore
       .collection('offers')
       .where('isActive', isEqualTo: true)
-      .where('expiryDate', isGreaterThan: DateTime.now())
+      .where('expiryDate', isGreaterThan: Timestamp.now())
       .orderBy('expiryDate')
       .snapshots()
       .map((snapshot) {
     if (snapshot.docs.isEmpty) {
-      // Return mock data if no offers in Firestore
       return _getMockOffers();
     }
     return snapshot.docs.map((doc) => OfferData.fromJson(doc.data())).toList();
+  }).handleError((error) {
+    // Return mock data on permission or other errors
+    return _getMockOffers();
   });
 });
 
@@ -191,6 +218,66 @@ List<OfferData> _getMockOffers() {
       title: 'Refer & Earn',
       description: 'Get 30% off when you refer a friend',
       code: 'REFER30',
+    ),
+  ];
+}
+
+// ============================================
+// OFFER BANNERS PROVIDER
+// ============================================
+final offerBannersProvider = StreamProvider<List<OfferBannerData>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+
+  return firestore
+      .collection('offer_banners')
+      .where('isActive', isEqualTo: true)
+      .orderBy('priority', descending: true)
+      .snapshots()
+      .map((snapshot) {
+    if (snapshot.docs.isEmpty) {
+      return _getMockOfferBanners();
+    }
+    return snapshot.docs
+        .map((doc) => OfferBannerData.fromJson(doc.data(), docId: doc.id))
+        .where((banner) =>
+            banner.expiryDate == null ||
+            banner.expiryDate!.isAfter(DateTime.now()))
+        .toList();
+  }).handleError((error) {
+    // Return mock data on permission or other errors
+    return _getMockOfferBanners();
+  });
+});
+
+// Mock offer banners for testing
+List<OfferBannerData> _getMockOfferBanners() {
+  return [
+    OfferBannerData(
+      id: '1',
+      imageUrl: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800',
+      title: 'First Ride Bonus',
+      subtitle: 'Get amazing discount on your first ride with us',
+      discount: '50% OFF',
+      promoCode: 'FIRST50',
+      priority: 3,
+    ),
+    OfferBannerData(
+      id: '2',
+      imageUrl: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800',
+      title: 'Weekend Special',
+      subtitle: 'Book any ride this weekend and save big',
+      discount: '30% OFF',
+      promoCode: 'WEEKEND30',
+      priority: 2,
+    ),
+    OfferBannerData(
+      id: '3',
+      imageUrl: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800',
+      title: 'Refer & Earn',
+      subtitle: 'Invite friends and earn rewards on every referral',
+      discount: 'Up to ₹500',
+      promoCode: 'REFER500',
+      priority: 1,
     ),
   ];
 }

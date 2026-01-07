@@ -1,0 +1,170 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+
+    function isVehicleOwner(vehicleId) {
+      return request.auth != null &&
+             get(/databases/$(database)/documents/vehicles/$(vehicleId)).data.userId == request.auth.uid;
+    }
+
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ============================================
+    // VEHICLES COLLECTION
+    // ============================================
+    match /vehicles/{vehicleId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow read: if request.auth != null;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      // Documents subcollection
+      match /documents/{documentId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && isVehicleOwner(vehicleId);
+        allow update, delete: if request.auth != null && isVehicleOwner(vehicleId);
+      }
+
+      // Blocked dates subcollection
+      match /blocked_dates/{dateId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && isVehicleOwner(vehicleId);
+        allow update, delete: if request.auth != null && isVehicleOwner(vehicleId);
+      }
+
+      // Schedules subcollection
+      match /schedules/{scheduleId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && isVehicleOwner(vehicleId);
+        allow update, delete: if request.auth != null && isVehicleOwner(vehicleId);
+      }
+
+      // Vehicle Availability Settings
+      match /settings/{document=**} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && isVehicleOwner(vehicleId);
+      }
+    }
+
+    // ============================================
+    // BOOKINGS COLLECTION
+    // ============================================
+    match /bookings/{bookingId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null &&
+                     (resource.data.userId == request.auth.uid ||
+                      resource.data.ownerId == request.auth.uid);
+      allow delete: if request.auth != null &&
+                     resource.data.ownerId == request.auth.uid;
+    }
+
+    // ============================================
+    // VEHICLE CATALOG
+    // ============================================
+    match /vehicleCatalog/{document} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ============================================
+    // BANNERS COLLECTION
+    // ============================================
+    match /banners/{bannerId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // ============================================
+    // OFFERS COLLECTION
+    // ============================================
+    match /offers/{offerId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // ============================================
+    // OFFER BANNERS COLLECTION
+    // ============================================
+    match /offer_banners/{offerBannerId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // ============================================
+    // AGREEMENTS
+    // ============================================
+    match /agreements/{agreementId} {
+      function isOwner() {
+        return request.auth != null &&
+               agreementId.matches(request.auth.uid + '_.*');
+      }
+
+      function isValidAgreement() {
+        let data = request.resource.data;
+        return data.userId == request.auth.uid &&
+               data.keys().hasAll(['userId', 'vehicleId', 'ownerName',
+                                   'vehicleRegistrationNumber', 'vehicleCategory',
+                                   'signatureData', 'agreedToTerms', 'signedAt']) &&
+               data.agreedToTerms == true &&
+               data.signatureData is string;
+      }
+
+      allow read: if isOwner();
+      allow create: if isOwner() && isValidAgreement();
+      allow update, delete: if false;
+    }
+
+    // ============================================
+    // SUPPORT CENTER — COMPLAINTS
+    // ============================================
+    match /complaints/{complaintId} {
+      function isValidComplaint() {
+        let data = request.resource.data;
+        return data.keys().hasAll(['userId', 'ticketId', 'subject', 'description',
+                                   'priority', 'status', 'createdAt']) &&
+               data.userId is string &&
+               data.ticketId is string &&
+               data.subject is string &&
+               data.description is string &&
+               data.priority in ['Low', 'Medium', 'High'] &&
+               data.status == 'Pending' &&
+               data.userId == request.auth.uid;
+      }
+
+      allow create: if request.auth != null && isValidComplaint();
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ============================================
+    // SUPPORT CENTER — FEEDBACKS
+    // ============================================
+    match /feedbacks/{feedbackId} {
+      function isValidFeedback() {
+        let data = request.resource.data;
+        return data.keys().hasAll(['userId', 'feedbackId', 'rating',
+                                   'message', 'createdAt']) &&
+               data.userId is string &&
+               data.feedbackId is string &&
+               data.rating is number &&
+               data.rating >= 1 && data.rating <= 5 &&
+               data.message is string &&
+               data.userId == request.auth.uid;
+      }
+
+      allow create: if request.auth != null && isValidFeedback();
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow update, delete: if false;
+    }
+  }
+}

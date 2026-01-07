@@ -18,9 +18,10 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       userId: json['userId'] ?? '',
-      userName: json['userName'] ?? 'User',
+      // Check for 'fullName' first (Firestore field), then 'userName', then default to 'User'
+      userName: json['fullName'] ?? json['userName'] ?? 'User',
       email: json['email'],
-      phoneNumber: json['phoneNumber'],
+      phoneNumber: json['phoneNumber'] ?? json['mobile'],
       profileImageUrl: json['profileImageUrl'],
       notificationCount: json['notificationCount'] ?? 0,
     );
