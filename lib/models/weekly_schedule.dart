@@ -111,4 +111,14 @@ class TimeSlot {
     final minute = time.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
   }
+
+  TimeSlot copyWith({
+    TimeOfDay? start,
+    TimeOfDay? end,
+  }) {
+    return TimeSlot(
+      start: start ?? this.start,
+      end: end ?? this.end,
+    );
+  }
 }

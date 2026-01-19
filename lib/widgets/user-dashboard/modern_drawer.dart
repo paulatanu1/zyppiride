@@ -141,10 +141,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
               GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
-                  context.goNamed(
-                    RoutesName.profile,
-                    queryParameters: {'userId': user.userId},
-                  );
+                  context.push('/user-profile');
                 },
                 child: Hero(
                   tag: 'profile-avatar-drawer',
@@ -206,81 +203,52 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          GestureDetector(
-            onTap: () {
-              Navigator.pop(context);
-              // context.goNamed(
-              //   RoutesName.wallet,
-              //   queryParameters: {'userId': user.userId},
-              // );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.white.withValues(alpha: 0.25),
-                    Colors.white.withValues(alpha: 0.15),
-                  ],
-                ),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.account_balance_wallet,
-                      color: Colors.deepPurple.shade700,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Wallet Balance',
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            color: Colors.white70,
-                          ),
-                        ),
-                        Text(
-                          '₹ 2,450.00',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_forward_ios,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
+          const SizedBox(height: 16),
+          // User Stats Row
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0.2),
+                  Colors.white.withValues(alpha: 0.1),
                 ],
               ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatColumn(
+                  icon: Icons.directions_car,
+                  value: '${user.totalRides ?? 0}',
+                  label: 'Rides',
+                ),
+                Container(
+                  height: 35,
+                  width: 1,
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
+                _buildStatColumn(
+                  icon: Icons.star,
+                  value: '${(user.rating ?? 5.0).toStringAsFixed(1)}',
+                  label: 'Rating',
+                ),
+                Container(
+                  height: 35,
+                  width: 1,
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
+                _buildStatColumn(
+                  icon: Icons.calendar_today,
+                  value: _getMemberSince(user.createdAt),
+                  label: 'Member',
+                ),
+              ],
             ),
           ),
         ],
@@ -311,10 +279,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
           subtitle: 'View and edit profile',
           onTap: () {
             Navigator.pop(context);
-            context.goNamed(
-              RoutesName.profile,
-              queryParameters: {'userId': user.userId},
-            );
+            context.push('/user-profile');
           },
         ),
         _buildDrawerItem(
@@ -332,15 +297,12 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
         ),
         _buildDrawerItem(
           context: context,
-          icon: Icons.account_balance_wallet_outlined,
-          title: 'Wallet',
-          subtitle: 'Manage payments',
+          icon: Icons.directions_car_outlined,
+          title: 'Reserve Vehicle',
+          subtitle: 'Book a ride',
           onTap: () {
             Navigator.pop(context);
-            // context.goNamed(
-            //   RoutesName.wallet,
-            //   queryParameters: {'userId': user.userId},
-            // );
+            context.push('/reserve-vehicle');
           },
         ),
         _buildDrawerItem(
@@ -601,6 +563,54 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
         ),
       ),
     );
+  }
+
+  Widget _buildStatColumn({
+    required IconData icon,
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: Colors.white, size: 18),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            color: Colors.white70,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getMemberSince(dynamic createdAt) {
+    if (createdAt == null) return 'New';
+    try {
+      DateTime date;
+      if (createdAt is DateTime) {
+        date = createdAt;
+      } else {
+        // Assume Timestamp from Firestore
+        date = createdAt.toDate();
+      }
+      final months = DateTime.now().difference(date).inDays ~/ 30;
+      if (months < 1) return 'New';
+      if (months < 12) return '${months}m';
+      return '${months ~/ 12}y';
+    } catch (_) {
+      return 'New';
+    }
   }
 
   Widget _buildAppVersion() {

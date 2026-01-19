@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/driver_availability.dart';
+import '../core/errors/errors.dart';
+import '../core/utils/app_logger.dart';
 
 final availabilityProvider = StateNotifierProvider.family<AvailabilityNotifier, AsyncValue<DriverAvailability>, String>(
       (ref, vehicleId) => AvailabilityNotifier(vehicleId),
@@ -17,6 +19,7 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
   // Load availability from Firestore
   Future<void> loadAvailability() async {
     state = const AsyncValue.loading();
+    AppLogger.firestore('GET', 'vehicles/$vehicleId/settings', docId: 'availability');
 
     try {
       final doc = await _firestore
@@ -28,8 +31,10 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
 
       if (doc.exists) {
         final availability = DriverAvailability.fromJson(doc.data()!);
+        AppLogger.success('Loaded availability for vehicle: $vehicleId');
         state = AsyncValue.data(availability);
       } else {
+        AppLogger.info('No availability found, creating initial settings');
         final initial = DriverAvailability.initial();
         await _firestore
             .collection('vehicles')
@@ -40,7 +45,9 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
         state = AsyncValue.data(initial);
       }
     } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
+      final exception = ErrorHandler.handle(e, stackTrace);
+      AppLogger.logException(exception, context: 'loadAvailability');
+      state = AsyncValue.error(exception, stackTrace);
     }
   }
 
@@ -55,18 +62,10 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
         blockedDates.add(dateString);
       }
 
-      final updated = DriverAvailability(
+      state = AsyncValue.data(availability.copyWith(
         blockedDates: blockedDates,
-        limitedDates: availability.limitedDates,
-        workingMode: availability.workingMode,
-        customHours: availability.customHours,
-        tripPreferences: availability.tripPreferences,
-        vehiclePreferences: availability.vehiclePreferences,
         lastUpdated: DateTime.now(),
-        isCurrentlyAvailable: availability.isCurrentlyAvailable,
-      );
-
-      state = AsyncValue.data(updated);
+      ));
     });
   }
 
@@ -80,18 +79,10 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
         blockedDates.sort();
       }
 
-      final updated = DriverAvailability(
+      state = AsyncValue.data(availability.copyWith(
         blockedDates: blockedDates,
-        limitedDates: availability.limitedDates,
-        workingMode: availability.workingMode,
-        customHours: availability.customHours,
-        tripPreferences: availability.tripPreferences,
-        vehiclePreferences: availability.vehiclePreferences,
         lastUpdated: DateTime.now(),
-        isCurrentlyAvailable: availability.isCurrentlyAvailable,
-      );
-
-      state = AsyncValue.data(updated);
+      ));
     });
   }
 
@@ -101,72 +92,41 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
       final blockedDates = List<String>.from(availability.blockedDates);
       blockedDates.remove(dateString);
 
-      final updated = DriverAvailability(
+      state = AsyncValue.data(availability.copyWith(
         blockedDates: blockedDates,
-        limitedDates: availability.limitedDates,
-        workingMode: availability.workingMode,
-        customHours: availability.customHours,
-        tripPreferences: availability.tripPreferences,
-        vehiclePreferences: availability.vehiclePreferences,
         lastUpdated: DateTime.now(),
-        isCurrentlyAvailable: availability.isCurrentlyAvailable,
-      );
-
-      state = AsyncValue.data(updated);
+      ));
     });
   }
 
   // Update working mode
   void updateWorkingMode(String mode, {CustomHours? customHours}) {
     state.whenData((availability) {
-      final updated = DriverAvailability(
-        blockedDates: availability.blockedDates,
-        limitedDates: availability.limitedDates,
+      state = AsyncValue.data(availability.copyWith(
         workingMode: mode,
         customHours: customHours,
-        tripPreferences: availability.tripPreferences,
-        vehiclePreferences: availability.vehiclePreferences,
         lastUpdated: DateTime.now(),
-        isCurrentlyAvailable: availability.isCurrentlyAvailable,
-      );
-
-      state = AsyncValue.data(updated);
+      ));
     });
   }
 
   // Update trip preferences (whole object)
   void updateTripPreferences(TripPreferences tripPreferences) {
     state.whenData((availability) {
-      final updated = DriverAvailability(
-        blockedDates: availability.blockedDates,
-        limitedDates: availability.limitedDates,
-        workingMode: availability.workingMode,
-        customHours: availability.customHours,
+      state = AsyncValue.data(availability.copyWith(
         tripPreferences: tripPreferences,
-        vehiclePreferences: availability.vehiclePreferences,
         lastUpdated: DateTime.now(),
-        isCurrentlyAvailable: availability.isCurrentlyAvailable,
-      );
-
-      state = AsyncValue.data(updated);
+      ));
     });
   }
 
   // Update vehicle preferences (whole object)
   void updateVehiclePreferences(VehiclePreferences vehiclePreferences) {
     state.whenData((availability) {
-      final updated = DriverAvailability(
-        blockedDates: availability.blockedDates,
-        limitedDates: availability.limitedDates,
-        workingMode: availability.workingMode,
-        customHours: availability.customHours,
-        tripPreferences: availability.tripPreferences,
+      state = AsyncValue.data(availability.copyWith(
         vehiclePreferences: vehiclePreferences,
         lastUpdated: DateTime.now(),
-        isCurrentlyAvailable: availability.isCurrentlyAvailable,
-      );
-
-      state = AsyncValue.data(updated);
+      ));
     });
   }
 
@@ -248,21 +208,12 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
           return;
       }
 
-      final updated = DriverAvailability(
-        blockedDates: availability.blockedDates,
-        limitedDates: availability.limitedDates,
-        workingMode: availability.workingMode,
-        customHours: availability.customHours,
+      state = AsyncValue.data(availability.copyWith(
         tripPreferences: updatedPreferences,
-        vehiclePreferences: availability.vehiclePreferences,
         lastUpdated: DateTime.now(),
-        isCurrentlyAvailable: availability.isCurrentlyAvailable,
-      );
-
-      state = AsyncValue.data(updated);
+      ));
     });
   }
-
 
   // Update individual vehicle preference
   void updateVehiclePreference(String key, dynamic value) {
@@ -311,18 +262,10 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
           return;
       }
 
-      final updated = DriverAvailability(
-        blockedDates: availability.blockedDates,
-        limitedDates: availability.limitedDates,
-        workingMode: availability.workingMode,
-        customHours: availability.customHours,
-        tripPreferences: availability.tripPreferences,
+      state = AsyncValue.data(availability.copyWith(
         vehiclePreferences: updatedPreferences,
         lastUpdated: DateTime.now(),
-        isCurrentlyAvailable: availability.isCurrentlyAvailable,
-      );
-
-      state = AsyncValue.data(updated);
+      ));
     });
   }
 
@@ -334,45 +277,37 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
         endTime: endTime,
       );
 
-      final updated = DriverAvailability(
-        blockedDates: availability.blockedDates,
-        limitedDates: availability.limitedDates,
+      state = AsyncValue.data(availability.copyWith(
         workingMode: 'custom',
         customHours: customHours,
-        tripPreferences: availability.tripPreferences,
-        vehiclePreferences: availability.vehiclePreferences,
         lastUpdated: DateTime.now(),
-        isCurrentlyAvailable: availability.isCurrentlyAvailable,
-      );
-
-      state = AsyncValue.data(updated);
+      ));
     });
   }
 
   // Update availability status
   void updateAvailabilityStatus(bool isAvailable) {
     state.whenData((availability) {
-      final updated = DriverAvailability(
-        blockedDates: availability.blockedDates,
-        limitedDates: availability.limitedDates,
-        workingMode: availability.workingMode,
-        customHours: availability.customHours,
-        tripPreferences: availability.tripPreferences,
-        vehiclePreferences: availability.vehiclePreferences,
-        lastUpdated: DateTime.now(),
+      state = AsyncValue.data(availability.copyWith(
         isCurrentlyAvailable: isAvailable,
-      );
-
-      state = AsyncValue.data(updated);
+        lastUpdated: DateTime.now(),
+      ));
     });
   }
 
   // Save to Firestore
-  Future<void> saveAvailability() async {
+  Future<Result<void>> saveAvailability() async {
+    AppLogger.firestore('SET', 'vehicles/$vehicleId/settings', docId: 'availability');
+
     try {
       final availability = state.value;
       if (availability == null) {
-        throw Exception('No availability data to save');
+        final exception = ValidationException(
+          message: 'No availability data to save',
+          code: 'NO_DATA',
+        );
+        AppLogger.logException(exception, context: 'saveAvailability');
+        return Result.failure(exception);
       }
 
       await _firestore
@@ -382,24 +317,16 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
           .doc('availability')
           .set(availability.toJson(), SetOptions(merge: true));
 
-      print('✅ Availability saved successfully!');
+      AppLogger.success('Availability saved for vehicle: $vehicleId');
 
-      final updated = DriverAvailability(
-        blockedDates: availability.blockedDates,
-        limitedDates: availability.limitedDates,
-        workingMode: availability.workingMode,
-        customHours: availability.customHours,
-        tripPreferences: availability.tripPreferences,
-        vehiclePreferences: availability.vehiclePreferences,
-        lastUpdated: DateTime.now(),
-        isCurrentlyAvailable: availability.isCurrentlyAvailable,
-      );
-
+      final updated = availability.copyWith(lastUpdated: DateTime.now());
       state = AsyncValue.data(updated);
+
+      return Result.success(null);
     } catch (e, stackTrace) {
-      print('❌ Error saving availability: $e');
-      print('Stack trace: $stackTrace');
-      rethrow;
+      final exception = ErrorHandler.handle(e, stackTrace);
+      AppLogger.logException(exception, context: 'saveAvailability', stackTrace: stackTrace);
+      return Result.failure(exception);
     }
   }
 
@@ -416,9 +343,11 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
           .doc('availability')
           .set(availability.toJson(), SetOptions(merge: true));
 
-      print('💾 Auto-saved to Firestore');
-    } catch (e) {
-      print('❌ Auto-save failed: $e');
+      AppLogger.debug('Auto-saved availability for vehicle: $vehicleId');
+    } catch (e, stackTrace) {
+      final exception = ErrorHandler.handle(e, stackTrace);
+      AppLogger.logException(exception, context: 'autoSave');
+      // Don't rethrow for auto-save - it's a background operation
     }
   }
 }

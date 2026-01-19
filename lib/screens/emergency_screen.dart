@@ -23,22 +23,10 @@ class EmergencyScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            if (userId != null) {
-              // Clear navigation stack and go to Dashboard
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MainDashboard(),
-                ),
-                    (route) => false, // Remove all previous routes
-              );
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
             } else {
-              // If no userId provided, try to pop or go to a default route
-              if (Navigator.canPop(context)) {
-                context.go('/dashboard?userId=$userId');
-              } else {
-                Navigator.pushReplacementNamed(context, '/dashboard');
-              }
+              context.go('/user-dashboard');
             }
           },
         ),

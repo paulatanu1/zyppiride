@@ -58,4 +58,42 @@ class ActiveBooking {
       'bookingTime': bookingTime.toIso8601String(),
     };
   }
+
+  ActiveBooking copyWith({
+    String? bookingId,
+    String? userId,
+    String? vehicleType,
+    String? status,
+    String? driverName,
+    String? driverId,
+    String? eta,
+    String? pickupLocation,
+    String? dropLocation,
+    double? fare,
+    DateTime? bookingTime,
+  }) {
+    return ActiveBooking(
+      bookingId: bookingId ?? this.bookingId,
+      userId: userId ?? this.userId,
+      vehicleType: vehicleType ?? this.vehicleType,
+      status: status ?? this.status,
+      driverName: driverName ?? this.driverName,
+      driverId: driverId ?? this.driverId,
+      eta: eta ?? this.eta,
+      pickupLocation: pickupLocation ?? this.pickupLocation,
+      dropLocation: dropLocation ?? this.dropLocation,
+      fare: fare ?? this.fare,
+      bookingTime: bookingTime ?? this.bookingTime,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ActiveBooking &&
+          runtimeType == other.runtimeType &&
+          bookingId == other.bookingId;
+
+  @override
+  int get hashCode => bookingId.hashCode;
 }

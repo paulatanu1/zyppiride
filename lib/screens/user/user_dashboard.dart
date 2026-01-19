@@ -12,6 +12,7 @@ import '../../router/routes_name.dart';
 import '../../widgets/quick_action_button.dart';
 import '../../widgets/offer_banner_slider.dart';
 import '../../widgets/user-dashboard/modern_drawer.dart';
+import '../../widgets/user-dashboard/location_bar.dart';
 
 class UserDashboard extends ConsumerStatefulWidget {
   const UserDashboard({super.key});
@@ -235,10 +236,18 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                   child: CustomScrollView(
                     physics: const BouncingScrollPhysics(),
                     slivers: [
+                      // Location Bar Section
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 16, bottom: 8),
+                          child: LocationBar(),
+                        ),
+                      ),
+
                       // Offer Banner Section
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.only(top: 20, bottom: 24),
+                          padding: const EdgeInsets.only(top: 12, bottom: 24),
                           child: offerBanners.when(
                             data: (offerBannerList) => OfferBannerSlider(
                               offerBanners: offerBannerList,

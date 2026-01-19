@@ -17,6 +17,7 @@ import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:intl/intl.dart';
 import '../services/vehicle_service.dart';
+import '../core/errors/errors.dart';
 
 class VehicleRegistrationScreen extends StatefulWidget {
   final String userId;
@@ -483,24 +484,33 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   Future<void> _loadCatalogData() async {
   final startTime = DateTime.now();
   try {
-    final data = await _vehicleService.fetchVehicleCatalog(useCache: isOffline);
+    final result = await _vehicleService.fetchVehicleCatalog(useCache: isOffline);
 
-    if (data != null && mounted) {
-      setState(() {
-        catalogData = data;
-        colors = List<String>.from(catalogData?['colors'] ?? []);
-        isLoading = false;
-      });
+    result.when(
+      success: (data) {
+        if (mounted) {
+          setState(() {
+            catalogData = data;
+            colors = List<String>.from(catalogData?['colors'] ?? []);
+            isLoading = false;
+          });
+        }
+      },
+      failure: (exception) {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+          _showSnackBar(exception.message, isError: true);
+        }
+      },
+    );
 
+    if (result.isSuccess) {
       final loadTime = DateTime.now().difference(startTime).inMilliseconds;
       await _logEvent('catalog_loaded', parameters: {
         'load_time_ms': loadTime,
       });
-    } else {
-      setState(() {
-        isLoading = false;
-      });
-      _showSnackBar('Vehicle catalog not found', isError: true);
     }
   } catch (e) {
     setState(() {
@@ -720,10 +730,19 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     }
 
     // Check duplicate registration
-final isDuplicate = await _vehicleService.isRegistrationNumberExists(
+final duplicateResult = await _vehicleService.isRegistrationNumberExists(
     registrationController.text);
+final isDuplicate = duplicateResult.when(
+  success: (exists) => exists,
+  failure: (e) {
+    _showSnackBar('Could not verify registration: ${e.message}', isError: true);
+    return true; // Treat as duplicate on error to prevent submission
+  },
+);
 if (isDuplicate) {
-  _showSnackBar('This registration number is already registered!', isError: true);
+  if (duplicateResult.isSuccess) {
+    _showSnackBar('This registration number is already registered!', isError: true);
+  }
   return;
 }
 
@@ -736,7 +755,7 @@ final startTime = DateTime.now();
 
 try {
   // Upload images using service
-  final vehicleImageUrls = await _vehicleService.uploadVehicleImages(
+  final uploadResult = await _vehicleService.uploadVehicleImages(
     images: _imageGroups['vehicle']!,
     userId: widget.userId,
     onProgress: (progress, type) {
@@ -748,6 +767,17 @@ try {
       }
     },
   );
+
+  if (uploadResult.isFailure) {
+    _showSnackBar(uploadResult.exceptionOrNull?.message ?? 'Failed to upload images', isError: true);
+    setState(() {
+      isSubmitting = false;
+      _showUploadProgress = false;
+    });
+    return;
+  }
+
+  final vehicleImageUrls = uploadResult.dataOrNull!;
 
   // Prepare location data
   final locationData = {
@@ -777,19 +807,37 @@ try {
   };
 
   // Register vehicle using service
-  final vehicleId = await _vehicleService.registerVehicle(
+  final registerResult = await _vehicleService.registerVehicle(
     userId: widget.userId,
     locationData: locationData,
     vehicleDetails: vehicleDetails,
     vehicleImageUrls: vehicleImageUrls,
   );
 
+  if (registerResult.isFailure) {
+    _showSnackBar(registerResult.exceptionOrNull?.message ?? 'Failed to register vehicle', isError: true);
+    setState(() {
+      isSubmitting = false;
+      _showUploadProgress = false;
+    });
+    return;
+  }
+
+  final vehicleId = registerResult.dataOrNull!;
+
   // Update user license using service
-  await _vehicleService.updateUserLicenseDetails(
+  final licenseResult = await _vehicleService.updateUserLicenseDetails(
     userId: widget.userId,
     licenseNumber: _licenseNumberController.text.trim(),
     licenseValidUpto: _licenseValidUptoDate!,
   );
+
+  if (licenseResult.isFailure) {
+    // Log but don't fail - vehicle is already registered
+    await _logEvent('license_update_failed', parameters: {
+      'error': licenseResult.exceptionOrNull?.message,
+    });
+  }
 
   final submissionTime = DateTime.now().difference(startTime).inMilliseconds;
   await _logEvent('vehicle_registered', parameters: {

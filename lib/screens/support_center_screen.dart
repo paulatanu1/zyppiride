@@ -712,17 +712,18 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          context.go('/mainDashboard');
-        }
-      },
+      canPop: true,
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go('/mainDashboard'),
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                context.go('/user-dashboard');
+              }
+            },
           ),
           title: const Text('Support Center'),
           backgroundColor: Colors.cyan,

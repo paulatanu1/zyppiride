@@ -6,6 +6,9 @@ import '../models/active_booking_model.dart';
 import '../models/banner_model.dart';
 import '../models/offer_model.dart';
 import '../models/offer_banner_model.dart';
+import '../core/errors/errors.dart';
+import '../core/utils/app_logger.dart';
+import '../core/utils/pagination.dart';
 
 // ============================================
 // FIREBASE INSTANCES
@@ -136,23 +139,30 @@ final activeBookingProvider = StreamProvider<ActiveBooking?>((ref) {
 });
 
 // ============================================
-// BANNER DATA PROVIDER
+// BANNER DATA PROVIDER (with pagination)
 // ============================================
+const int _bannerPageSize = 10;
+
 final bannerDataProvider = StreamProvider<List<BannerData>>((ref) {
   final firestore = ref.watch(firestoreProvider);
+
+  AppLogger.firestore('STREAM', 'banners');
 
   return firestore
       .collection('banners')
       .where('isActive', isEqualTo: true)
       .orderBy('priority', descending: true)
+      .limit(_bannerPageSize)
       .snapshots()
       .map((snapshot) {
     if (snapshot.docs.isEmpty) {
+      AppLogger.debug('No banners found, using mock data');
       return _getMockBanners();
     }
+    AppLogger.debug('Loaded ${snapshot.docs.length} banners');
     return snapshot.docs.map((doc) => BannerData.fromJson(doc.data())).toList();
-  }).handleError((error) {
-    // Return mock data on permission or other errors
+  }).handleError((error, stackTrace) {
+    AppLogger.error('Error loading banners', error: error, stackTrace: stackTrace);
     return _getMockBanners();
   });
 });
@@ -176,24 +186,31 @@ List<BannerData> _getMockBanners() {
 }
 
 // ============================================
-// OFFERS PROVIDER
+// OFFERS PROVIDER (with pagination)
 // ============================================
+const int _offersPageSize = 10;
+
 final offersProvider = StreamProvider<List<OfferData>>((ref) {
   final firestore = ref.watch(firestoreProvider);
+
+  AppLogger.firestore('STREAM', 'offers');
 
   return firestore
       .collection('offers')
       .where('isActive', isEqualTo: true)
       .where('expiryDate', isGreaterThan: Timestamp.now())
       .orderBy('expiryDate')
+      .limit(_offersPageSize)
       .snapshots()
       .map((snapshot) {
     if (snapshot.docs.isEmpty) {
+      AppLogger.debug('No offers found, using mock data');
       return _getMockOffers();
     }
+    AppLogger.debug('Loaded ${snapshot.docs.length} offers');
     return snapshot.docs.map((doc) => OfferData.fromJson(doc.data())).toList();
-  }).handleError((error) {
-    // Return mock data on permission or other errors
+  }).handleError((error, stackTrace) {
+    AppLogger.error('Error loading offers', error: error, stackTrace: stackTrace);
     return _getMockOffers();
   });
 });
@@ -223,28 +240,36 @@ List<OfferData> _getMockOffers() {
 }
 
 // ============================================
-// OFFER BANNERS PROVIDER
+// OFFER BANNERS PROVIDER (with pagination)
 // ============================================
+const int _offerBannersPageSize = 10;
+
 final offerBannersProvider = StreamProvider<List<OfferBannerData>>((ref) {
   final firestore = ref.watch(firestoreProvider);
+
+  AppLogger.firestore('STREAM', 'offer_banners');
 
   return firestore
       .collection('offer_banners')
       .where('isActive', isEqualTo: true)
       .orderBy('priority', descending: true)
+      .limit(_offerBannersPageSize)
       .snapshots()
       .map((snapshot) {
     if (snapshot.docs.isEmpty) {
+      AppLogger.debug('No offer banners found, using mock data');
       return _getMockOfferBanners();
     }
-    return snapshot.docs
+    final banners = snapshot.docs
         .map((doc) => OfferBannerData.fromJson(doc.data(), docId: doc.id))
         .where((banner) =>
             banner.expiryDate == null ||
             banner.expiryDate!.isAfter(DateTime.now()))
         .toList();
-  }).handleError((error) {
-    // Return mock data on permission or other errors
+    AppLogger.debug('Loaded ${banners.length} offer banners');
+    return banners;
+  }).handleError((error, stackTrace) {
+    AppLogger.error('Error loading offer banners', error: error, stackTrace: stackTrace);
     return _getMockOfferBanners();
   });
 });
@@ -281,3 +306,77 @@ List<OfferBannerData> _getMockOfferBanners() {
     ),
   ];
 }
+
+// ============================================
+// PAGINATED BOOKING HISTORY PROVIDER
+// ============================================
+
+/// Provider for paginated booking history
+final bookingHistoryProvider = StateNotifierProvider.family<
+    BookingHistoryNotifier, PaginatedState<ActiveBooking>, String>(
+  (ref, userId) => BookingHistoryNotifier(userId, ref),
+);
+
+/// Notifier for managing paginated booking history
+class BookingHistoryNotifier extends PaginatedNotifier<ActiveBooking> {
+  final String userId;
+  final Ref ref;
+
+  BookingHistoryNotifier(this.userId, this.ref)
+      : super(config: const PaginationConfig(pageSize: 15)) {
+    if (userId.isNotEmpty) {
+      loadInitial();
+    }
+  }
+
+  @override
+  Query<Map<String, dynamic>> buildQuery(FirebaseFirestore firestore) {
+    AppLogger.firestore('QUERY', 'bookings', docId: 'user: $userId');
+    return firestore
+        .collection('bookings')
+        .where('userId', isEqualTo: userId)
+        .orderBy('bookingTime', descending: true);
+  }
+
+  @override
+  ActiveBooking fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data()!;
+    return ActiveBooking.fromJson({...data, 'bookingId': doc.id});
+  }
+}
+
+// ============================================
+// ERROR-AWARE USER DATA PROVIDER
+// ============================================
+
+/// A more robust user data provider with proper error handling
+final safeUserDashboardProvider = FutureProvider<Result<UserModel>>((ref) async {
+  final firestore = ref.watch(firestoreProvider);
+  final authUser = ref.watch(currentUserProvider).value;
+
+  if (authUser == null) {
+    return Result.failure(AuthException.sessionExpired());
+  }
+
+  return runCatching(() async {
+    AppLogger.firestore('GET', 'users', docId: authUser.uid);
+
+    final doc = await firestore.collection('users').doc(authUser.uid).get();
+
+    if (doc.exists) {
+      return UserModel.fromJson({
+        ...doc.data()!,
+        'userId': authUser.uid,
+      });
+    } else {
+      // Return default user if document doesn't exist
+      AppLogger.warning('User document not found, using defaults');
+      return UserModel(
+        userId: authUser.uid,
+        userName: authUser.displayName ?? 'User',
+        email: authUser.email,
+        phoneNumber: authUser.phoneNumber,
+      );
+    }
+  });
+});
