@@ -28,6 +28,12 @@ import 'package:zyppi_ride/screens/user/user_profile_screen.dart';
 import 'package:zyppi_ride/screens/user/reserve_vehicle_screen.dart';
 import 'package:zyppi_ride/screens/user/vehicle_details_screen.dart';
 import 'package:zyppi_ride/screens/driver/driver_profile_screen.dart';
+import 'package:zyppi_ride/screens/user/book_goods_carrier_screen.dart';
+import 'package:zyppi_ride/screens/user/track_booking_screen.dart';
+import 'package:zyppi_ride/screens/user/ride_history_screen.dart' as user_ride_history;
+import 'package:zyppi_ride/screens/user/offers_rewards_screen.dart';
+import 'package:zyppi_ride/screens/user/local_transport_screen.dart';
+import 'package:zyppi_ride/screens/user/outstation_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'routes_name.dart';
 
@@ -135,6 +141,46 @@ class AppRouter {
           final vehicleId = state.uri.queryParameters['vehicleId'];
           return VehicleDetailsScreen(vehicleId: vehicleId);
         },
+      ),
+
+      // ============================================
+      // USER BOOKING ROUTES
+      // ============================================
+
+      GoRoute(
+        path: '/book-goods-carrier',
+        name: RoutesName.bookGoodsCarrier,
+        builder: (context, state) => const BookGoodsCarrierScreen(),
+      ),
+
+      GoRoute(
+        path: '/track-booking',
+        name: RoutesName.trackActiveBooking,
+        builder: (context, state) => const TrackBookingScreen(),
+      ),
+
+      GoRoute(
+        path: '/user-ride-history',
+        name: 'user-ride-history',
+        builder: (context, state) => const user_ride_history.UserRideHistoryScreen(),
+      ),
+
+      GoRoute(
+        path: '/offers-rewards',
+        name: RoutesName.offersRewards,
+        builder: (context, state) => const OffersRewardsScreen(),
+      ),
+
+      GoRoute(
+        path: '/local-transport',
+        name: RoutesName.localTransport,
+        builder: (context, state) => const LocalTransportScreen(),
+      ),
+
+      GoRoute(
+        path: '/outstation',
+        name: RoutesName.outstationRental,
+        builder: (context, state) => const OutstationScreen(),
       ),
 
       // ============================================
