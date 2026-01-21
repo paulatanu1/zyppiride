@@ -12,7 +12,7 @@ class OffersRewardsScreen extends ConsumerStatefulWidget {
 }
 
 class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late TabController _tabController;

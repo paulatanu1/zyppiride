@@ -145,6 +145,13 @@ const int _bannerPageSize = 10;
 
 final bannerDataProvider = StreamProvider<List<BannerData>>((ref) {
   final firestore = ref.watch(firestoreProvider);
+  final authUser = ref.watch(currentUserProvider).value;
+
+  // Return mock data if user is not authenticated to avoid permission errors
+  if (authUser == null) {
+    AppLogger.debug('User not authenticated, using mock banners');
+    return Stream.value(_getMockBanners());
+  }
 
   AppLogger.firestore('STREAM', 'banners');
 
@@ -192,6 +199,13 @@ const int _offersPageSize = 10;
 
 final offersProvider = StreamProvider<List<OfferData>>((ref) {
   final firestore = ref.watch(firestoreProvider);
+  final authUser = ref.watch(currentUserProvider).value;
+
+  // Return mock data if user is not authenticated to avoid permission errors
+  if (authUser == null) {
+    AppLogger.debug('User not authenticated, using mock offers');
+    return Stream.value(_getMockOffers());
+  }
 
   AppLogger.firestore('STREAM', 'offers');
 
@@ -246,6 +260,13 @@ const int _offerBannersPageSize = 10;
 
 final offerBannersProvider = StreamProvider<List<OfferBannerData>>((ref) {
   final firestore = ref.watch(firestoreProvider);
+  final authUser = ref.watch(currentUserProvider).value;
+
+  // Return mock data if user is not authenticated to avoid permission errors
+  if (authUser == null) {
+    AppLogger.debug('User not authenticated, using mock offer banners');
+    return Stream.value(_getMockOfferBanners());
+  }
 
   AppLogger.firestore('STREAM', 'offer_banners');
 

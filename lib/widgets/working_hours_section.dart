@@ -26,9 +26,7 @@ class _WorkingHoursSectionState extends ConsumerState<WorkingHoursSection> {
 
   @override
   void initState() {
-
-    print('🚗 Working Hours Section loaded for vehicleId: ${widget.vehicleId}');
-
+    debugPrint('🚗 Working Hours Section loaded for vehicleId: ${widget.vehicleId}');
     super.initState();
     _startTimeController = TextEditingController(
       text: widget.availability.customHours?.startTime ?? '09:00',
@@ -53,7 +51,7 @@ class _WorkingHoursSectionState extends ConsumerState<WorkingHoursSection> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -161,7 +159,7 @@ class _WorkingHoursSectionState extends ConsumerState<WorkingHoursSection> {
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: isSelected ? color.withOpacity(0.1) : Colors.grey[50],
+              color: isSelected ? color.withValues(alpha:0.1) : Colors.grey[50],
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected ? color : Colors.grey[300]!,

@@ -57,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         // Debug prints
         debugPrint('Current user: ${userDoc.data()}');
         debugPrint('User role: $role');
-        print('user details: $user');
+        debugPrint('user details: $user');
 
         // Navigate based on role
         if (role == 'User') {

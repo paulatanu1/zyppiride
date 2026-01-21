@@ -18,7 +18,7 @@ class VehicleNumberFormatter extends TextInputFormatter {
     int cursorOffset = newValue.selection.end;
 
     // State code (2 letters): XX
-    if (text.length >= 1) {
+    if (text.isNotEmpty) {
       buffer.write(text.substring(0, text.length >= 2 ? 2 : text.length));
     }
 

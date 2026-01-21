@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/dashboard_tiles.dart';
 import 'dart:developer';
@@ -19,15 +18,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _userData;
   bool _isDataLoaded = false;
   DateTime? _lastPressedAt;
-
-  Future<void> _callAmbulance() async {
-    final Uri uri = Uri(scheme: 'tel', path: '101');
-    if (!await launchUrl(uri)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not launch dialer')),
-      );
-    }
-  }
 
   @override
   void initState() {
@@ -106,7 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) async {
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
         if (didPop) return;
 
         // Use our custom logic

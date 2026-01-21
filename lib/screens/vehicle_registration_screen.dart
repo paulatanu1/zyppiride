@@ -17,7 +17,6 @@ import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:intl/intl.dart';
 import '../services/vehicle_service.dart';
-import '../core/errors/errors.dart';
 
 class VehicleRegistrationScreen extends StatefulWidget {
   final String userId;
@@ -90,8 +89,6 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
   // Google Places API Key
   static const String googleApiKey = "AIzaSyABUF7GCEM6h1n3isugLj2qOEySpTtxd1I";
-
-  int _googlePlacesKey = 0;
 
   @override
   void initState() {

@@ -167,11 +167,11 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
         },
       );
 
-      if (mounted) {
-        _showSnackBar('Agreement signed successfully!', Colors.green);
-        await Future.delayed(const Duration(seconds: 1));
-        context.go('/dashboard?userId=${widget.userId}');
-      }
+      if (!mounted) return;
+      _showSnackBar('Agreement signed successfully!', Colors.green);
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
+      context.go('/dashboard?userId=${widget.userId}');
     } catch (e) {
       debugPrint('Error submitting agreement: $e');
       _showSnackBar('Failed to submit agreement', Colors.red);

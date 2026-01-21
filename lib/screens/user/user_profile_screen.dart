@@ -318,7 +318,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha:0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 32),
@@ -398,7 +398,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha:0.9),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.arrow_back_ios_new, size: 18),
@@ -416,7 +416,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha:0.9),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.settings_outlined, size: 20),
@@ -458,7 +458,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                               ),
                               child: CircleAvatar(
                                 radius: 55,
-                                backgroundColor: Colors.white.withOpacity(0.2),
+                                backgroundColor: Colors.white.withValues(alpha:0.2),
                                 backgroundImage: profileUrl != null
                                     ? CachedNetworkImageProvider(profileUrl)
                                     : null,
@@ -479,7 +479,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                                 child: Container(
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.black.withOpacity(0.5),
+                                    color: Colors.black.withValues(alpha:0.5),
                                   ),
                                   child: const Center(
                                     child: CircularProgressIndicator(
@@ -500,7 +500,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
+                                        color: Colors.black.withValues(alpha:0.2),
                                         blurRadius: 8,
                                       ),
                                     ],
@@ -529,7 +529,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                         'Member since $memberSince',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha:0.8),
                         ),
                       ),
                     ],
@@ -685,7 +685,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -700,7 +700,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.1),
+                    color: iconColor.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: iconColor, size: 20),
@@ -753,7 +753,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: iconColor, size: 18),
@@ -965,7 +965,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       });
                       if (context.mounted) Navigator.pop(context);
                       _loadUserData();
-                      if (mounted) {
+                      if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: const Text('Profile updated!'),

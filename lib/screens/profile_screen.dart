@@ -213,7 +213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha:0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
@@ -293,11 +293,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           gradient: LinearGradient(
             colors: [
               Colors.white.withValues(alpha: 0.2),
-              Colors.white.withOpacity(0.1),
+              Colors.white.withValues(alpha:0.1),
             ],
           ),
           border: Border.all(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha:0.2),
             width: 1.5,
           ),
         ),
@@ -352,12 +352,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProfileContent(Map<String, dynamic> data) {
     final email = data['email'] ?? 'No email';
-    final mobile = data['mobile'] ?? 'No mobile';
     final role = data['role'] ?? 'No role';
     final name = data['fullName'] ?? 'No name';
-    final dob = (data['dob'] is Timestamp)
-        ? (data['dob'] as Timestamp).toDate()
-        : null;
 
     return Column(
       children: [
@@ -369,11 +365,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             gradient: LinearGradient(
               colors: [
                 Colors.white.withValues(alpha: 0.2),
-                Colors.white.withOpacity(0.1),
+                Colors.white.withValues(alpha:0.1),
               ],
             ),
             border: Border.all(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha:0.2),
               width: 1.5,
             ),
           ),
@@ -391,7 +387,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: CircleAvatar(
                       radius: 50,
-                      backgroundColor: Colors.white.withOpacity(0.3),
+                      backgroundColor: Colors.white.withValues(alpha:0.3),
                       child: Text(
                         name.isNotEmpty ? name[0].toUpperCase() : 'U',
                         style: GoogleFonts.poppins(
@@ -417,14 +413,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     email,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha:0.8),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha:0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -460,12 +456,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
           colors: [
-            Colors.deepPurple.withOpacity(0.2),
-            Colors.deepPurple.withOpacity(0.1),
+            Colors.deepPurple.withValues(alpha:0.2),
+            Colors.deepPurple.withValues(alpha:0.1),
           ],
         ),
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha:0.2),
           width: 1.5,
         ),
       ),
@@ -485,7 +481,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha:0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.all(6),
@@ -494,7 +490,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Divider(thickness: 0.5, color: Colors.white.withOpacity(0.3)),
+          Divider(thickness: 0.5, color: Colors.white.withValues(alpha:0.3)),
           const SizedBox(height: 12),
           _buildInfoRow(Icons.phone_outlined, "Mobile", "+91 $mobile"),
           _buildInfoRow(
@@ -537,7 +533,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha:0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: Colors.white, size: 20),
@@ -551,7 +547,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   label,
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha:0.7),
                   ),
                 ),
                 const SizedBox(height: 2),

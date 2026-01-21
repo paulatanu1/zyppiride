@@ -203,14 +203,6 @@ class _ModernTileCardState extends State<ModernTileCard>
     });
   }
 
-  // NEW: Reset and replay animation
-  void _resetAnimation() {
-    if (mounted) {
-      _controller.reset();
-      _startAnimation();
-    }
-  }
-
   @override
   void dispose() {
     _controller.dispose();

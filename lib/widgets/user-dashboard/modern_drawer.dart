@@ -95,7 +95,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
           loading: () => const Center(
             child: CircularProgressIndicator(color: Colors.white),
           ),
-          error: (_, __) => Center(
+          error: (_, _) => Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
@@ -752,9 +752,11 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
 
     if (shouldLogout == true && context.mounted) {
       Navigator.pop(context); // Close drawer
-      // Add your logout logic here
-      // Example: await FirebaseAuth.instance.signOut();
-      context.goNamed(RoutesName.login);
+      // Sign out from Firebase - this will trigger providers to switch to unauthenticated state
+      await ref.read(firebaseAuthProvider).signOut();
+      if (context.mounted) {
+        context.goNamed(RoutesName.login);
+      }
     }
   }
 }

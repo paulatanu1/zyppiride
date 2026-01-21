@@ -228,7 +228,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha:0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 32),
@@ -303,7 +303,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha:0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.arrow_back_ios_new, size: 18, color: Colors.white),
@@ -321,7 +321,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha:0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.settings_outlined, size: 20, color: Colors.white),
@@ -360,7 +360,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
                                 border: Border.all(color: Colors.white, width: 3),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
+                                    color: Colors.black.withValues(alpha:0.3),
                                     blurRadius: 20,
                                   ),
                                 ],
@@ -388,7 +388,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
                                 child: Container(
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.black.withOpacity(0.5),
+                                    color: Colors.black.withValues(alpha:0.5),
                                   ),
                                   child: const Center(
                                     child: CircularProgressIndicator(
@@ -409,7 +409,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
+                                        color: Colors.black.withValues(alpha:0.2),
                                         blurRadius: 8,
                                       ),
                                     ],
@@ -477,7 +477,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha:0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -689,7 +689,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha:0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),
@@ -736,7 +736,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -751,7 +751,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.1),
+                    color: iconColor.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: iconColor, size: 20),
@@ -805,7 +805,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: iconColor, size: 18),
@@ -850,7 +850,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.deepPurple.withOpacity(0.1),
+                color: Colors.deepPurple.withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.directions_car, color: Colors.deepPurple),
@@ -982,7 +982,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
                     });
                     if (context.mounted) Navigator.pop(context);
                     _loadData();
-                    if (mounted) {
+                    if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('Profile updated!'),

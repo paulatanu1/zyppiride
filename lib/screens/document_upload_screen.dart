@@ -876,7 +876,9 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
         }
       });
 
+      if (!mounted) return;
       _showSnackBar('Document deleted successfully', isSuccess: true);
+      if (!mounted) return;
       Navigator.pop(context);
       _viewAndEditDocuments();
 

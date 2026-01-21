@@ -63,7 +63,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
         isLoading = false;
       });
     } catch (e) {
-      print('❌ ERROR: $e');
+      debugPrint('❌ ERROR: $e');
       setState(() {
         errorMessage = 'Error loading vehicles: $e';
         isLoading = false;
@@ -94,7 +94,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
         isLoadingBookings = false;
       });
     } catch (e) {
-      print('❌ ERROR loading bookings: $e');
+      debugPrint('❌ ERROR loading bookings: $e');
       setState(() => isLoadingBookings = false);
     }
   }
@@ -242,7 +242,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

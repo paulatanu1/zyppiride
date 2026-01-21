@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
-import 'dashboard_screen.dart'; // Import the new dashboard
 
 class RoleSelectionScreen extends StatefulWidget {
   final String userId;

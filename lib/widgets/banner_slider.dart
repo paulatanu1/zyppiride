@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'dart:ui';
 
 class BannerSlider extends StatefulWidget {
   final List<BannerItem> banners;
@@ -34,7 +33,7 @@ class _BannerSliderState extends State<BannerSlider> {
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha:0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -72,9 +71,9 @@ class _BannerSliderState extends State<BannerSlider> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.black.withOpacity(0.7),
+                                  Colors.black.withValues(alpha:0.7),
                                   Colors.transparent,
-                                  Colors.black.withOpacity(0.5),
+                                  Colors.black.withValues(alpha:0.5),
                                 ],
                                 begin: Alignment.bottomCenter,
                                 end: Alignment.topCenter,
@@ -103,7 +102,7 @@ class _BannerSliderState extends State<BannerSlider> {
                                   banner.subtitle,
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha:0.9),
                                     fontFamily: 'Poppins',
                                   ),
                                 ),
@@ -169,7 +168,7 @@ class _BannerSliderState extends State<BannerSlider> {
                 borderRadius: BorderRadius.circular(4),
                 color: _currentIndex == entry.key
                     ? Colors.white
-                    : Colors.white.withOpacity(0.4),
+                    : Colors.white.withValues(alpha:0.4),
               ),
             );
           }).toList(),
