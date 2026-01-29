@@ -5,6 +5,7 @@ class RoutesName {
   static const String auth = 'auth';
   static const String login = 'login';
   static const String registration = 'registration';
+  static const String phoneAuth = 'phone-auth';
 
   // Dashboard Routes
   static const String dashboard = 'dashboard';

@@ -10,15 +10,13 @@ dependencies {
   // Import the Firebase BoM (latest stable as of Oct 2025)
   implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
 
-  // TODO: Add the dependencies for Firebase products you want to use
-  // When using the BoM, don't specify versions in Firebase dependencies
+  // Firebase products
   implementation("com.google.firebase:firebase-analytics")
+  implementation("com.google.firebase:firebase-auth")
 
-  // Add the dependencies for any other desired Firebase products
-  // https://firebase.google.com/docs/android/setup#available-libraries
-  // Example: implementation("com.google.firebase:firebase-firestore")
-  //          implementation("com.google.firebase:firebase-storage")
-  //          implementation("com.google.firebase:firebase-auth")
+  // Required for Phone Auth silent verification (avoids reCAPTCHA)
+  implementation("com.google.android.gms:play-services-safetynet:18.0.1")
+  implementation("com.google.android.play:integrity:1.3.0")
 }
 
 android {

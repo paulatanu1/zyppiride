@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:zyppi_ride/screens/emergency_screen.dart';
 import 'package:zyppi_ride/screens/login_screen.dart';
 import 'package:zyppi_ride/screens/register_screen.dart';
+import 'package:zyppi_ride/screens/phone_auth_screen.dart';
 import '../screens/splash_screen.dart';
 import '../screens/auth_screen.dart';
 import '../screens/main_dashboard.dart';
@@ -44,6 +45,7 @@ class AppRouter {
     '/auth',
     '/login',
     '/registration',
+    '/phone-auth',
   ];
 
   // Check if route requires authentication
@@ -100,6 +102,12 @@ class AppRouter {
         path: '/registration',
         name: RoutesName.registration,
         builder: (context, state) => const RegisterScreen(),
+      ),
+
+      GoRoute(
+        path: '/phone-auth',
+        name: RoutesName.phoneAuth,
+        builder: (context, state) => const PhoneAuthScreen(),
       ),
 
       // ============================================
