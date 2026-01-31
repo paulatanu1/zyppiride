@@ -13,6 +13,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import '../core/utils/app_logger.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:intl/intl.dart';
@@ -394,7 +395,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         'has_vehicle_images': _imageGroups['vehicle']!.isNotEmpty,
       });
     } catch (e) {
-      debugPrint('Failed to save draft: $e');
+      AppLogger.error('Failed to save draft', tag: 'VehicleReg', error: e);
     }
   }
 
@@ -444,7 +445,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         }
       }
     } catch (e) {
-      debugPrint('Failed to load draft: $e');
+      AppLogger.error('Failed to load draft', tag: 'VehicleReg', error: e);
     }
   }
 
@@ -473,7 +474,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('vehicle_draft_${widget.userId}');
     } catch (e) {
-      debugPrint('Failed to clear draft: $e');
+      AppLogger.error('Failed to clear draft', tag: 'VehicleReg', error: e);
     }
   }
 
@@ -609,7 +610,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
       return compressedFile;
     } catch (e) {
-      debugPrint('Compression error: $e');
+      AppLogger.error('Compression error', tag: 'VehicleReg', error: e);
       return null;
     }
   }

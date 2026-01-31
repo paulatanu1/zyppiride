@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import '../core/utils/app_logger.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -54,10 +55,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
         final role = userDoc.data()?['role'];
 
-        // Debug prints
-        debugPrint('Current user: ${userDoc.data()}');
-        debugPrint('User role: $role');
-        debugPrint('user details: $user');
+        // Debug logs
+        AppLogger.debug('Current user: ${userDoc.data()}', tag: 'Splash');
+        AppLogger.debug('User role: $role', tag: 'Splash');
+        AppLogger.debug('user details: $user', tag: 'Splash');
 
         // Navigate based on role
         if (role == 'User') {
@@ -66,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           context.goNamed('mainDashboard');
         } else {
           // Default fallback if role is null or unexpected
-          debugPrint('Unknown role: $role, defaulting to User dashboard');
+          AppLogger.warning('Unknown role: $role, defaulting to User dashboard', tag: 'Splash');
           context.goNamed('mainDashboard');
         }
       } else {
@@ -75,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         context.goNamed('auth');
       }
     } catch (e) {
-      debugPrint('Error in splash initialization: $e');
+      AppLogger.error('Error in splash initialization', tag: 'Splash', error: e);
       if (mounted && !_hasNavigated) {
         _hasNavigated = true;
         context.goNamed('auth');
@@ -105,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 height: 200,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
-                  debugPrint('Lottie animation error: $error');
+                  AppLogger.error('Lottie animation error', tag: 'Splash', error: error);
                   return Container(
                     width: 200,
                     height: 200,

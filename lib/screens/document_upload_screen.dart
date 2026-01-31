@@ -8,6 +8,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:firebase_analytics/firebase_analytics.dart';
+import '../core/utils/app_logger.dart';
 
 class DocumentUploadScreen extends StatefulWidget {
   final String userId;
@@ -510,7 +511,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
 
       return result != null ? File(result.path) : null;
     } catch (e) {
-      debugPrint('Compression error: $e');
+      AppLogger.error('Compression error', tag: 'DocumentUpload', error: e);
       return file;
     }
   }

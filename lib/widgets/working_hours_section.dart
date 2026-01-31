@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/driver_availability.dart';
 import '../providers/availability_provider.dart';
+import '../core/utils/app_logger.dart';
 
 class WorkingHoursSection extends ConsumerStatefulWidget {
   final String vehicleId;
@@ -26,7 +27,7 @@ class _WorkingHoursSectionState extends ConsumerState<WorkingHoursSection> {
 
   @override
   void initState() {
-    debugPrint('🚗 Working Hours Section loaded for vehicleId: ${widget.vehicleId}');
+    AppLogger.debug('Working Hours Section loaded for vehicleId: ${widget.vehicleId}', tag: 'WorkingHours');
     super.initState();
     _startTimeController = TextEditingController(
       text: widget.availability.customHours?.startTime ?? '09:00',

@@ -7,7 +7,7 @@ import 'package:pinput/pinput.dart';
 import 'package:sms_autofill/sms_autofill.dart';
 import '../services/auth_service.dart';
 import '../router/routes_name.dart';
-import 'role_selection_screen.dart';
+import '../core/utils/app_logger.dart';
 
 class PhoneAuthScreen extends ConsumerStatefulWidget {
   const PhoneAuthScreen({super.key});
@@ -35,9 +35,9 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
     // Get app signature for SMS Retriever API (Android)
     try {
       _appSignature = await SmsAutoFill().getAppSignature;
-      debugPrint('App Signature: $_appSignature');
+      AppLogger.debug('App Signature: $_appSignature', tag: 'PhoneAuth');
     } catch (e) {
-      debugPrint('Error getting app signature: $e');
+      AppLogger.error('Error getting app signature', tag: 'PhoneAuth', error: e);
     }
   }
 
@@ -73,6 +73,48 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
     cancel(); // Cancel SMS listener
     SmsAutoFill().unregisterListener();
     super.dispose();
+  }
+
+  /// Validates phone number format based on country code
+  String? _validatePhoneFormat(String phone, String countryCode) {
+    // Remove any non-digit characters
+    final digits = phone.replaceAll(RegExp(r'\D'), '');
+
+    // Define validation rules for different countries
+    switch (countryCode) {
+      case '+91': // India
+        if (digits.length != 10) {
+          return 'Indian numbers must be 10 digits';
+        }
+        if (!RegExp(r'^[6-9]\d{9}$').hasMatch(digits)) {
+          return 'Invalid Indian mobile number';
+        }
+        break;
+      case '+1': // US/Canada
+        if (digits.length != 10) {
+          return 'US/Canada numbers must be 10 digits';
+        }
+        if (!RegExp(r'^[2-9]\d{9}$').hasMatch(digits)) {
+          return 'Invalid US/Canada number format';
+        }
+        break;
+      case '+44': // UK
+        if (digits.length < 10 || digits.length > 11) {
+          return 'UK numbers must be 10-11 digits';
+        }
+        break;
+      case '+61': // Australia
+        if (digits.length != 9 && digits.length != 10) {
+          return 'Australian numbers must be 9-10 digits';
+        }
+        break;
+      default:
+        // Generic validation for other countries
+        if (digits.length < 8 || digits.length > 15) {
+          return 'Phone number must be 8-15 digits';
+        }
+    }
+    return null;
   }
 
   Future<void> _sendOtp() async {
@@ -114,32 +156,29 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
       SmsAutoFill().unregisterListener();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Phone verified successfully!')),
+        const SnackBar(
+          content: Text('Phone verified successfully!'),
+          backgroundColor: Colors.green,
+        ),
       );
 
       if (result.isNewUser) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => RoleSelectionScreen(
-              userId: result.user!.uid,
-            ),
-          ),
+        // New user - navigate to role selection
+        context.goNamed(
+          RoutesName.roleSelection,
+          queryParameters: {'userId': result.user!.uid},
         );
       } else {
+        // Existing user - check if they have a role
         final authService = ref.read(authServiceProvider);
         final hasRole = await authService.checkUserHasRole(result.user!.uid);
 
         if (hasRole) {
           context.goNamed(RoutesName.userDashboard);
         } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RoleSelectionScreen(
-                userId: result.user!.uid,
-              ),
-            ),
+          context.goNamed(
+            RoutesName.roleSelection,
+            queryParameters: {'userId': result.user!.uid},
           );
         }
       }
@@ -165,12 +204,16 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
         title: Text('Phone Login', style: GoogleFonts.poppins()),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            ref.read(phoneAuthNotifierProvider.notifier).reset();
-            Navigator.of(context).pop();
-          },
+        leading: Semantics(
+          label: 'Go back',
+          button: true,
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              ref.read(phoneAuthNotifierProvider.notifier).reset();
+              context.pop();
+            },
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -245,57 +288,66 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Country Code Dropdown
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[400]!),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedCountryCode,
-                    items: const [
-                      DropdownMenuItem(value: '+91', child: Text('+91')),
-                      DropdownMenuItem(value: '+1', child: Text('+1')),
-                      DropdownMenuItem(value: '+44', child: Text('+44')),
-                      DropdownMenuItem(value: '+61', child: Text('+61')),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCountryCode = value ?? '+91';
-                      });
-                    },
+              // Country Code Dropdown with accessibility
+              Semantics(
+                label: 'Country code selector',
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[400]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedCountryCode,
+                      items: const [
+                        DropdownMenuItem(value: '+91', child: Text('+91')),
+                        DropdownMenuItem(value: '+1', child: Text('+1')),
+                        DropdownMenuItem(value: '+44', child: Text('+44')),
+                        DropdownMenuItem(value: '+61', child: Text('+61')),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCountryCode = value ?? '+91';
+                        });
+                      },
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              // Phone Number Input
+              // Phone Number Input with accessibility
               Expanded(
-                child: TextFormField(
-                  controller: _phoneController,
-                  decoration: InputDecoration(
-                    labelText: 'Phone Number',
-                    hintText: '9876543210',
-                    prefixIcon: const Icon(Icons.phone),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                child: Semantics(
+                  label: 'Phone number input field',
+                  child: TextFormField(
+                    controller: _phoneController,
+                    decoration: InputDecoration(
+                      labelText: 'Phone Number',
+                      hintText: '9876543210',
+                      prefixIcon: const Icon(Icons.phone),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    keyboardType: TextInputType.phone,
+                    autofillHints: const [AutofillHints.telephoneNumber],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter phone number';
+                      }
+                      // Validate phone format based on country code
+                      final validationError = _validatePhoneFormat(value, _selectedCountryCode);
+                      if (validationError != null) {
+                        return validationError;
+                      }
+                      return null;
+                    },
                   ),
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10),
-                  ],
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter phone number';
-                    }
-                    if (value.length < 10) {
-                      return 'Enter valid 10-digit number';
-                    }
-                    return null;
-                  },
                 ),
               ),
             ],
@@ -306,35 +358,39 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
           if (phoneAuthState.errorMessage != null)
             _buildErrorMessage(phoneAuthState.errorMessage!),
 
-          // Send OTP Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: phoneAuthState.isLoading ? null : _sendOtp,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Colors.deepPurple,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+          // Send OTP Button with accessibility
+          Semantics(
+            label: 'Send OTP button',
+            button: true,
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: phoneAuthState.isLoading ? null : _sendOtp,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
+                child: phoneAuthState.isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text(
+                        'Send OTP',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
-              child: phoneAuthState.isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : Text(
-                      'Send OTP',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
             ),
           ),
         ],
@@ -400,14 +456,18 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
                 ),
               ),
               const Spacer(),
-              TextButton(
-                onPressed: () {
-                  _otpController.clear();
-                  ref.read(phoneAuthNotifierProvider.notifier).reset();
-                },
-                child: Text(
-                  'Change',
-                  style: GoogleFonts.poppins(color: Colors.deepPurple),
+              Semantics(
+                label: 'Change phone number',
+                button: true,
+                child: TextButton(
+                  onPressed: () {
+                    _otpController.clear();
+                    ref.read(phoneAuthNotifierProvider.notifier).reset();
+                  },
+                  child: Text(
+                    'Change',
+                    style: GoogleFonts.poppins(color: Colors.deepPurple),
+                  ),
                 ),
               ),
             ],
@@ -415,31 +475,34 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
         ),
         const SizedBox(height: 32),
 
-        // OTP Input with Pinput
-        Pinput(
-          length: 6,
-          controller: _otpController,
-          focusNode: _pinputFocusNode,
-          defaultPinTheme: defaultPinTheme,
-          focusedPinTheme: focusedPinTheme,
-          submittedPinTheme: submittedPinTheme,
-          errorPinTheme: errorPinTheme,
-          pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
-          showCursor: true,
-          autofocus: true,
-          hapticFeedbackType: HapticFeedbackType.lightImpact,
-          keyboardType: TextInputType.number,
-          autofillHints: const [AutofillHints.oneTimeCode],
-          onCompleted: (pin) {
-            // Auto-verify when all digits are entered
-            _verifyOtp();
-          },
-          onChanged: (value) {
-            // Clear error when user types
-            if (phoneAuthState.errorMessage != null && value.isNotEmpty) {
-              // This will trigger rebuild without error
-            }
-          },
+        // OTP Input with Pinput and accessibility
+        Semantics(
+          label: 'Enter 6-digit OTP code',
+          child: Pinput(
+            length: 6,
+            controller: _otpController,
+            focusNode: _pinputFocusNode,
+            defaultPinTheme: defaultPinTheme,
+            focusedPinTheme: focusedPinTheme,
+            submittedPinTheme: submittedPinTheme,
+            errorPinTheme: errorPinTheme,
+            pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
+            showCursor: true,
+            autofocus: true,
+            hapticFeedbackType: HapticFeedbackType.lightImpact,
+            keyboardType: TextInputType.number,
+            autofillHints: const [AutofillHints.oneTimeCode],
+            onCompleted: (pin) {
+              // Auto-verify when all digits are entered
+              _verifyOtp();
+            },
+            onChanged: (value) {
+              // Clear error when user types
+              if (phoneAuthState.errorMessage != null && value.isNotEmpty) {
+                // This will trigger rebuild without error
+              }
+            },
+          ),
         ),
 
         const SizedBox(height: 24),
@@ -462,7 +525,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
 
         const SizedBox(height: 16),
 
-        // Resend OTP
+        // Resend OTP with accessibility
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -470,13 +533,17 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
               "Didn't receive the code? ",
               style: GoogleFonts.poppins(color: Colors.grey[600]),
             ),
-            TextButton(
-              onPressed: phoneAuthState.isLoading ? null : _resendOtp,
-              child: Text(
-                'Resend',
-                style: GoogleFonts.poppins(
-                  color: Colors.deepPurple,
-                  fontWeight: FontWeight.w600,
+            Semantics(
+              label: 'Resend OTP button',
+              button: true,
+              child: TextButton(
+                onPressed: phoneAuthState.isLoading ? null : _resendOtp,
+                child: Text(
+                  'Resend',
+                  style: GoogleFonts.poppins(
+                    color: Colors.deepPurple,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -491,35 +558,39 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
 
         const SizedBox(height: 16),
 
-        // Verify OTP Button
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: phoneAuthState.isLoading ? null : _verifyOtp,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.deepPurple,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+        // Verify OTP Button with accessibility
+        Semantics(
+          label: 'Verify OTP button',
+          button: true,
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: phoneAuthState.isLoading ? null : _verifyOtp,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
               ),
+              child: phoneAuthState.isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(
+                      'Verify OTP',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
-            child: phoneAuthState.isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(
-                    'Verify OTP',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
           ),
         ),
       ],
@@ -527,29 +598,32 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
   }
 
   Widget _buildErrorMessage(String message) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        border: Border.all(color: Colors.red.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: Colors.red.shade600),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                color: Colors.red.shade700,
+    return Semantics(
+      label: 'Error: $message',
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          border: Border.all(color: Colors.red.shade300),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red.shade600),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.red.shade700,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

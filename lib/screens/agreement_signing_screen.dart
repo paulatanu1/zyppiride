@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:signature/signature.dart';
 import 'dart:async';
+import '../core/utils/app_logger.dart';
 
 class AgreementSigningScreen extends StatefulWidget {
   final String userId;
@@ -57,7 +58,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
         });
       }
     } catch (e) {
-      debugPrint('Error fetching vehicle data: $e');
+      AppLogger.error('Error fetching vehicle data', tag: 'Agreement', error: e);
     }
   }
 
@@ -73,7 +74,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
         });
       }
     } catch (e) {
-      debugPrint('Error checking agreement: $e');
+      AppLogger.error('Error checking agreement', tag: 'Agreement', error: e);
     }
   }
 
@@ -173,7 +174,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
       if (!mounted) return;
       context.go('/dashboard?userId=${widget.userId}');
     } catch (e) {
-      debugPrint('Error submitting agreement: $e');
+      AppLogger.error('Error submitting agreement', tag: 'Agreement', error: e);
       _showSnackBar('Failed to submit agreement', Colors.red);
     } finally {
       if (mounted) {
@@ -402,7 +403,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
       try {
         signatureData = base64Decode(signatureBase64);
       } catch (e) {
-        debugPrint('Error decoding signature: $e');
+        AppLogger.error('Error decoding signature', tag: 'Agreement', error: e);
       }
     }
 

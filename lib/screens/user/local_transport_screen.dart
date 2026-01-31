@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../router/routes_name.dart';
 
 class LocalTransportScreen extends ConsumerStatefulWidget {
   const LocalTransportScreen({super.key});
@@ -133,21 +134,25 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              } else {
-                context.go('/user-dashboard');
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+          Semantics(
+            label: 'Go back',
+            button: true,
+            child: GestureDetector(
+              onTap: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.goNamed(RoutesName.userDashboard);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
               ),
-              child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
             ),
           ),
           const SizedBox(width: 16),
@@ -259,48 +264,53 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
         itemBuilder: (context, index) {
           final ride = _rideTypes[index];
           final isSelected = _selectedRideType == ride['name'];
-          return GestureDetector(
-            onTap: () => setState(() => _selectedRideType = ride['name']),
-            child: Container(
-              width: 100,
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(16),
-                border: isSelected
-                    ? Border.all(color: Colors.deepPurple, width: 2)
-                    : null,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    ride['icon'],
-                    size: 32,
-                    color: isSelected ? Colors.deepPurple : Colors.white,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    ride['name'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+          return Semantics(
+            label: '${ride['name']} ride type, ${ride['description']}${isSelected ? ', selected' : ''}',
+            button: true,
+            selected: isSelected,
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedRideType = ride['name']),
+              child: Container(
+                width: 100,
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: isSelected
+                      ? Border.all(color: Colors.deepPurple, width: 2)
+                      : null,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      ride['icon'],
+                      size: 32,
                       color: isSelected ? Colors.deepPurple : Colors.white,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${ride['multiplier']}x',
-                    style: GoogleFonts.poppins(
-                      fontSize: 10,
-                      color: isSelected ? Colors.deepPurple.shade300 : Colors.white70,
+                    const SizedBox(height: 8),
+                    Text(
+                      ride['name'],
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? Colors.deepPurple : Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      '${ride['multiplier']}x',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        color: isSelected ? Colors.deepPurple.shade300 : Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -366,22 +376,29 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
         Icon(icon, color: iconColor, size: 16),
         const SizedBox(width: 12),
         Expanded(
-          child: TextField(
-            controller: controller,
-            style: GoogleFonts.poppins(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: GoogleFonts.poppins(color: Colors.white54),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          child: Semantics(
+            label: '$hint input field',
+            child: TextField(
+              controller: controller,
+              style: GoogleFonts.poppins(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: GoogleFonts.poppins(color: Colors.white54),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
           ),
         ),
-        IconButton(
-          icon: const Icon(Icons.my_location, color: Colors.white70),
-          onPressed: () {
-            // TODO: Get current location
-          },
+        Semantics(
+          label: 'Use current location',
+          button: true,
+          child: IconButton(
+            icon: const Icon(Icons.my_location, color: Colors.white70),
+            onPressed: () {
+              // TODO: Get current location
+            },
+          ),
         ),
       ],
     );
@@ -671,23 +688,27 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
       ),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _bookRide,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.deepPurple,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+        child: Semantics(
+          label: isOneWay ? 'Find rides button' : 'Book rental button',
+          button: true,
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _bookRide,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.deepPurple,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
-            ),
-            child: Text(
-              isOneWay ? 'Find Rides' : 'Book Rental',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              child: Text(
+                isOneWay ? 'Find Rides' : 'Book Rental',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),

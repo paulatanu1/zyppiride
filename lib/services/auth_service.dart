@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../core/utils/app_logger.dart';
 
 // ============================================
 // AUTH SERVICE PROVIDER
@@ -264,7 +264,7 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       return AuthResult.failure(_getEmailAuthErrorMessage(e));
     } catch (e) {
-      debugPrint('Email login error: $e');
+      AppLogger.error('Email login error', tag: 'AuthService', error: e);
       return AuthResult.failure('An unexpected error occurred. Please try again.');
     }
   }
@@ -300,7 +300,7 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       return AuthResult.failure(_getEmailAuthErrorMessage(e));
     } catch (e) {
-      debugPrint('Email registration error: $e');
+      AppLogger.error('Email registration error', tag: 'AuthService', error: e);
       return AuthResult.failure('An unexpected error occurred. Please try again.');
     }
   }
@@ -350,10 +350,10 @@ class AuthService {
 
       return AuthResult.failure('Google sign-in failed. Please try again.');
     } on FirebaseAuthException catch (e) {
-      debugPrint('Google sign-in Firebase error: ${e.code} - ${e.message}');
+      AppLogger.error('Google sign-in Firebase error: ${e.code}', tag: 'AuthService', error: e.message);
       return AuthResult.failure(_getGoogleAuthErrorMessage(e));
     } catch (e) {
-      debugPrint('Google sign-in error: $e');
+      AppLogger.error('Google sign-in error', tag: 'AuthService', error: e);
       return AuthResult.failure('Google sign-in failed. Please try again.');
     }
   }
@@ -374,7 +374,7 @@ class AuthService {
       verificationFailed: onVerificationFailed,
       codeSent: onCodeSent,
       codeAutoRetrievalTimeout: (verificationId) {
-        debugPrint('Auto retrieval timeout for: $verificationId');
+        AppLogger.debug('Auto retrieval timeout for: $verificationId', tag: 'PhoneAuth');
       },
       forceResendingToken: resendToken,
       timeout: const Duration(seconds: 60),
@@ -404,8 +404,85 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       return AuthResult.failure(_getPhoneAuthErrorMessage(e));
     } catch (e) {
-      debugPrint('Phone sign-in error: $e');
+      AppLogger.error('Phone sign-in error', tag: 'AuthService', error: e);
       return AuthResult.failure('Phone verification failed. Please try again.');
+    }
+  }
+
+  // ============================================
+  // FORGOT PASSWORD
+  // ============================================
+  Future<({bool success, String? errorMessage})> sendPasswordResetEmail(String email) async {
+    try {
+      await auth.sendPasswordResetEmail(email: email.trim());
+      return (success: true, errorMessage: null);
+    } on FirebaseAuthException catch (e) {
+      return (success: false, errorMessage: _getPasswordResetErrorMessage(e));
+    } catch (e) {
+      AppLogger.error('Password reset error', tag: 'AuthService', error: e);
+      return (success: false, errorMessage: 'Failed to send reset email. Please try again.');
+    }
+  }
+
+  String _getPasswordResetErrorMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'No account found with this email address.';
+      case 'invalid-email':
+        return 'The email address is not valid.';
+      case 'too-many-requests':
+        return 'Too many requests. Please wait and try again.';
+      default:
+        return e.message ?? 'Failed to send reset email. Please try again.';
+    }
+  }
+
+  // ============================================
+  // EMAIL VERIFICATION
+  // ============================================
+  Future<AuthResult> sendEmailVerification() async {
+    try {
+      final user = auth.currentUser;
+      if (user == null) {
+        return AuthResult.failure('No user logged in.');
+      }
+
+      if (user.emailVerified) {
+        return AuthResult.failure('Email is already verified.');
+      }
+
+      await user.sendEmailVerification();
+      return AuthResult.success(user);
+    } on FirebaseAuthException catch (e) {
+      return AuthResult.failure(_getEmailVerificationErrorMessage(e));
+    } catch (e) {
+      AppLogger.error('Email verification error', tag: 'AuthService', error: e);
+      return AuthResult.failure('Failed to send verification email. Please try again.');
+    }
+  }
+
+  Future<bool> checkEmailVerified() async {
+    try {
+      final user = auth.currentUser;
+      if (user == null) return false;
+
+      // Reload user to get latest email verification status
+      await user.reload();
+      return auth.currentUser?.emailVerified ?? false;
+    } catch (e) {
+      AppLogger.error('Check email verified error', tag: 'AuthService', error: e);
+      return false;
+    }
+  }
+
+  bool get isEmailVerified => auth.currentUser?.emailVerified ?? false;
+
+  String _getEmailVerificationErrorMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'too-many-requests':
+        return 'Too many requests. Please wait and try again.';
+      default:
+        return e.message ?? 'Failed to send verification email.';
     }
   }
 
@@ -421,7 +498,7 @@ class AuthService {
       // Sign out from Firebase
       await auth.signOut();
     } catch (e) {
-      debugPrint('Sign out error: $e');
+      AppLogger.error('Sign out error', tag: 'AuthService', error: e);
       rethrow;
     }
   }
@@ -489,7 +566,7 @@ class AuthService {
       }
       return false;
     } catch (e) {
-      debugPrint('Error checking user role: $e');
+      AppLogger.error('Error checking user role', tag: 'AuthService', error: e);
       return false;
     }
   }
@@ -502,7 +579,7 @@ class AuthService {
         await FirebaseAnalytics.instance.logLogin(loginMethod: method);
       }
     } catch (e) {
-      debugPrint('Analytics error: $e');
+      AppLogger.warning('Analytics error', tag: 'AuthService');
     }
   }
 

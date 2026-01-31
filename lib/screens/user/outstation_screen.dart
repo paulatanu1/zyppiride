@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../router/routes_name.dart';
 
 class OutstationScreen extends ConsumerStatefulWidget {
   const OutstationScreen({super.key});
@@ -146,21 +147,25 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              } else {
-                context.go('/user-dashboard');
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+          Semantics(
+            label: 'Go back',
+            button: true,
+            child: GestureDetector(
+              onTap: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.goNamed(RoutesName.userDashboard);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
               ),
-              child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
             ),
           ),
           const SizedBox(width: 16),
@@ -268,14 +273,17 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
         Icon(icon, color: iconColor, size: 20),
         const SizedBox(width: 12),
         Expanded(
-          child: TextField(
-            controller: controller,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 15),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: GoogleFonts.poppins(color: Colors.white54),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          child: Semantics(
+            label: '$hint input field',
+            child: TextField(
+              controller: controller,
+              style: GoogleFonts.poppins(color: Colors.white, fontSize: 15),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: GoogleFonts.poppins(color: Colors.white54),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
           ),
         ),
@@ -404,49 +412,54 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
         itemBuilder: (context, index) {
           final car = _carTypes[index];
           final isSelected = _selectedCarType == car['name'];
-          return GestureDetector(
-            onTap: () => setState(() => _selectedCarType = car['name']),
-            child: Container(
-              width: 110,
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(16),
-                border: isSelected
-                    ? Border.all(color: Colors.deepPurple, width: 2)
-                    : null,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    car['icon'],
-                    size: 32,
-                    color: isSelected ? Colors.deepPurple : Colors.white,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    car['name'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+          return Semantics(
+            label: '${car['name']} car type, ${car['capacity']}, ${car['price']}${isSelected ? ', selected' : ''}',
+            button: true,
+            selected: isSelected,
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedCarType = car['name']),
+              child: Container(
+                width: 110,
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: isSelected
+                      ? Border.all(color: Colors.deepPurple, width: 2)
+                      : null,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      car['icon'],
+                      size: 32,
                       color: isSelected ? Colors.deepPurple : Colors.white,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    car['price'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.green : Colors.greenAccent,
+                    const SizedBox(height: 8),
+                    Text(
+                      car['name'],
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? Colors.deepPurple : Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      car['price'],
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? Colors.green : Colors.greenAccent,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -635,23 +648,27 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
       ),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _bookOutstation,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.deepPurple,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+        child: Semantics(
+          label: 'Search cabs button',
+          button: true,
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _bookOutstation,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.deepPurple,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
-            ),
-            child: Text(
-              'Search Cabs',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              child: Text(
+                'Search Cabs',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),

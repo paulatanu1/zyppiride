@@ -5,6 +5,9 @@ import 'package:zyppi_ride/screens/emergency_screen.dart';
 import 'package:zyppi_ride/screens/login_screen.dart';
 import 'package:zyppi_ride/screens/register_screen.dart';
 import 'package:zyppi_ride/screens/phone_auth_screen.dart';
+import 'package:zyppi_ride/screens/forgot_password_screen.dart';
+import 'package:zyppi_ride/screens/email_verification_screen.dart';
+import 'package:zyppi_ride/screens/role_selection_screen.dart';
 import '../screens/splash_screen.dart';
 import '../screens/auth_screen.dart';
 import '../screens/main_dashboard.dart';
@@ -46,6 +49,9 @@ class AppRouter {
     '/login',
     '/registration',
     '/phone-auth',
+    '/forgot-password',
+    '/email-verification',
+    '/role-selection',
   ];
 
   // Check if route requires authentication
@@ -108,6 +114,30 @@ class AppRouter {
         path: '/phone-auth',
         name: RoutesName.phoneAuth,
         builder: (context, state) => const PhoneAuthScreen(),
+      ),
+
+      GoRoute(
+        path: '/forgot-password',
+        name: RoutesName.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+
+      GoRoute(
+        path: '/email-verification',
+        name: RoutesName.emailVerification,
+        builder: (context, state) {
+          final userId = state.uri.queryParameters['userId'] ?? '';
+          return EmailVerificationScreen(userId: userId);
+        },
+      ),
+
+      GoRoute(
+        path: '/role-selection',
+        name: RoutesName.roleSelection,
+        builder: (context, state) {
+          final userId = state.uri.queryParameters['userId'] ?? '';
+          return RoleSelectionScreen(userId: userId);
+        },
       ),
 
       // ============================================

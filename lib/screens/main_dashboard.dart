@@ -26,19 +26,19 @@ class _MainDashboardState extends State<MainDashboard> {
 
   Future<void> _logout(BuildContext context) async {
     try {
-      // Show loading indicator
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Logging out...')),
-      );
       await FirebaseAuth.instance.signOut();
-      // Navigate to auth screen
+      // Navigate to auth screen after successful logout
       if (context.mounted) {
         context.go('/auth');
       }
     } catch (e) {
+      // Only show error SnackBar if logout fails and context is still valid
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Logout failed: $e')),
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

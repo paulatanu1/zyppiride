@@ -6,6 +6,9 @@ class RoutesName {
   static const String login = 'login';
   static const String registration = 'registration';
   static const String phoneAuth = 'phone-auth';
+  static const String forgotPassword = 'forgot-password';
+  static const String emailVerification = 'email-verification';
+  static const String roleSelection = 'role-selection';
 
   // Dashboard Routes
   static const String dashboard = 'dashboard';

@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/utils/app_logger.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({super.key});
@@ -146,7 +147,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           fileToUpload = File(compressedFile.path);
         }
       } catch (compressError) {
-        debugPrint('Compression failed, using original: $compressError');
+        AppLogger.warning('Compression failed, using original', tag: 'UserProfile');
       }
 
       // Verify file exists
@@ -154,29 +155,23 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         throw Exception('Image file not found');
       }
 
-      // Debug: Print auth info
+      // Get auth info
       final authUser = FirebaseAuth.instance.currentUser;
-      debugPrint('=== UPLOAD DEBUG ===');
-      debugPrint('Auth UID: ${authUser?.uid}');
-      debugPrint('Profile userId: $_userId');
-      debugPrint('Auth email: ${authUser?.email}');
-      debugPrint('Is anonymous: ${authUser?.isAnonymous}');
+      AppLogger.debug('Upload auth - UID: ${authUser?.uid}, email: ${authUser?.email}', tag: 'UserProfile');
 
       // Force token refresh to ensure valid auth
       await authUser?.getIdToken(true);
-      debugPrint('Token refreshed');
+      AppLogger.debug('Token refreshed', tag: 'UserProfile');
 
       // Ensure we use the authenticated user's ID
       final uploadUserId = authUser?.uid ?? _userId;
       final storagePath = 'users/$uploadUserId/profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      debugPrint('Storage path: $storagePath');
+      AppLogger.debug('Storage path: $storagePath', tag: 'UserProfile');
 
       // Get storage instance with explicit bucket
       final storage = FirebaseStorage.instanceFor(
         bucket: 'gs://zyppiride-2025.firebasestorage.app',
       );
-      debugPrint('Storage bucket: ${storage.bucket}');
-      debugPrint('====================');
 
       // Upload to Firebase Storage with metadata
       final ref = storage.ref().child(storagePath);
@@ -191,7 +186,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       // Monitor upload progress
       uploadTask.snapshotEvents.listen((event) {
         final progress = event.bytesTransferred / event.totalBytes;
-        debugPrint('Upload progress: ${(progress * 100).toStringAsFixed(1)}%');
+        AppLogger.debug('Upload progress: ${(progress * 100).toStringAsFixed(1)}%', tag: 'UserProfile');
       });
 
       await uploadTask;
@@ -217,7 +212,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         );
       }
     } on FirebaseException catch (e) {
-      debugPrint('Firebase error: ${e.code} - ${e.message}');
+      AppLogger.error('Firebase error: ${e.code}', tag: 'UserProfile', error: e.message);
       if (mounted) {
         String errorMessage = 'Upload failed';
         if (e.code == 'unauthorized') {
@@ -239,7 +234,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         );
       }
     } catch (e) {
-      debugPrint('Upload error: $e');
+      AppLogger.error('Upload error', tag: 'UserProfile', error: e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

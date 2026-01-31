@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
+import '../core/utils/app_logger.dart';
 
 class AvailabilityScreen extends StatefulWidget {
   final String userId;
@@ -63,7 +64,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
         isLoading = false;
       });
     } catch (e) {
-      debugPrint('❌ ERROR: $e');
+      AppLogger.error('Error loading vehicles', tag: 'Availability', error: e);
       setState(() {
         errorMessage = 'Error loading vehicles: $e';
         isLoading = false;
@@ -94,7 +95,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
         isLoadingBookings = false;
       });
     } catch (e) {
-      debugPrint('❌ ERROR loading bookings: $e');
+      AppLogger.error('Error loading bookings', tag: 'Availability', error: e);
       setState(() => isLoadingBookings = false);
     }
   }
