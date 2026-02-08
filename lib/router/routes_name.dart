@@ -18,6 +18,7 @@ class RoutesName {
   // Profile & Settings
   static const String profile = 'profile';
   static const String notifications = 'notifications';
+  static const String savedAddresses = 'saved-addresses';
 
   // Vehicle Services
   static const String reserveVehicle = 'reserve-vehicle';

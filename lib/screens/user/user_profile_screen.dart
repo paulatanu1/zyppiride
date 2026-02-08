@@ -616,6 +616,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     child: Column(
                       children: [
                         _buildActionTile(
+                          icon: Icons.location_on_outlined,
+                          label: 'Saved Addresses',
+                          onTap: () => context.push('/saved-addresses'),
+                        ),
+                        const Divider(height: 1),
+                        _buildActionTile(
                           icon: Icons.history,
                           label: 'Ride History',
                           onTap: () => context.push('/ride-history?userId=$_userId'),

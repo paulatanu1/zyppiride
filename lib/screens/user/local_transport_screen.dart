@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../router/routes_name.dart';
+import '../../providers/saved_address_provider.dart';
+import '../../widgets/saved_addresses/saved_addresses.dart';
 
 class LocalTransportScreen extends ConsumerStatefulWidget {
   const LocalTransportScreen({super.key});
@@ -204,6 +206,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
           const SizedBox(height: 12),
           _buildRideTypeSelector(),
           const SizedBox(height: 24),
+          _buildSavedAddressesSection(),
           _buildSectionTitle('Pickup & Drop Location'),
           const SizedBox(height: 12),
           _buildLocationInputs(),
@@ -229,6 +232,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
           const SizedBox(height: 12),
           _buildRideTypeSelector(),
           const SizedBox(height: 24),
+          _buildSavedAddressesSection(pickupOnly: true),
           _buildSectionTitle('Pickup Location'),
           const SizedBox(height: 12),
           _buildPickupOnly(),
@@ -251,6 +255,167 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildSavedAddressesSection({bool pickupOnly = false}) {
+    final addressState = ref.watch(savedAddressProvider);
+
+    if (addressState.addresses.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.bookmark, color: Colors.white70, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              'Saved Places',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.white70,
+              ),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () => showAddAddressModal(context),
+              child: Text(
+                '+ Add',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              // Home address
+              if (addressState.homeAddress != null)
+                _buildSavedAddressChip(
+                  addressState.homeAddress!,
+                  Icons.home,
+                  Colors.blue,
+                  pickupOnly,
+                ),
+
+              // Work address
+              if (addressState.workAddress != null)
+                _buildSavedAddressChip(
+                  addressState.workAddress!,
+                  Icons.work,
+                  Colors.orange,
+                  pickupOnly,
+                ),
+
+              // Other addresses (max 3)
+              ...addressState.otherAddresses.take(3).map(
+                    (address) => _buildSavedAddressChip(
+                      address,
+                      Icons.location_on,
+                      Colors.purple,
+                      pickupOnly,
+                    ),
+                  ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildSavedAddressChip(
+    dynamic address,
+    IconData icon,
+    Color color,
+    bool pickupOnly,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            // Set the address to pickup field
+            _pickupController.text = address.address;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '${address.displayLabel} selected as pickup',
+                  style: GoogleFonts.poppins(),
+                ),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          },
+          onLongPress: pickupOnly
+              ? null
+              : () {
+                  // Set as drop location on long press
+                  _dropController.text = address.address;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '${address.displayLabel} selected as drop',
+                        style: GoogleFonts.poppins(),
+                      ),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                },
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 16, color: color),
+                const SizedBox(width: 6),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      address.displayLabel,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (address.area != null)
+                      Text(
+                        address.area,
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: Colors.white70,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

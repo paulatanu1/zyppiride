@@ -38,6 +38,7 @@ import 'package:zyppi_ride/screens/user/ride_history_screen.dart' as user_ride_h
 import 'package:zyppi_ride/screens/user/offers_rewards_screen.dart';
 import 'package:zyppi_ride/screens/user/local_transport_screen.dart';
 import 'package:zyppi_ride/screens/user/outstation_screen.dart';
+import 'package:zyppi_ride/screens/user/saved_addresses_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'routes_name.dart';
 
@@ -252,6 +253,13 @@ class AppRouter {
               FirebaseAuth.instance.currentUser?.uid ?? '';
           return DriverProfileScreen(userId: userId);
         },
+      ),
+
+      // Saved Addresses Screen
+      GoRoute(
+        path: '/saved-addresses',
+        name: RoutesName.savedAddresses,
+        builder: (context, state) => const SavedAddressesScreen(),
       ),
 
       // ============================================
