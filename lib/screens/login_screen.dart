@@ -43,7 +43,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Login successful!')),
           );
-          context.goNamed(RoutesName.userDashboard);
+          // Navigate based on user role
+          final role = await authService.getUserRole(result.user!.uid);
+          if (role == 'Driver' || role == 'Vehicle Owner') {
+            context.goNamed(RoutesName.mainDashboard);
+          } else if (role == 'User') {
+            context.goNamed(RoutesName.userDashboard);
+          } else {
+            // No role set - go to role selection
+            context.goNamed(
+              RoutesName.roleSelection,
+              queryParameters: {'userId': result.user!.uid},
+            );
+          }
         } else {
           setState(() {
             _errorMessage = result.errorMessage;
@@ -79,12 +91,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             queryParameters: {'userId': result.user!.uid},
           );
         } else {
-          // Existing user - check if they have a role
-          final hasRole = await authService.checkUserHasRole(result.user!.uid);
-
-          if (hasRole) {
+          // Existing user - check their role and navigate accordingly
+          final role = await authService.getUserRole(result.user!.uid);
+          if (role == 'Driver' || role == 'Vehicle Owner') {
+            context.goNamed(RoutesName.mainDashboard);
+          } else if (role == 'User') {
             context.goNamed(RoutesName.userDashboard);
           } else {
+            // No role set - go to role selection
             context.goNamed(
               RoutesName.roleSelection,
               queryParameters: {'userId': result.user!.uid},

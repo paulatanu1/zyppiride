@@ -64,6 +64,10 @@ class VehicleFiltersNotifier extends StateNotifier<VehicleSearchFilters> {
     state = state.copyWith(transmission: transmission);
   }
 
+  void updateOnlyOnline(bool onlyOnline) {
+    state = state.copyWith(onlyOnline: onlyOnline);
+  }
+
   void clearAllFilters() {
     state = VehicleSearchFilters();
   }

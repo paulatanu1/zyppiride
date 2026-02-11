@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zyppi_ride/screens/dashboard_screen.dart';
-import 'profile_screen.dart'; // New profile screen
+import 'driver/driver_profile_screen.dart'; // Driver/Owner profile screen
 import 'emergency_screen.dart'; // New emergency screen
 
 
@@ -20,7 +20,10 @@ class _MainDashboardState extends State<MainDashboard> {
 
   final List<Widget> _screens = [
     DashboardScreen(userId: FirebaseAuth.instance.currentUser!.uid), // Overview tab
-    ProfileScreen(userId: FirebaseAuth.instance.currentUser!.uid), // Profile tab
+    DriverProfileScreen(
+      userId: FirebaseAuth.instance.currentUser!.uid,
+      embedded: true, // Embedded mode - hides back button and logout (mainDashboard handles these)
+    ),
     EmergencyScreen(), // Emergency tab
   ];
 

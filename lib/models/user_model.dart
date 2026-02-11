@@ -12,6 +12,16 @@ class UserModel {
   final DateTime? createdAt;
   final String? role;
 
+  // Verification fields
+  final String? verificationStatus; // pending, submitted, approved, rejected
+  final DateTime? verificationSubmittedAt;
+  final DateTime? verificationApprovedAt;
+  final String? verificationNotes;
+
+  // FCM fields
+  final String? fcmToken;
+  final DateTime? fcmTokenUpdatedAt;
+
   UserModel({
     required this.userId,
     required this.userName,
@@ -23,6 +33,12 @@ class UserModel {
     this.rating = 5.0,
     this.createdAt,
     this.role,
+    this.verificationStatus,
+    this.verificationSubmittedAt,
+    this.verificationApprovedAt,
+    this.verificationNotes,
+    this.fcmToken,
+    this.fcmTokenUpdatedAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +54,14 @@ class UserModel {
       rating: _parseDoubleSafe(json['rating'], 5.0),
       createdAt: _parseDateTime(json['createdAt']),
       role: json['role'],
+      // Verification fields
+      verificationStatus: json['verificationStatus'],
+      verificationSubmittedAt: _parseDateTime(json['verificationSubmittedAt']),
+      verificationApprovedAt: _parseDateTime(json['verificationApprovedAt']),
+      verificationNotes: json['verificationNotes'],
+      // FCM fields
+      fcmToken: json['fcmToken'],
+      fcmTokenUpdatedAt: _parseDateTime(json['fcmTokenUpdatedAt']),
     );
   }
 
@@ -77,6 +101,20 @@ class UserModel {
       'rating': rating,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'role': role,
+      // Verification fields
+      'verificationStatus': verificationStatus,
+      'verificationSubmittedAt': verificationSubmittedAt != null
+          ? Timestamp.fromDate(verificationSubmittedAt!)
+          : null,
+      'verificationApprovedAt': verificationApprovedAt != null
+          ? Timestamp.fromDate(verificationApprovedAt!)
+          : null,
+      'verificationNotes': verificationNotes,
+      // FCM fields
+      'fcmToken': fcmToken,
+      'fcmTokenUpdatedAt': fcmTokenUpdatedAt != null
+          ? Timestamp.fromDate(fcmTokenUpdatedAt!)
+          : null,
     };
   }
 
@@ -91,6 +129,12 @@ class UserModel {
     double? rating,
     DateTime? createdAt,
     String? role,
+    String? verificationStatus,
+    DateTime? verificationSubmittedAt,
+    DateTime? verificationApprovedAt,
+    String? verificationNotes,
+    String? fcmToken,
+    DateTime? fcmTokenUpdatedAt,
   }) {
     return UserModel(
       userId: userId ?? this.userId,
@@ -103,12 +147,33 @@ class UserModel {
       rating: rating ?? this.rating,
       createdAt: createdAt ?? this.createdAt,
       role: role ?? this.role,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
+      verificationSubmittedAt:
+          verificationSubmittedAt ?? this.verificationSubmittedAt,
+      verificationApprovedAt:
+          verificationApprovedAt ?? this.verificationApprovedAt,
+      verificationNotes: verificationNotes ?? this.verificationNotes,
+      fcmToken: fcmToken ?? this.fcmToken,
+      fcmTokenUpdatedAt: fcmTokenUpdatedAt ?? this.fcmTokenUpdatedAt,
     );
   }
 
   /// Check if user is a driver/owner
-  bool get isDriver => role == 'driver' || role == 'owner';
+  bool get isDriver => role == 'driver' || role == 'owner' || role == 'Driver' || role == 'Vehicle Owner';
 
   /// Check if user is a regular user
-  bool get isUser => role == 'user' || role == null;
+  bool get isUser => role == 'user' || role == 'User' || role == null;
+
+  /// Check if user is verified
+  bool get isVerified => verificationStatus == 'approved';
+
+  /// Check if user can go online (verified and is driver)
+  bool get canGoOnline => isDriver && isVerified;
+
+  /// Check if verification is pending
+  bool get isVerificationPending =>
+      verificationStatus == 'pending' || verificationStatus == 'submitted';
+
+  /// Check if verification was rejected
+  bool get isVerificationRejected => verificationStatus == 'rejected';
 }

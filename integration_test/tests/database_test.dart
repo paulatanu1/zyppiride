@@ -1,10 +1,7 @@
 // integration_test/tests/database_test.dart
 // E2E Tests for Firebase Database Interactions
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
-import '../test_config.dart';
 import '../test_report_generator.dart';
 import '../mocks/mock_firebase_service.dart';
 

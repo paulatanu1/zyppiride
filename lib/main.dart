@@ -1,19 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'router/router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'services/notification_service.dart';
+import 'providers/notification_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  // Initialize Firebase App Check with Play Integrity (Android) / Device Check (iOS)
+  await FirebaseAppCheck.instance.activate(
+    // Use debug provider for debug builds, Play Integrity for release
+    androidProvider: kDebugMode
+        ? AndroidProvider.debug
+        : AndroidProvider.playIntegrity,
+    appleProvider: kDebugMode
+        ? AppleProvider.debug
+        : AppleProvider.appAttest,
+  );
+
+  // Setup FCM background message handler
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
   // Limit Firestore cache to 100MB to prevent excessive storage usage
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
     cacheSizeBytes: 100 * 1024 * 1024, // 100 MB
   );
-  // runApp(const MyApp());
+
   runApp(
     const ProviderScope(
       child: MyApp(),
@@ -21,8 +40,22 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
+
+  @override
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize notifications after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationProvider.notifier).initialize();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,12 +71,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      // home: const SplashScreen(),
       routerConfig: AppRouter.router,
-      // routes: {
-      //   '/auth': (context) => const AuthScreen(),
-      //   '/dashboard': (context) => const MainDashboard(),
-      // },
     );
   }
 }

@@ -1,13 +1,10 @@
 // integration_test/app_test.dart
 // Main E2E Test Runner for Zyppi Ride Android App
 
-import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 // Test configuration and utilities
-import 'test_config.dart';
 import 'test_report_generator.dart';
 import 'mocks/mock_firebase_service.dart';
 

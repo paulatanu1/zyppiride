@@ -39,6 +39,7 @@ import 'package:zyppi_ride/screens/user/offers_rewards_screen.dart';
 import 'package:zyppi_ride/screens/user/local_transport_screen.dart';
 import 'package:zyppi_ride/screens/user/outstation_screen.dart';
 import 'package:zyppi_ride/screens/user/saved_addresses_screen.dart';
+import 'package:zyppi_ride/screens/driver/driver_booking_dashboard_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'routes_name.dart';
 
@@ -432,6 +433,16 @@ class AppRouter {
           final userId = _getUserId(state);
           return PromotionsScreen(userId: userId);
         },
+      ),
+
+      // ============================================
+      // DRIVER BOOKING DASHBOARD ROUTE
+      // ============================================
+
+      GoRoute(
+        path: '/driver-booking-dashboard',
+        name: RoutesName.driverBookingDashboard,
+        builder: (context, state) => const DriverBookingDashboardScreen(),
       ),
     ],
 

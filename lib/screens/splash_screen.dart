@@ -63,12 +63,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         // Navigate based on role
         if (role == 'User') {
           context.goNamed('user-dashboard');
-        } else if (role == 'Driver') {
+        } else if (role == 'Driver' || role == 'Vehicle Owner') {
           context.goNamed('mainDashboard');
         } else {
-          // Default fallback if role is null or unexpected
-          AppLogger.warning('Unknown role: $role, defaulting to User dashboard', tag: 'Splash');
-          context.goNamed('mainDashboard');
+          // Default fallback if role is null or unexpected - go to role selection
+          AppLogger.warning('Unknown or missing role: $role, redirecting to role selection', tag: 'Splash');
+          context.goNamed('role-selection', queryParameters: {'userId': user.uid});
         }
       } else {
         // User is not logged in

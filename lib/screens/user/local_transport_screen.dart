@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../router/routes_name.dart';
+import '../../models/booking_model.dart';
 import '../../providers/saved_address_provider.dart';
+import '../../providers/booking_provider.dart';
 import '../../widgets/saved_addresses/saved_addresses.dart';
+import '../../widgets/booking/booking_widgets.dart';
 
 class LocalTransportScreen extends ConsumerStatefulWidget {
   const LocalTransportScreen({super.key});
@@ -23,6 +27,13 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
   final _pickupController = TextEditingController();
   final _dropController = TextEditingController();
   int _passengerCount = 1;
+  bool _isSearching = false;
+
+  // Location coordinates
+  double? _pickupLat;
+  double? _pickupLng;
+  double? _dropLat;
+  double? _dropLng;
 
   final List<Map<String, dynamic>> _rideTypes = [
     {
@@ -859,7 +870,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _bookRide,
+              onPressed: _isSearching ? null : _bookRide,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.deepPurple,
@@ -867,14 +878,37 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
+                disabledBackgroundColor: Colors.white.withValues(alpha: 0.7),
               ),
-              child: Text(
-                isOneWay ? 'Find Rides' : 'Book Rental',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: _isSearching
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.deepPurple,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Searching...',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      isOneWay ? 'Find Rides' : 'Book Rental',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
           ),
         ),
@@ -882,7 +916,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
     );
   }
 
-  void _bookRide() {
+  Future<void> _bookRide() async {
     if (_pickupController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -911,16 +945,233 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
       return;
     }
 
-    // TODO: Implement booking logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Searching for nearby ${_selectedRideType.toLowerCase()}s...',
-          style: GoogleFonts.poppins(),
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    // Check if user has an active booking
+    final canBook = await ref.read(canCreateBookingProvider.future);
+    if (!canBook) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'You already have an active booking',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'View',
+              textColor: Colors.white,
+              onPressed: () {
+                context.goNamed(RoutesName.trackActiveBooking);
+              },
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() => _isSearching = true);
+
+    try {
+      // Geocode addresses to get coordinates
+      await _geocodeAddresses();
+
+      if (_pickupLat == null || _pickupLng == null) {
+        throw Exception('Unable to find pickup location');
+      }
+
+      if (_tabController.index == 0 && (_dropLat == null || _dropLng == null)) {
+        throw Exception('Unable to find drop location');
+      }
+
+      // Calculate estimated distance and duration
+      final distance = _calculateDistance();
+      final duration = _calculateDuration(distance);
+
+      if (mounted) {
+        setState(() => _isSearching = false);
+
+        // Show vehicle selection sheet
+        showVehicleSelectionSheet(
+          context,
+          pickupAddress: _pickupController.text,
+          dropAddress: _dropController.text,
+          pickupLat: _pickupLat,
+          pickupLng: _pickupLng,
+          dropLat: _dropLat,
+          dropLng: _dropLng,
+          vehicleType: _getVehicleType(),
+          estimatedDistance: distance,
+          estimatedDuration: duration,
+          onVehicleSelected: (vehicle, fare) {
+            // Show booking confirmation
+            showBookingConfirmationSheet(
+              context,
+              vehicle: vehicle,
+              fare: fare,
+              pickupLocation: BookingLocation(
+                address: _pickupController.text,
+                latitude: _pickupLat!,
+                longitude: _pickupLng!,
+              ),
+              dropLocation: BookingLocation(
+                address: _dropController.text,
+                latitude: _dropLat ?? 0,
+                longitude: _dropLng ?? 0,
+              ),
+              bookingType: _tabController.index == 0
+                  ? BookingType.local
+                  : BookingType.rental,
+              estimatedDistance: distance,
+              estimatedDuration: duration,
+              onBookingCreated: (booking) {
+                // Navigate to tracking screen
+                context.goNamed(RoutesName.trackActiveBooking);
+              },
+            );
+          },
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSearching = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _geocodeAddresses() async {
+    // Geocode pickup address
+    try {
+      final pickupLocations = await locationFromAddress(_pickupController.text);
+      if (pickupLocations.isNotEmpty) {
+        _pickupLat = pickupLocations.first.latitude;
+        _pickupLng = pickupLocations.first.longitude;
+      }
+    } catch (e) {
+      // Silently fail, will be caught in main method
+    }
+
+    // Geocode drop address (only for one-way)
+    if (_tabController.index == 0 && _dropController.text.isNotEmpty) {
+      try {
+        final dropLocations = await locationFromAddress(_dropController.text);
+        if (dropLocations.isNotEmpty) {
+          _dropLat = dropLocations.first.latitude;
+          _dropLng = dropLocations.first.longitude;
+        }
+      } catch (e) {
+        // Silently fail, will be caught in main method
+      }
+    }
+  }
+
+  double _calculateDistance() {
+    if (_pickupLat == null || _pickupLng == null) return 5.0;
+    if (_dropLat == null || _dropLng == null) return 5.0;
+
+    // Haversine formula for distance calculation
+    const double earthRadius = 6371; // km
+    final double dLat = _toRadians(_dropLat! - _pickupLat!);
+    final double dLng = _toRadians(_dropLng! - _pickupLng!);
+
+    final double a =
+        _sin(dLat / 2) * _sin(dLat / 2) +
+        _cos(_toRadians(_pickupLat!)) * _cos(_toRadians(_dropLat!)) *
+        _sin(dLng / 2) * _sin(dLng / 2);
+
+    final double c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
+    final double distance = earthRadius * c;
+
+    // Add 20% for road distance (approximate)
+    return (distance * 1.2).clamp(1.0, 500.0);
+  }
+
+  int _calculateDuration(double distanceKm) {
+    // Assume average speed of 25 km/h in city
+    final minutes = (distanceKm / 25 * 60).round();
+    return minutes.clamp(5, 600);
+  }
+
+  double _toRadians(double degrees) => degrees * 3.14159265359 / 180;
+  double _sin(double x) => _sinApprox(x);
+  double _cos(double x) => _sinApprox(x + 1.5707963267948966);
+  double _sqrt(double x) => x > 0 ? _sqrtApprox(x) : 0;
+  double _atan2(double y, double x) => _atan2Approx(y, x);
+
+  double _sinApprox(double x) {
+    // Normalize to [-pi, pi]
+    while (x > 3.14159265359) {
+      x -= 6.28318530718;
+    }
+    while (x < -3.14159265359) {
+      x += 6.28318530718;
+    }
+    // Taylor series approximation
+    double result = x;
+    double term = x;
+    for (int i = 1; i < 10; i++) {
+      term *= -x * x / ((2 * i) * (2 * i + 1));
+      result += term;
+    }
+    return result;
+  }
+
+  double _sqrtApprox(double x) {
+    if (x <= 0) return 0;
+    double guess = x / 2;
+    for (int i = 0; i < 10; i++) {
+      guess = (guess + x / guess) / 2;
+    }
+    return guess;
+  }
+
+  double _atan2Approx(double y, double x) {
+    if (x > 0) return _atanApprox(y / x);
+    if (x < 0 && y >= 0) return _atanApprox(y / x) + 3.14159265359;
+    if (x < 0 && y < 0) return _atanApprox(y / x) - 3.14159265359;
+    if (x == 0 && y > 0) return 1.5707963267948966;
+    if (x == 0 && y < 0) return -1.5707963267948966;
+    return 0;
+  }
+
+  double _atanApprox(double x) {
+    // Simple approximation for atan
+    if (x.abs() > 1) {
+      return (x > 0 ? 1 : -1) * 1.5707963267948966 - _atanApprox(1 / x);
+    }
+    double result = x;
+    double term = x;
+    for (int i = 1; i < 15; i++) {
+      term *= -x * x;
+      result += term / (2 * i + 1);
+    }
+    return result;
+  }
+
+  String? _getVehicleType() {
+    switch (_selectedRideType.toLowerCase()) {
+      case 'regular':
+        return 'car';
+      case 'premium':
+        return 'sedan';
+      case 'suv':
+        return 'suv';
+      case 'auto':
+        return 'auto';
+      case 'bike':
+        return 'bike';
+      default:
+        return null;
+    }
   }
 }

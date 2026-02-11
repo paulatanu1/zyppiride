@@ -147,6 +147,11 @@ class VehicleSearchService {
       vehicles = vehicles.where((v) => v.pricing.perKmRate <= filters.maxPrice!).toList();
     }
 
+    // Filter by online status - only show online drivers for riders
+    if (filters.onlyOnline) {
+      vehicles = vehicles.where((v) => v.isOnline).toList();
+    }
+
     AppLogger.success('Found ${vehicles.length} vehicles after filtering');
     return Result.success(vehicles);
   }
@@ -199,6 +204,10 @@ class VehicleSearchService {
          data['documentStatus'] == 'active' ||
          data['documentStatus'] == 'pending'); // Show pending too for now
 
+    // Check online status
+    bool isOnline = data['isOnline'] ?? false;
+    DateTime? lastOnlineAt = (data['lastOnlineAt'] as Timestamp?)?.toDate();
+
     return AvailableVehicle(
       id: doc.id,
       userId: userId,
@@ -211,6 +220,8 @@ class VehicleSearchService {
       pricing: PricingInfo.fromMap(pricingData),
       vehicleImages: vehicleImages,
       isAvailable: isAvailable,
+      isOnline: isOnline,
+      lastOnlineAt: lastOnlineAt,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -349,6 +360,7 @@ class VehicleSearchService {
     if (filters.fuelType != null) parts.add('fuelType=${filters.fuelType}');
     if (filters.transmission != null) parts.add('transmission=${filters.transmission}');
     if (filters.onlyAvailable) parts.add('onlyAvailable=true');
+    if (filters.onlyOnline) parts.add('onlyOnline=true');
     return parts.isEmpty ? 'none' : parts.join(', ');
   }
 

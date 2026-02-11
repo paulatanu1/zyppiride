@@ -12,6 +12,8 @@ class AvailableVehicle {
   final PricingInfo pricing;
   final List<String> vehicleImages;
   final bool isAvailable;
+  final bool isOnline; // Driver online/offline status
+  final DateTime? lastOnlineAt; // Last time driver was online
   final DateTime createdAt;
 
   AvailableVehicle({
@@ -26,6 +28,8 @@ class AvailableVehicle {
     required this.pricing,
     required this.vehicleImages,
     required this.isAvailable,
+    this.isOnline = false,
+    this.lastOnlineAt,
     required this.createdAt,
   });
 
@@ -49,6 +53,8 @@ class AvailableVehicle {
       pricing: PricingInfo.fromMap(pricingData),
       vehicleImages: List<String>.from(documents['vehicleImages'] ?? []),
       isAvailable: data['isAvailable'] ?? true,
+      isOnline: data['isOnline'] ?? false,
+      lastOnlineAt: (data['lastOnlineAt'] as Timestamp?)?.toDate(),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -65,6 +71,8 @@ class AvailableVehicle {
     PricingInfo? pricing,
     List<String>? vehicleImages,
     bool? isAvailable,
+    bool? isOnline,
+    DateTime? lastOnlineAt,
     DateTime? createdAt,
   }) {
     return AvailableVehicle(
@@ -79,6 +87,8 @@ class AvailableVehicle {
       pricing: pricing ?? this.pricing,
       vehicleImages: vehicleImages ?? this.vehicleImages,
       isAvailable: isAvailable ?? this.isAvailable,
+      isOnline: isOnline ?? this.isOnline,
+      lastOnlineAt: lastOnlineAt ?? this.lastOnlineAt,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -276,6 +286,7 @@ class VehicleSearchFilters {
   final String? fuelType;
   final String? transmission;
   final bool onlyAvailable;
+  final bool onlyOnline; // Filter for online drivers only
 
   VehicleSearchFilters({
     this.vehicleType,
@@ -287,6 +298,7 @@ class VehicleSearchFilters {
     this.fuelType,
     this.transmission,
     this.onlyAvailable = false, // Default to false to show all vehicles
+    this.onlyOnline = true, // Default to true to show only online drivers for riders
   });
 
   VehicleSearchFilters copyWith({
@@ -299,6 +311,7 @@ class VehicleSearchFilters {
     String? fuelType,
     String? transmission,
     bool? onlyAvailable,
+    bool? onlyOnline,
   }) {
     return VehicleSearchFilters(
       vehicleType: vehicleType ?? this.vehicleType,
@@ -310,6 +323,7 @@ class VehicleSearchFilters {
       fuelType: fuelType ?? this.fuelType,
       transmission: transmission ?? this.transmission,
       onlyAvailable: onlyAvailable ?? this.onlyAvailable,
+      onlyOnline: onlyOnline ?? this.onlyOnline,
     );
   }
 

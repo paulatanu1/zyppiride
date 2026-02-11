@@ -571,6 +571,25 @@ class AuthService {
     }
   }
 
+  /// Get the user's role from Firestore
+  /// Returns the role string ('User', 'Driver', 'Vehicle Owner') or null if not set
+  Future<String?> getUserRole(String uid) async {
+    try {
+      final doc = await firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        final data = doc.data();
+        final role = data?['role'];
+        if (role != null && role.toString().isNotEmpty) {
+          return role.toString();
+        }
+      }
+      return null;
+    } catch (e) {
+      AppLogger.error('Error getting user role', tag: 'AuthService', error: e);
+      return null;
+    }
+  }
+
   Future<void> _logAnalyticsEvent(String event, {required String method}) async {
     try {
       if (event == 'sign_up') {

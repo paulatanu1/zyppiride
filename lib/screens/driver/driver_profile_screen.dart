@@ -11,11 +11,18 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../widgets/driver/driver_online_toggle.dart';
+import '../../widgets/driver/verification_status_badge.dart';
 
 class DriverProfileScreen extends ConsumerStatefulWidget {
   final String userId;
+  final bool embedded; // When true, hides back button (for use in tabs)
 
-  const DriverProfileScreen({super.key, required this.userId});
+  const DriverProfileScreen({
+    super.key,
+    required this.userId,
+    this.embedded = false,
+  });
 
   @override
   ConsumerState<DriverProfileScreen> createState() => _DriverProfileScreenState();
@@ -299,37 +306,42 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
             pinned: true,
             backgroundColor: Colors.deepPurple,
             elevation: 0,
-            leading: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha:0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.arrow_back_ios_new, size: 18, color: Colors.white),
-              ),
-              onPressed: () {
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/mainDashboard');
-                }
-              },
-            ),
-            actions: [
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha:0.2),
-                    borderRadius: BorderRadius.circular(12),
+            automaticallyImplyLeading: false,
+            leading: widget.embedded
+                ? null
+                : IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new, size: 18, color: Colors.white),
+                    ),
+                    onPressed: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/dashboard?userId=$_effectiveUserId');
+                      }
+                    },
                   ),
-                  child: const Icon(Icons.settings_outlined, size: 20, color: Colors.white),
-                ),
-                onPressed: () {},
-              ),
-              const SizedBox(width: 8),
-            ],
+            actions: widget.embedded
+                ? null
+                : [
+                    IconButton(
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.settings_outlined, size: 20, color: Colors.white),
+                      ),
+                      onPressed: () {},
+                    ),
+                    const SizedBox(width: 8),
+                  ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
@@ -434,28 +446,12 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.shade600,
-                          borderRadius: BorderRadius.circular(20),
+                      // Dynamic verification status badge
+                      if (_effectiveUserId != null)
+                        VerificationStatusBadge(
+                          userId: _effectiveUserId!,
+                          showDetails: true,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.verified, size: 16, color: Colors.white),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Verified Driver',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -469,6 +465,11 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
+                  // Online/Offline Status Toggle
+                  if (_effectiveUserId != null)
+                    DriverOnlineStatusCard(userId: _effectiveUserId!),
+                  const SizedBox(height: 16),
+
                   // Quick Stats Row
                   Container(
                     padding: const EdgeInsets.all(20),
@@ -647,27 +648,30 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
                   ),
                   const SizedBox(height: 16),
 
-                  // Logout Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _showLogoutDialog,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  // Logout Button (only show when not embedded)
+                  if (!widget.embedded) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _showLogoutDialog,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.logout),
+                        label: Text(
+                          'Logout',
+                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                         ),
                       ),
-                      icon: const Icon(Icons.logout),
-                      label: Text(
-                        'Logout',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                      ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 32),
+                  ] else
+                    const SizedBox(height: 16),
                 ],
               ),
             ),

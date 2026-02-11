@@ -56,4 +56,7 @@ class RoutesName {
   static const String availability = 'availability';
   static const String driverAvailability = 'driver-availability';
   static const String manageSchedule = 'manage-schedule';
+
+  // Driver Dashboard
+  static const String driverBookingDashboard = 'driver-booking-dashboard';
 }
