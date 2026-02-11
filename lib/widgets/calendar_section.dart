@@ -48,8 +48,8 @@ class _CalendarSectionState extends ConsumerState<CalendarSection> {
           _buildSelectionModeToggle(),
           const Divider(height: 1),
 
-          // ✅ FIXED: Wrap calendar in Container with fixed height for better scrolling
-          Container(
+          // ✅ FIXED: Wrap calendar in SizedBox with fixed height for better scrolling
+          SizedBox(
             height: 380, // Fixed height to enable proper scrolling
             child: SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
@@ -139,7 +139,13 @@ class _CalendarSectionState extends ConsumerState<CalendarSection> {
                         onChanged: (value) {
                           setState(() => _showBengaliCalendar = value);
                         },
-                        activeColor: Colors.blue[700],
+                        activeTrackColor: Colors.blue[700],
+                        thumbColor: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Colors.white;
+                          }
+                          return null;
+                        }),
                       ),
                     ),
                     const SizedBox(width: 2),
@@ -210,7 +216,13 @@ class _CalendarSectionState extends ConsumerState<CalendarSection> {
                   _selectedDates.clear();
                 });
               },
-              activeColor: Colors.blue[700],
+              activeTrackColor: Colors.blue[700],
+              thumbColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return Colors.white;
+                }
+                return null;
+              }),
             ),
           ),
         ],

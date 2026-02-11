@@ -56,3 +56,5 @@ app.*.map.json
 reports/
 coverage/
 test_reports/
+# E2E Test Results
+test_results/

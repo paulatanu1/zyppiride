@@ -1,33 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/dashboard_tiles.dart';
+import '../widgets/driver/driver_online_toggle.dart';
 import 'dart:developer';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   final String userId;
 
   const DashboardScreen({super.key, required this.userId});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Map<String, dynamic>? _userData;
   bool _isDataLoaded = false;
   DateTime? _lastPressedAt;
-
-  Future<void> _callAmbulance() async {
-    final Uri uri = Uri(scheme: 'tel', path: '101');
-    if (!await launchUrl(uri)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not launch dialer')),
-      );
-    }
-  }
 
   @override
   void initState() {
@@ -106,7 +98,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) async {
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
         if (didPop) return;
 
         // Use our custom logic
@@ -175,6 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildDashboardContent(Map<String, dynamic> data) {
     final fullName = data['fullName'] ?? 'User';
     final role = data['role'] ?? 'Passenger';
+    final isDriver = role == 'Vehicle Owner' || role == 'Driver';
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -191,6 +184,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(height: 20),
+          // Show online/offline toggle for drivers
+          if (isDriver) ...[
+            DriverOnlineStatusCard(userId: widget.userId),
+            const SizedBox(height: 20),
+          ],
           DashboardTiles(userId: widget.userId, role: role),
         ],
       ),

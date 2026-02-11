@@ -7,12 +7,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import '../core/utils/app_logger.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:intl/intl.dart';
@@ -83,23 +82,15 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
   Map<String, dynamic>? catalogData;
 
-  // Draft save timer
-  DateTime _lastSaveTime = DateTime.now();
-  static const _autoSaveInterval = Duration(seconds: 30);
-
   // Google Places API Key
   static const String googleApiKey = "AIzaSyABUF7GCEM6h1n3isugLj2qOEySpTtxd1I";
-
-  int _googlePlacesKey = 0;
 
   @override
   void initState() {
     super.initState();
     _checkConnectivity();
     _loadCatalogData();
-    _loadDraft();
     _logScreenView();
-    _setupAutoSave();
     Future.delayed(const Duration(milliseconds: 500), () {
       _getCurrentLocation();
     });
@@ -174,7 +165,6 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
             break;
         }
       });
-      _saveDraft();
     }
   }
 
@@ -277,8 +267,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
           useManualAddress = false;
         });
         _showSnackBar('Location detected successfully!', isSuccess: true);
-        _saveDraft();
-        await _logEvent('location_detected', parameters: {
+          await _logEvent('location_detected', parameters: {
           'city': city,
           'state': state,
         });
@@ -329,8 +318,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
             _manualAddressController.clear();
           });
           _showSnackBar('Location selected successfully!', isSuccess: true);
-          _saveDraft();
-          await _logEvent('manual_location_selected', parameters: {
+              await _logEvent('manual_location_selected', parameters: {
             'city': city,
             'state': state,
           });
@@ -344,163 +332,38 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     }
   }
 
-  // OFFLINE SUPPORT - DRAFT SAVING
-  void _setupAutoSave() {
-    yearController.addListener(_scheduleAutoSave);
-    registrationController.addListener(_scheduleAutoSave);
-    seatingController.addListener(_scheduleAutoSave);
-    _passengerCapacityController.addListener(_scheduleAutoSave);
-    _passengerCapacityController.addListener(_scheduleAutoSave);
-    _licenseNumberController.addListener(_scheduleAutoSave);
-  }
-
-  void _scheduleAutoSave() {
-    final now = DateTime.now();
-    if (now.difference(_lastSaveTime) >= _autoSaveInterval) {
-      _saveDraft();
-      _lastSaveTime = now;
-    }
-  }
-
-  Future<void> _saveDraft() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final draftData = {
-        'selectedVehicleCategory': selectedVehicleCategory,
-        'selectedBrand': selectedBrand,
-        'selectedModel': selectedModel,
-        'selectedColor': selectedColor,
-        'year': yearController.text,
-        'registrationNumber': registrationController.text,
-        'seatingCapacity': seatingController.text,
-        'passengerCapacity': _passengerCapacityController.text,
-        'latitude': latitude,
-        'longitude': longitude,
-        'locationAddress': locationAddress,
-        'city': city,
-        'state': state,
-        'isACVariant': _isACVariant,
-        'licenseNumber': _licenseNumberController.text,
-        'pucValidUpto': _pucValidUptoDate?.toIso8601String(),
-        'insuranceValidUpto': _insuranceValidUptoDate?.toIso8601String(),
-        'licenseValidUpto': _licenseValidUptoDate?.toIso8601String(),
-        'imageCount': {
-          'vehicle': _imageGroups['vehicle']!.length,
-        },
-        'timestamp': DateTime.now().toIso8601String(),
-      };
-
-      await prefs.setString('vehicle_draft_${widget.userId}', json.encode(draftData));
-      await _logEvent('draft_saved', parameters: {
-        'has_location': latitude != null,
-        'has_vehicle_images': _imageGroups['vehicle']!.isNotEmpty,
-      });
-    } catch (e) {
-      debugPrint('Failed to save draft: $e');
-    }
-  }
-
-  Future<void> _loadDraft() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final draftString = prefs.getString('vehicle_draft_${widget.userId}');
-
-      if (draftString != null) {
-        final draftData = json.decode(draftString) as Map<String, dynamic>;
-        final timestamp = DateTime.parse(draftData['timestamp'] as String);
-
-        if (DateTime.now().difference(timestamp).inDays <= 7) {
-          final shouldRestore = await _showRestoreDraftDialog();
-          if (shouldRestore && mounted) {
-            setState(() {
-              selectedVehicleCategory = draftData['selectedVehicleCategory'] as String?;
-              selectedBrand = draftData['selectedBrand'] as String?;
-              selectedModel = draftData['selectedModel'] as String?;
-              selectedColor = draftData['selectedColor'] as String?;
-              yearController.text = draftData['year'] as String? ?? '';
-              registrationController.text = draftData['registrationNumber'] as String? ?? '';
-              seatingController.text = draftData['seatingCapacity'] as String? ?? '';
-              _passengerCapacityController.text = draftData['passengerCapacity'] as String? ?? '';
-              _passengerCapacityController.text = draftData['passengerCapacity'] as String? ?? '';
-              latitude = draftData['latitude'] as double?;
-              longitude = draftData['longitude'] as double?;
-              locationAddress = draftData['locationAddress'] as String?;
-              city = draftData['city'] as String?;
-              state = draftData['state'] as String?;
-              _isACVariant = draftData['isACVariant'] as bool? ?? false;
-              _licenseNumberController.text = draftData['licenseNumber'] as String? ?? '';
-
-              if (draftData['pucValidUpto'] != null) {
-                _pucValidUptoDate = DateTime.parse(draftData['pucValidUpto']);
-              }
-              if (draftData['insuranceValidUpto'] != null) {
-                _insuranceValidUptoDate = DateTime.parse(draftData['insuranceValidUpto']);
-              }
-              if (draftData['licenseValidUpto'] != null) {
-                _licenseValidUptoDate = DateTime.parse(draftData['licenseValidUpto']);
-              }
-            });
-            _showSnackBar('Draft restored successfully');
-            await _logEvent('draft_restored');
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Failed to load draft: $e');
-    }
-  }
-
-  Future<bool> _showRestoreDraftDialog() async {
-    return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Restore Draft?'),
-        content: const Text('You have a saved draft. Would you like to restore it?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Discard'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Restore'),
-          ),
-        ],
-      ),
-    ) ?? false;
-  }
-
-  Future<void> _clearDraft() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('vehicle_draft_${widget.userId}');
-    } catch (e) {
-      debugPrint('Failed to clear draft: $e');
-    }
-  }
 
   // CATALOG DATA
   Future<void> _loadCatalogData() async {
   final startTime = DateTime.now();
   try {
-    final data = await _vehicleService.fetchVehicleCatalog(useCache: isOffline);
+    final result = await _vehicleService.fetchVehicleCatalog(useCache: isOffline);
 
-    if (data != null && mounted) {
-      setState(() {
-        catalogData = data;
-        colors = List<String>.from(catalogData?['colors'] ?? []);
-        isLoading = false;
-      });
+    result.when(
+      success: (data) {
+        if (mounted) {
+          setState(() {
+            catalogData = data;
+            colors = List<String>.from(catalogData?['colors'] ?? []);
+            isLoading = false;
+          });
+        }
+      },
+      failure: (exception) {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+          _showSnackBar(exception.message, isError: true);
+        }
+      },
+    );
 
+    if (result.isSuccess) {
       final loadTime = DateTime.now().difference(startTime).inMilliseconds;
       await _logEvent('catalog_loaded', parameters: {
         'load_time_ms': loadTime,
       });
-    } else {
-      setState(() {
-        isLoading = false;
-      });
-      _showSnackBar('Vehicle catalog not found', isError: true);
     }
   } catch (e) {
     setState(() {
@@ -602,7 +465,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
       return compressedFile;
     } catch (e) {
-      debugPrint('Compression error: $e');
+      AppLogger.error('Compression error', tag: 'VehicleReg', error: e);
       return null;
     }
   }
@@ -657,7 +520,6 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
       });
 
       _showSnackBar('${compressedImages.length} images added successfully');
-      _saveDraft();
 
       final processingTime = DateTime.now().difference(startTime).inMilliseconds;
       await _logEvent('images_compressed', parameters: {
@@ -672,7 +534,6 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     setState(() {
       _imageGroups[type]!.removeAt(index);
     });
-    _saveDraft();
     _logEvent('image_removed', parameters: {'type': type});
   }
 
@@ -720,10 +581,19 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     }
 
     // Check duplicate registration
-final isDuplicate = await _vehicleService.isRegistrationNumberExists(
+final duplicateResult = await _vehicleService.isRegistrationNumberExists(
     registrationController.text);
+final isDuplicate = duplicateResult.when(
+  success: (exists) => exists,
+  failure: (e) {
+    _showSnackBar('Could not verify registration: ${e.message}', isError: true);
+    return true; // Treat as duplicate on error to prevent submission
+  },
+);
 if (isDuplicate) {
-  _showSnackBar('This registration number is already registered!', isError: true);
+  if (duplicateResult.isSuccess) {
+    _showSnackBar('This registration number is already registered!', isError: true);
+  }
   return;
 }
 
@@ -736,7 +606,7 @@ final startTime = DateTime.now();
 
 try {
   // Upload images using service
-  final vehicleImageUrls = await _vehicleService.uploadVehicleImages(
+  final uploadResult = await _vehicleService.uploadVehicleImages(
     images: _imageGroups['vehicle']!,
     userId: widget.userId,
     onProgress: (progress, type) {
@@ -748,6 +618,17 @@ try {
       }
     },
   );
+
+  if (uploadResult.isFailure) {
+    _showSnackBar(uploadResult.exceptionOrNull?.message ?? 'Failed to upload images', isError: true);
+    setState(() {
+      isSubmitting = false;
+      _showUploadProgress = false;
+    });
+    return;
+  }
+
+  final vehicleImageUrls = uploadResult.dataOrNull!;
 
   // Prepare location data
   final locationData = {
@@ -777,19 +658,37 @@ try {
   };
 
   // Register vehicle using service
-  final vehicleId = await _vehicleService.registerVehicle(
+  final registerResult = await _vehicleService.registerVehicle(
     userId: widget.userId,
     locationData: locationData,
     vehicleDetails: vehicleDetails,
     vehicleImageUrls: vehicleImageUrls,
   );
 
+  if (registerResult.isFailure) {
+    _showSnackBar(registerResult.exceptionOrNull?.message ?? 'Failed to register vehicle', isError: true);
+    setState(() {
+      isSubmitting = false;
+      _showUploadProgress = false;
+    });
+    return;
+  }
+
+  final vehicleId = registerResult.dataOrNull!;
+
   // Update user license using service
-  await _vehicleService.updateUserLicenseDetails(
+  final licenseResult = await _vehicleService.updateUserLicenseDetails(
     userId: widget.userId,
     licenseNumber: _licenseNumberController.text.trim(),
     licenseValidUpto: _licenseValidUptoDate!,
   );
+
+  if (licenseResult.isFailure) {
+    // Log but don't fail - vehicle is already registered
+    await _logEvent('license_update_failed', parameters: {
+      'error': licenseResult.exceptionOrNull?.message,
+    });
+  }
 
   final submissionTime = DateTime.now().difference(startTime).inMilliseconds;
   await _logEvent('vehicle_registered', parameters: {
@@ -801,8 +700,6 @@ try {
     'submission_time_ms': submissionTime,
     'vehicle_id': vehicleId,
   });
-
-  await _clearDraft();
 
   if (mounted) {
     _showSnackBar(
@@ -849,8 +746,7 @@ try {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            _saveDraft();
-            context.go('/dashboard?userId=${widget.userId}');
+                  context.go('/dashboard?userId=${widget.userId}');
           },
         ),
         title: const Text(
@@ -1384,188 +1280,217 @@ try {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-           Row(
-  children: [
-    Expanded(
-      child: _buildTextField(
-        controller: yearController,
-        label: 'Year',
-        hint: '2024',
-        keyboardType: TextInputType.number,
-        validator: (value) {
-          if (value == null || value.isEmpty) return 'Required';
-          final year = int.tryParse(value);
-          if (year == null || year < 1900 || year > DateTime.now().year + 1) {
-            return 'Invalid year';
-          }
-          return null;
-        },
-      ),
-    ),
-    const SizedBox(width: 12),
-    Expanded(
-      child: _buildTextField(
-        controller: seatingController,
-        label: 'Seating',
-        hint: '5',
-        keyboardType: TextInputType.number,
-        validator: (value) {
-          if (value == null || value.isEmpty) return 'Required';
-          if (int.tryParse(value) == null) return 'Invalid';
-          return null;
-        },
-      ),
-    ),
-    const SizedBox(width: 12),
-    Expanded(
-      child: _buildTextField(
-        controller: _passengerCapacityController,
-        label: 'Passengers',
-        hint: '4',
-        keyboardType: TextInputType.number,
-        validator: (value) {
-          if (value == null || value.isEmpty) return 'Required';
-          final passengers = int.tryParse(value);
-          if (passengers == null || passengers < 1) return 'Invalid';
-          final seating = int.tryParse(seatingController.text);
-          if (seating != null && passengers > seating) {
-            return 'Cannot exceed seating';
-          }
-          return null;
-        },
-      ),
-    ),
-  ],
-),
-const SizedBox(height: 16),
-  _buildDropdown(
-    label: 'Vehicle Category',
-    value: selectedVehicleCategory,
-    items: const ['private', 'commercial'],
-    onChanged: (value) {
-      setState(() {
-        selectedVehicleCategory = value;
-        updateBrandsAndModels();
-        _saveDraft();
-      });
-    },
-    displayText: (item) =>
-    item[0].toUpperCase() + item.substring(1),
-  ),
-  const SizedBox(height: 16),
-  _buildDropdown(
-    label: 'Brand',
-    value: selectedBrand,
-    items: brands,
-    onChanged: brands.isEmpty
-        ? null
-        : (value) {
-      setState(() {
-        selectedBrand = value;
-        updateModels();
-        _saveDraft();
-      });
-    },
-  ),
-  const SizedBox(height: 16),
-  _buildDropdown(
-    label: 'Model',
-    value: selectedModel,
-    items: models,
-    onChanged: models.isEmpty
-        ? null
-        : (value) {
-      setState(() {
-        selectedModel = value;
-        _saveDraft();
-      });
-    },
-  ),
-  const SizedBox(height: 16),
-  _buildDropdown(
-    label: 'Color',
-    value: selectedColor,
-    items: colors,
-    onChanged: (value) {
-      setState(() {
-        selectedColor = value;
-        _saveDraft();
-      });
-    },
-  ),
-  const SizedBox(height: 16),
-  Row(
-    children: [
-      Expanded(
-        child: _buildTextField(
-          controller: yearController,
-          label: 'Year',
-          hint: '2024',
-          keyboardType: TextInputType.number,
-          validator: (value) {
-            if (value == null || value.isEmpty) return 'Required';
-            final year = int.tryParse(value);
-            if (year == null ||
-                year < 1900 ||
-                year > DateTime.now().year + 1) {
-              return 'Invalid year';
-            }
-            return null;
-          },
+            // Card Header
+            Row(
+              children: [
+                Icon(Icons.directions_car, color: Colors.blue[700], size: 24),
+                const SizedBox(width: 8),
+                const Text(
+                  'Vehicle Details',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Enter your vehicle information',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Section: Vehicle Type
+            _buildSectionHeader('Vehicle Type'),
+            const SizedBox(height: 12),
+            _buildDropdown(
+              label: 'Vehicle Category',
+              value: selectedVehicleCategory,
+              items: const ['private', 'commercial'],
+              onChanged: (value) {
+                setState(() {
+                  selectedVehicleCategory = value;
+                  updateBrandsAndModels();
+                });
+              },
+              displayText: (item) => item[0].toUpperCase() + item.substring(1),
+            ),
+            const SizedBox(height: 24),
+
+            // Section: Make & Model
+            _buildSectionHeader('Make & Model'),
+            const SizedBox(height: 12),
+            _buildDropdown(
+              label: 'Brand',
+              value: selectedBrand,
+              items: brands,
+              onChanged: brands.isEmpty
+                  ? null
+                  : (value) {
+                      setState(() {
+                        selectedBrand = value;
+                        updateModels();
+                      });
+                    },
+            ),
+            const SizedBox(height: 16),
+            _buildDropdown(
+              label: 'Model',
+              value: selectedModel,
+              items: models,
+              onChanged: models.isEmpty
+                  ? null
+                  : (value) {
+                      setState(() {
+                        selectedModel = value;
+                      });
+                    },
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDropdown(
+                    label: 'Color',
+                    value: selectedColor,
+                    items: colors,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedColor = value;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildTextField(
+                    controller: yearController,
+                    label: 'Year',
+                    hint: '2024',
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Required';
+                      final year = int.tryParse(value);
+                      if (year == null || year < 1900 || year > DateTime.now().year + 1) {
+                        return 'Invalid year';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Section: Capacity
+            _buildSectionHeader('Seating Capacity'),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    controller: seatingController,
+                    label: 'Total Seats',
+                    hint: '5',
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Required';
+                      if (int.tryParse(value) == null) return 'Invalid';
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildTextField(
+                    controller: _passengerCapacityController,
+                    label: 'Max Passengers',
+                    hint: '4',
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Required';
+                      final passengers = int.tryParse(value);
+                      if (passengers == null || passengers < 1) return 'Invalid';
+                      final seating = int.tryParse(seatingController.text);
+                      if (seating != null && passengers > seating) {
+                        return 'Cannot exceed seats';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Section: Registration
+            _buildSectionHeader('Registration'),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: registrationController,
+              decoration: InputDecoration(
+                labelText: 'Registration Number',
+                hintText: 'WB-01-AB-1234',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                prefixIcon: const Icon(Icons.credit_card),
+              ),
+              textCapitalization: TextCapitalization.characters,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9-]')),
+                TextInputFormatter.withFunction((oldValue, newValue) {
+                  final formatted = _formatRegistrationNumber(newValue.text);
+                  return TextEditingValue(
+                    text: formatted,
+                    selection: TextSelection.collapsed(offset: formatted.length),
+                  );
+                }),
+                LengthLimitingTextInputFormatter(13),
+              ],
+              validator: _validateRegistrationNumber,
+            ),
+          ],
         ),
       ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: _buildTextField(
-          controller: seatingController,
-          label: 'Seating',
-          hint: '5',
-          keyboardType: TextInputType.number,
-          validator: (value) {
-            if (value == null || value.isEmpty) return 'Required';
-            if (int.tryParse(value) == null) return 'Invalid';
-            return null;
-          },
-        ),
-      ),
-    ],
-  ),
-  const SizedBox(height: 16),
-  TextFormField(
-    controller: registrationController,
-    decoration: InputDecoration(
-      labelText: 'Registration Number',
-      hintText: 'WB-01-AB-1234',
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 12,
-      ),
-      prefixIcon: const Icon(Icons.credit_card),
-    ),
-    textCapitalization: TextCapitalization.characters,
-    inputFormatters: [
-      FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9-]')),
-      TextInputFormatter.withFunction((oldValue, newValue) {
-        final formatted = _formatRegistrationNumber(newValue.text);
-        return TextEditingValue(
-          text: formatted,
-          selection: TextSelection.collapsed(offset: formatted.length),
-        );
-      }),
-      LengthLimitingTextInputFormatter(13),
-    ],
-    validator: _validateRegistrationNumber,
-  ),
-      ],
-    ),
-  ),
-  );
+    );
   }
 
-  // NEW FIELDS CARD
+  Widget _buildSectionHeader(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 16,
+          decoration: BoxDecoration(
+            color: Colors.blue[700],
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildNewFieldsCard() {
     return Card(
       elevation: 2,
@@ -1575,6 +1500,7 @@ const SizedBox(height: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Card Header
             Row(
               children: [
                 Icon(Icons.description, color: Colors.blue[700], size: 24),
@@ -1589,9 +1515,20 @@ const SizedBox(height: 16),
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Enter vehicle documents and driver license information',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
             const SizedBox(height: 20),
 
-            // AC Variant Checkbox
+            // Section: Vehicle Features
+            _buildSectionHeader('Vehicle Features'),
+            const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey.shade300),
@@ -1604,15 +1541,16 @@ const SizedBox(height: 16),
                 onChanged: (value) {
                   setState(() {
                     _isACVariant = value ?? false;
-                    _saveDraft();
                   });
                 },
                 controlAffinity: ListTileControlAffinity.leading,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-            // PUC Valid Upto
+            // Section: Vehicle Documents
+            _buildSectionHeader('Vehicle Documents'),
+            const SizedBox(height: 12),
             InkWell(
               onTap: () => _selectDate(context, 'puc'),
               child: InputDecorator(
@@ -1638,8 +1576,6 @@ const SizedBox(height: 16),
               ),
             ),
             const SizedBox(height: 16),
-
-            // Insurance Valid Upto
             InkWell(
               onTap: () => _selectDate(context, 'insurance'),
               child: InputDecorator(
@@ -1664,9 +1600,11 @@ const SizedBox(height: 16),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-            // License Number
+            // Section: Driver License
+            _buildSectionHeader('Driver License'),
+            const SizedBox(height: 12),
             _buildTextField(
               controller: _licenseNumberController,
               label: 'Driving License Number *',
@@ -1683,8 +1621,6 @@ const SizedBox(height: 16),
               },
             ),
             const SizedBox(height: 16),
-
-            // License Valid Upto
             InkWell(
               onTap: () => _selectDate(context, 'license'),
               child: InputDecorator(

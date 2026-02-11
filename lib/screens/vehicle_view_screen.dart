@@ -75,19 +75,6 @@ class _VehicleViewScreenState extends State<VehicleViewScreen> {
     );
   }
 
-  String _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return 'green';
-      case 'pending':
-        return 'orange';
-      case 'rejected':
-        return 'red';
-      default:
-        return 'grey';
-    }
-  }
-
   Color _getStatusBgColor(String status) {
     switch (status.toLowerCase()) {
       case 'approved':

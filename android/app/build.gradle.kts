@@ -10,28 +10,32 @@ dependencies {
   // Import the Firebase BoM (latest stable as of Oct 2025)
   implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
 
-  // TODO: Add the dependencies for Firebase products you want to use
-  // When using the BoM, don't specify versions in Firebase dependencies
+  // Firebase products
   implementation("com.google.firebase:firebase-analytics")
+  implementation("com.google.firebase:firebase-auth")
+  implementation("com.google.firebase:firebase-appcheck-playintegrity")
 
-  // Add the dependencies for any other desired Firebase products
-  // https://firebase.google.com/docs/android/setup#available-libraries
-  // Example: implementation("com.google.firebase:firebase-firestore")
-  //          implementation("com.google.firebase:firebase-storage")
-  //          implementation("com.google.firebase:firebase-auth")
+  // Required for Phone Auth silent verification (avoids reCAPTCHA)
+  implementation("com.google.android.gms:play-services-safetynet:18.0.1")
+  implementation("com.google.android.play:integrity:1.3.0")
+
+  // Core library desugaring for flutter_local_notifications
+  coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 android {
     namespace = "com.example.zyppi_ride"
-    
+
     // Updated to 36 to resolve plugin warnings (Android 16 / API 36, stable since March 2025)
     compileSdk = 36
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         // Java 17 for AGP 8.12+ and Flutter 3.35+ compatibility
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Enable core library desugaring for flutter_local_notifications
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {

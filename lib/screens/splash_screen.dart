@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import '../core/utils/app_logger.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,23 +42,41 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       // Check current user
       final user = FirebaseAuth.instance.currentUser;
 
-      // Debug prints
-      debugPrint('Current user: ${user?.email ?? 'No user'}');
-      debugPrint('Navigating to: ${user != null ? '/dashboard' : '/auth'}');
-
       _hasNavigated = true;
 
       if (user != null) {
-        // User is logged in
-          context.goNamed('mainDashboard');
+        // Get user role from Firestore
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
 
+        if (!mounted) return; // Check mounted after async operation
+
+        final role = userDoc.data()?['role'];
+
+        // Debug logs
+        AppLogger.debug('Current user: ${userDoc.data()}', tag: 'Splash');
+        AppLogger.debug('User role: $role', tag: 'Splash');
+        AppLogger.debug('user details: $user', tag: 'Splash');
+
+        // Navigate based on role
+        if (role == 'User') {
+          context.goNamed('user-dashboard');
+        } else if (role == 'Driver' || role == 'Vehicle Owner') {
+          context.goNamed('mainDashboard');
+        } else {
+          // Default fallback if role is null or unexpected - go to role selection
+          AppLogger.warning('Unknown or missing role: $role, redirecting to role selection', tag: 'Splash');
+          context.goNamed('role-selection', queryParameters: {'userId': user.uid});
+        }
       } else {
         // User is not logged in
-          context.goNamed('auth');
-
+        if (!mounted) return;
+        context.goNamed('auth');
       }
     } catch (e) {
-      debugPrint('Error in splash initialization: $e');
+      AppLogger.error('Error in splash initialization', tag: 'Splash', error: e);
       if (mounted && !_hasNavigated) {
         _hasNavigated = true;
         context.goNamed('auth');
@@ -86,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 height: 200,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
-                  debugPrint('Lottie animation error: $error');
+                  AppLogger.error('Lottie animation error', tag: 'Splash', error: error);
                   return Container(
                     width: 200,
                     height: 200,

@@ -10,6 +10,7 @@ import 'package:path/path.dart' as path;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
+import '../core/utils/app_logger.dart';
 
 class VehicleEditScreen extends StatefulWidget {
   final String userId;
@@ -220,7 +221,7 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
 
       return compressedFile;
     } catch (e) {
-      debugPrint('Compression error: $e');
+      AppLogger.error('Compression error', tag: 'VehicleEdit', error: e);
       return null;
     }
   }
@@ -343,7 +344,7 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
             final ref = FirebaseStorage.instance.refFromURL(imageUrl);
             await ref.delete();
           } catch (e) {
-            debugPrint('Failed to delete image: $e');
+            AppLogger.error('Failed to delete image', tag: 'VehicleEdit', error: e);
           }
         }
       }

@@ -15,7 +15,17 @@ class DashboardTiles extends StatelessWidget {
   });
 
   static final List<Map<String, dynamic>> _tiles = [
-    // ... your tiles remain the same
+    // Driver Booking Dashboard - Primary action for drivers
+    {
+      'title': 'Booking Dashboard',
+      'icon': Icons.dashboard_customize,
+      'gradient': const LinearGradient(
+        colors: [Colors.deepPurple, Colors.purpleAccent],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      'route': 'driver-booking-dashboard',
+    },
     {
       'title': 'Vehicle Registration',
       'icon': Icons.directions_car,
@@ -201,14 +211,6 @@ class _ModernTileCardState extends State<ModernTileCard>
     Future.delayed(Duration(milliseconds: widget.index * 80), () {
       if (mounted) _controller.forward();
     });
-  }
-
-  // NEW: Reset and replay animation
-  void _resetAnimation() {
-    if (mounted) {
-      _controller.reset();
-      _startAnimation();
-    }
   }
 
   @override

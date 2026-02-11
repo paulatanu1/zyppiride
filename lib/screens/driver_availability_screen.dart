@@ -58,7 +58,7 @@ class _DriverAvailabilityScreenState extends ConsumerState<DriverAvailabilityScr
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12,
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha:0.8),
               ),
             ),
           ],
@@ -99,7 +99,7 @@ class _DriverAvailabilityScreenState extends ConsumerState<DriverAvailabilityScr
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha:0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -128,7 +128,7 @@ class _DriverAvailabilityScreenState extends ConsumerState<DriverAvailabilityScr
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 11,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha:0.9),
                         ),
                       ),
                     ],
@@ -183,7 +183,7 @@ class _DriverAvailabilityScreenState extends ConsumerState<DriverAvailabilityScr
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha:0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

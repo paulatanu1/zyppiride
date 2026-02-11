@@ -12,7 +12,13 @@ class DeliveryRequestsScreen extends StatelessWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard?userId=$userId'),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              context.go('/user-dashboard');
+            }
+          },
         ),
         title: const Text(
           'Delivery Requests',

@@ -54,13 +54,35 @@ class DriverAvailability {
         (key, value) => MapEntry(key, LimitedAvailability.fromJson(value)),
       ) ?? {},
       workingMode: json['workingMode'] ?? 'always_available',
-      customHours: json['customHours'] != null 
-          ? CustomHours.fromJson(json['customHours']) 
+      customHours: json['customHours'] != null
+          ? CustomHours.fromJson(json['customHours'])
           : null,
       tripPreferences: TripPreferences.fromJson(json['tripPreferences'] ?? {}),
       vehiclePreferences: VehiclePreferences.fromJson(json['vehiclePreferences'] ?? {}),
       lastUpdated: (json['lastUpdated'] as Timestamp).toDate(),
       isCurrentlyAvailable: json['isCurrentlyAvailable'] ?? true,
+    );
+  }
+
+  DriverAvailability copyWith({
+    List<String>? blockedDates,
+    Map<String, LimitedAvailability>? limitedDates,
+    String? workingMode,
+    CustomHours? customHours,
+    TripPreferences? tripPreferences,
+    VehiclePreferences? vehiclePreferences,
+    DateTime? lastUpdated,
+    bool? isCurrentlyAvailable,
+  }) {
+    return DriverAvailability(
+      blockedDates: blockedDates ?? this.blockedDates,
+      limitedDates: limitedDates ?? this.limitedDates,
+      workingMode: workingMode ?? this.workingMode,
+      customHours: customHours ?? this.customHours,
+      tripPreferences: tripPreferences ?? this.tripPreferences,
+      vehiclePreferences: vehiclePreferences ?? this.vehiclePreferences,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
+      isCurrentlyAvailable: isCurrentlyAvailable ?? this.isCurrentlyAvailable,
     );
   }
 }
@@ -89,6 +111,18 @@ class LimitedAvailability {
       reason: json['reason'],
     );
   }
+
+  LimitedAvailability copyWith({
+    String? startTime,
+    String? endTime,
+    String? reason,
+  }) {
+    return LimitedAvailability(
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      reason: reason ?? this.reason,
+    );
+  }
 }
 
 class CustomHours {
@@ -106,6 +140,16 @@ class CustomHours {
     return CustomHours(
       startTime: json['startTime'],
       endTime: json['endTime'],
+    );
+  }
+
+  CustomHours copyWith({
+    String? startTime,
+    String? endTime,
+  }) {
+    return CustomHours(
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
     );
   }
 }
@@ -157,6 +201,24 @@ class TripPreferences {
       weekendBookings: WeekendConfig.fromJson(json['weekendBookings'] ?? {}),
     );
   }
+
+  TripPreferences copyWith({
+    BookingType? weddingBookings,
+    LongDistanceConfig? longDistance,
+    OutstationConfig? outstationTrips,
+    OneWayConfig? oneWayTrip,
+    RoundTripConfig? roundTrip,
+    WeekendConfig? weekendBookings,
+  }) {
+    return TripPreferences(
+      weddingBookings: weddingBookings ?? this.weddingBookings,
+      longDistance: longDistance ?? this.longDistance,
+      outstationTrips: outstationTrips ?? this.outstationTrips,
+      oneWayTrip: oneWayTrip ?? this.oneWayTrip,
+      roundTrip: roundTrip ?? this.roundTrip,
+      weekendBookings: weekendBookings ?? this.weekendBookings,
+    );
+  }
 }
 
 class BookingType {
@@ -181,6 +243,18 @@ class BookingType {
       enabled: json['enabled'] ?? false,
       minAdvanceBooking: json['minAdvanceBooking'] ?? 3,
       fareMultiplier: (json['fareMultiplier'] ?? 1.5).toDouble(),
+    );
+  }
+
+  BookingType copyWith({
+    bool? enabled,
+    int? minAdvanceBooking,
+    double? fareMultiplier,
+  }) {
+    return BookingType(
+      enabled: enabled ?? this.enabled,
+      minAdvanceBooking: minAdvanceBooking ?? this.minAdvanceBooking,
+      fareMultiplier: fareMultiplier ?? this.fareMultiplier,
     );
   }
 }
@@ -209,6 +283,18 @@ class LongDistanceConfig {
       overnightStay: json['overnightStay'] ?? true,
     );
   }
+
+  LongDistanceConfig copyWith({
+    bool? enabled,
+    int? maxDistance,
+    bool? overnightStay,
+  }) {
+    return LongDistanceConfig(
+      enabled: enabled ?? this.enabled,
+      maxDistance: maxDistance ?? this.maxDistance,
+      overnightStay: overnightStay ?? this.overnightStay,
+    );
+  }
 }
 
 class OutstationConfig {
@@ -226,6 +312,16 @@ class OutstationConfig {
     return OutstationConfig(
       enabled: json['enabled'] ?? true,
       minDistance: json['minDistance'] ?? 200,
+    );
+  }
+
+  OutstationConfig copyWith({
+    bool? enabled,
+    int? minDistance,
+  }) {
+    return OutstationConfig(
+      enabled: enabled ?? this.enabled,
+      minDistance: minDistance ?? this.minDistance,
     );
   }
 }
@@ -247,6 +343,16 @@ class OneWayConfig {
       returnCharges: json['returnCharges'] ?? 'half_fare',
     );
   }
+
+  OneWayConfig copyWith({
+    bool? enabled,
+    String? returnCharges,
+  }) {
+    return OneWayConfig(
+      enabled: enabled ?? this.enabled,
+      returnCharges: returnCharges ?? this.returnCharges,
+    );
+  }
 }
 
 class RoundTripConfig {
@@ -266,6 +372,16 @@ class RoundTripConfig {
       waitingCharges: json['waitingCharges'] ?? 50,
     );
   }
+
+  RoundTripConfig copyWith({
+    bool? enabled,
+    int? waitingCharges,
+  }) {
+    return RoundTripConfig(
+      enabled: enabled ?? this.enabled,
+      waitingCharges: waitingCharges ?? this.waitingCharges,
+    );
+  }
 }
 
 class WeekendConfig {
@@ -283,6 +399,16 @@ class WeekendConfig {
     return WeekendConfig(
       enabled: json['enabled'] ?? true,
       fareMultiplier: (json['fareMultiplier'] ?? 1.2).toDouble(),
+    );
+  }
+
+  WeekendConfig copyWith({
+    bool? enabled,
+    double? fareMultiplier,
+  }) {
+    return WeekendConfig(
+      enabled: enabled ?? this.enabled,
+      fareMultiplier: fareMultiplier ?? this.fareMultiplier,
     );
   }
 }
@@ -322,6 +448,20 @@ class VehiclePreferences {
       hasAC: json['hasAC'] ?? true,
       hasMusic: json['hasMusic'] ?? true,
       petFriendly: json['petFriendly'] ?? false,
+    );
+  }
+
+  VehiclePreferences copyWith({
+    int? maxPassengers,
+    bool? hasAC,
+    bool? hasMusic,
+    bool? petFriendly,
+  }) {
+    return VehiclePreferences(
+      maxPassengers: maxPassengers ?? this.maxPassengers,
+      hasAC: hasAC ?? this.hasAC,
+      hasMusic: hasMusic ?? this.hasMusic,
+      petFriendly: petFriendly ?? this.petFriendly,
     );
   }
 }

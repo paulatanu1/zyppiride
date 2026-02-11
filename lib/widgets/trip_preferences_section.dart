@@ -21,7 +21,7 @@ class TripPreferencesSection extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -146,7 +146,7 @@ class TripPreferencesSection extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isEnabled ? color.withOpacity(0.1) : Colors.grey[50],
+        color: isEnabled ? color.withValues(alpha:0.1) : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isEnabled ? color : Colors.grey[300]!,
@@ -190,7 +190,7 @@ class TripPreferencesSection extends ConsumerWidget {
                     margin: const EdgeInsets.only(top: 4),
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.2),
+                      color: color.withValues(alpha:0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -214,7 +214,13 @@ class TripPreferencesSection extends ConsumerWidget {
                 // ✅ FIXED: Create proper Map with all required fields
                 _updateTripPreference(ref, type, value);
               },
-              activeColor: color,
+              activeTrackColor: color,
+              thumbColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return Colors.white;
+                }
+                return null;
+              }),
             ),
           ),
         ],

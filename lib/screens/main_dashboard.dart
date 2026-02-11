@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zyppi_ride/screens/dashboard_screen.dart';
-import 'profile_screen.dart'; // New profile screen
+import 'driver/driver_profile_screen.dart'; // Driver/Owner profile screen
 import 'emergency_screen.dart'; // New emergency screen
 
 
@@ -20,25 +20,28 @@ class _MainDashboardState extends State<MainDashboard> {
 
   final List<Widget> _screens = [
     DashboardScreen(userId: FirebaseAuth.instance.currentUser!.uid), // Overview tab
-    ProfileScreen(userId: FirebaseAuth.instance.currentUser!.uid), // Profile tab
+    DriverProfileScreen(
+      userId: FirebaseAuth.instance.currentUser!.uid,
+      embedded: true, // Embedded mode - hides back button and logout (mainDashboard handles these)
+    ),
     EmergencyScreen(), // Emergency tab
   ];
 
   Future<void> _logout(BuildContext context) async {
     try {
-      // Show loading indicator
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Logging out...')),
-      );
       await FirebaseAuth.instance.signOut();
-      // Navigate to auth screen
+      // Navigate to auth screen after successful logout
       if (context.mounted) {
         context.go('/auth');
       }
     } catch (e) {
+      // Only show error SnackBar if logout fails and context is still valid
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Logout failed: $e')),
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
