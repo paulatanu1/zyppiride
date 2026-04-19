@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/driver_status_provider.dart';
@@ -91,7 +90,7 @@ class DriverOnlineToggle extends ConsumerWidget {
             const SizedBox(width: 8),
             Text(
               statusState.isOnline ? 'Online' : 'Offline',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: statusState.isOnline
@@ -167,7 +166,7 @@ class DriverOnlineToggle extends ConsumerWidget {
                   statusState.isOnline
                       ? 'You are Online'
                       : 'You are Offline',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -177,7 +176,7 @@ class DriverOnlineToggle extends ConsumerWidget {
                   statusState.isOnline
                       ? 'Accepting ride requests'
                       : 'Tap to start receiving rides',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 12,
                     color: Colors.white.withValues(alpha: 0.85),
                   ),
@@ -231,7 +230,8 @@ class DriverOnlineStatusCard extends ConsumerWidget {
     }
 
     final statusState = ref.watch(driverOnlineProvider(effectiveId));
-    final eligibilityAsync = ref.watch(onlineEligibilityProvider(effectiveId));
+    // Use stream provider for real-time eligibility updates
+    final eligibilityAsync = ref.watch(onlineEligibilityStreamProvider(effectiveId));
 
     // Check eligibility first
     return eligibilityAsync.when(
@@ -290,7 +290,7 @@ class DriverOnlineStatusCard extends ConsumerWidget {
                   children: [
                     Text(
                       'Verification Required',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -299,7 +299,7 @@ class DriverOnlineStatusCard extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       eligibility.reason ?? 'Complete verification to go online',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -330,7 +330,7 @@ class DriverOnlineStatusCard extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Text(
                     _getActionButtonText(eligibility),
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -473,7 +473,7 @@ class DriverOnlineStatusCard extends ConsumerWidget {
                             ? 'You\'re Online!'
                             : 'You\'re Offline',
                         key: ValueKey(statusState.isOnline),
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -485,7 +485,7 @@ class DriverOnlineStatusCard extends ConsumerWidget {
                       statusState.isOnline
                           ? 'Ready to accept ride requests'
                           : 'Go online to receive rides',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -530,7 +530,7 @@ class DriverOnlineStatusCard extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Text(
                     statusState.isOnline ? 'Go Offline' : 'Go Online',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -556,7 +556,7 @@ class DriverOnlineStatusCard extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       statusState.error!,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         color: Colors.red.shade700,
                       ),

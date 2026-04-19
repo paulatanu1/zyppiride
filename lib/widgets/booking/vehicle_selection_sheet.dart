@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/available_vehicle_model.dart';
 import '../../providers/vehicle_search_provider.dart';
@@ -88,7 +87,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
               children: [
                 Text(
                   'Choose Your Ride',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -148,7 +147,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
                         children: [
                           Text(
                             _selectedFare?.formattedRange ?? '',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.green.shade700,
@@ -156,7 +155,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
                           ),
                           Text(
                             '${_selectedVehicle!.vehicleInfo.displayName} • ${widget.estimatedDuration} mins',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               fontSize: 12,
                               color: Colors.grey.shade600,
                             ),
@@ -181,7 +180,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
                       ),
                       child: Text(
                         'Confirm',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -222,14 +221,14 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
               children: [
                 Text(
                   widget.pickupAddress,
-                  style: GoogleFonts.poppins(fontSize: 13),
+                  style: TextStyle(fontFamily: 'Poppins', fontSize: 13),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   widget.dropAddress,
-                  style: GoogleFonts.poppins(fontSize: 13),
+                  style: TextStyle(fontFamily: 'Poppins', fontSize: 13),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -241,7 +240,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
             children: [
               Text(
                 '${widget.estimatedDistance.toStringAsFixed(1)} km',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Colors.deepPurple,
@@ -249,7 +248,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
               ),
               Text(
                 '${widget.estimatedDuration} min',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 11,
                   color: Colors.grey.shade600,
                 ),
@@ -340,7 +339,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
                     children: [
                       Text(
                         vehicle.vehicleInfo.displayName,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -358,7 +357,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
                           ),
                           child: Text(
                             'AC',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: Colors.blue.shade700,
@@ -375,7 +374,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
                       const SizedBox(width: 4),
                       Text(
                         vehicle.driverRating.toStringAsFixed(1),
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -385,7 +384,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
                       const SizedBox(width: 4),
                       Text(
                         '${vehicle.vehicleInfo.seatingCapacity}',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 12,
                           color: Colors.grey.shade600,
                         ),
@@ -395,7 +394,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
                   const SizedBox(height: 4),
                   Text(
                     vehicle.driverName,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 12,
                       color: Colors.grey.shade600,
                     ),
@@ -410,7 +409,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
               children: [
                 Text(
                   fare.formattedRange,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.green.shade700,
@@ -418,7 +417,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
                 ),
                 Text(
                   '₹${vehicle.pricing.perKmRate.toStringAsFixed(0)}/km',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 11,
                     color: Colors.grey.shade600,
                   ),
@@ -452,7 +451,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
             const SizedBox(height: 16),
             Text(
               'Unable to find rides',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -460,7 +459,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
             const SizedBox(height: 8),
             Text(
               error,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 color: Colors.grey.shade600,
               ),
@@ -489,7 +488,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
             const SizedBox(height: 16),
             Text(
               'No rides available',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -497,7 +496,7 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
             const SizedBox(height: 8),
             Text(
               'No vehicles found in your area.\nPlease try again later.',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 color: Colors.grey.shade600,
               ),

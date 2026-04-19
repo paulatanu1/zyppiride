@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:geocoding/geocoding.dart';
@@ -86,7 +85,7 @@ class _LocationBarState extends ConsumerState<LocationBar> {
                 children: [
                   Text(
                     'Your Location',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 11,
                       color: Colors.white.withValues(alpha: 0.7),
                       fontWeight: FontWeight.w500,
@@ -99,7 +98,7 @@ class _LocationBarState extends ConsumerState<LocationBar> {
                         : locationState.hasLocation
                             ? locationState.location!.shortAddress
                             : 'Tap to set location',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 14,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -198,7 +197,7 @@ class _LocationSelectionSheetState
                   children: [
                     Text(
                       'Select Location',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -323,7 +322,7 @@ class _LocationSelectionSheetState
               children: [
                 Text(
                   'Current Location',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 12,
                     color: Colors.white70,
                     fontWeight: FontWeight.w500,
@@ -332,7 +331,7 @@ class _LocationSelectionSheetState
                 const SizedBox(height: 4),
                 Text(
                   location.shortAddress,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 16,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -342,7 +341,7 @@ class _LocationSelectionSheetState
                   const SizedBox(height: 2),
                   Text(
                     location.cityState,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 13,
                       color: Colors.white70,
                     ),
@@ -404,7 +403,7 @@ class _LocationSelectionSheetState
                   children: [
                     Text(
                       title,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 16,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -412,7 +411,7 @@ class _LocationSelectionSheetState
                     ),
                     Text(
                       subtitle,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 13,
                         color: Colors.white70,
                       ),
@@ -444,7 +443,7 @@ class _LocationSelectionSheetState
         focusNode: _searchFocusNode,
         inputDecoration: InputDecoration(
           hintText: 'Search for a location...',
-          hintStyle: GoogleFonts.poppins(
+          hintStyle: TextStyle(fontFamily: 'Poppins', 
             color: Colors.grey[500],
             fontSize: 15,
           ),
@@ -469,7 +468,7 @@ class _LocationSelectionSheetState
             vertical: 14,
           ),
         ),
-        textStyle: GoogleFonts.poppins(
+        textStyle: TextStyle(fontFamily: 'Poppins', 
           fontSize: 15,
           color: Colors.black87,
         ),
@@ -497,7 +496,7 @@ class _LocationSelectionSheetState
                 Expanded(
                   child: Text(
                     prediction.description ?? '',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 14,
                       color: Colors.black87,
                     ),
@@ -584,7 +583,7 @@ class _LocationSelectionSheetState
                           LocationPermissionStatus.serviceDisabled
                       ? 'Location Services Disabled'
                       : 'Location Permission Required',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 15,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -599,7 +598,7 @@ class _LocationSelectionSheetState
                     LocationPermissionStatus.serviceDisabled
                 ? 'Please enable location services in your device settings to use this feature.'
                 : 'Please grant location permission to automatically detect your location.',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 13,
               color: Colors.white70,
             ),
@@ -628,7 +627,7 @@ class _LocationSelectionSheetState
               ),
               child: Text(
                 'Open Settings',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -661,7 +660,7 @@ class _LocationSelectionSheetState
           Expanded(
             child: Text(
               error,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 13,
                 color: Colors.white,
               ),
@@ -682,7 +681,7 @@ class _LocationSelectionSheetState
             Expanded(
               child: Text(
                 message,
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -705,7 +704,7 @@ class _LocationSelectionSheetState
             Expanded(
               child: Text(
                 message,
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
               ),
             ),
           ],

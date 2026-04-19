@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:ui';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../models/active_booking_model.dart';
 import '../../models/offer_model.dart';
@@ -140,7 +139,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
               children: [
                 Text(
                   _getGreeting(),
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 13,
                     color: Colors.white.withValues(alpha: 0.9),
                     fontWeight: FontWeight.w400,
@@ -148,7 +147,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                 ),
                 Text(
                   'Hi, ${user.userName} 👋',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 18,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -284,7 +283,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                             children: [
                               Text(
                                 'Quick Actions',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -332,7 +331,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                             children: [
                               Text(
                                 'Our Services',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -363,7 +362,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                               ),
                               child: Text(
                                 'Offers & Rewards',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -378,7 +377,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                                     ? Center(
                                         child: Text(
                                           'No offers available',
-                                          style: GoogleFonts.poppins(
+                                          style: TextStyle(fontFamily: 'Poppins', 
                                             color: Colors.white70,
                                             fontSize: 14,
                                           ),
@@ -421,7 +420,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                             children: [
                               Text(
                                 'Why Choose Us',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -575,14 +574,14 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                       children: [
                         Text(
                           'Active Booking',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 14,
                             color: Colors.white.withValues(alpha: 0.8),
                           ),
                         ),
                         Text(
                           booking.vehicleType,
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -604,7 +603,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                     ),
                     child: Text(
                       booking.status,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -628,14 +627,14 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                       children: [
                         Text(
                           'Driver',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 12,
                             color: Colors.white.withValues(alpha: 0.8),
                           ),
                         ),
                         Text(
                           booking.driverName,
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -651,14 +650,14 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                     children: [
                       Text(
                         'ETA',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 12,
                           color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                       Text(
                         booking.eta,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -683,7 +682,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                 ),
                 child: Text(
                   'Track Live Location',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -719,7 +718,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
           const SizedBox(height: 16),
           Text(
             'No Active Bookings',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -728,7 +727,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
           const SizedBox(height: 8),
           Text(
             'Book a ride to get started',
-            style: GoogleFonts.poppins(fontSize: 14, color: Colors.white70),
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Colors.white70),
           ),
           const SizedBox(height: 20),
           ElevatedButton(
@@ -745,7 +744,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
             ),
             child: Text(
               'Book Now',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
@@ -868,7 +867,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                       children: [
                         Text(
                           service['title'] as String,
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -879,7 +878,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                         const SizedBox(height: 3),
                         Text(
                           service['desc'] as String,
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 10,
                             color: Colors.white70,
                           ),
@@ -936,7 +935,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                   ),
                   child: Text(
                     offer.discount,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFFFF6F91),
@@ -958,7 +957,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
               children: [
                 Text(
                   offer.title,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -969,7 +968,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                 const SizedBox(height: 4),
                 Text(
                   offer.description,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 12,
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
@@ -989,7 +988,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                   ),
                   child: Text(
                     'Code: ${offer.code}',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -1048,7 +1047,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                 const SizedBox(height: 6),
                 Text(
                   feature['title'] as String,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,

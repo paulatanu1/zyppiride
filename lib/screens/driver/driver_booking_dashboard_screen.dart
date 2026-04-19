@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/booking_model.dart';
 import '../../services/booking_service.dart';
@@ -45,7 +44,7 @@ class _DriverBookingDashboardScreenState
       appBar: AppBar(
         title: Text(
           'Driver Dashboard',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
@@ -97,7 +96,7 @@ class _DriverBookingDashboardScreenState
                     children: [
                       Text(
                         'Active Ride',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.grey.shade800,
@@ -133,7 +132,7 @@ class _DriverBookingDashboardScreenState
                   children: [
                     Text(
                       'Booking Requests',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey.shade800,
@@ -152,7 +151,7 @@ class _DriverBookingDashboardScreenState
                               ),
                               child: Text(
                                 '${requests.length} new',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.orange.shade700,
@@ -245,7 +244,7 @@ class _DriverBookingDashboardScreenState
           const SizedBox(height: 16),
           Text(
             'No booking requests',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.grey.shade700,
@@ -255,7 +254,7 @@ class _DriverBookingDashboardScreenState
           Text(
             'New requests will appear here when customers book nearby.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 14,
               color: Colors.grey.shade500,
             ),
@@ -292,7 +291,7 @@ class _DriverBookingDashboardScreenState
           const SizedBox(height: 12),
           Text(
             'Failed to load requests',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.red.shade700,
@@ -303,7 +302,7 @@ class _DriverBookingDashboardScreenState
             onPressed: _refreshData,
             child: Text(
               'Retry',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -478,18 +477,18 @@ class _DriverBookingDashboardScreenState
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           title,
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
         ),
         content: Text(
           message,
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Cancel',
-              style: GoogleFonts.poppins(color: Colors.grey),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
             ),
           ),
           ElevatedButton(
@@ -503,7 +502,7 @@ class _DriverBookingDashboardScreenState
             ),
             child: Text(
               confirmText,
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -518,7 +517,7 @@ class _DriverBookingDashboardScreenState
       SnackBar(
         content: Text(
           message,
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,

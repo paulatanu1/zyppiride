@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../models/booking_model.dart';
 
@@ -63,7 +62,7 @@ class PendingBookingCard extends StatelessWidget {
                     children: [
                       Text(
                         booking.bookingType.displayName,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Colors.deepPurple,
@@ -71,7 +70,7 @@ class PendingBookingCard extends StatelessWidget {
                       ),
                       Text(
                         _formatTime(booking.createdAt),
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 12,
                           color: Colors.grey.shade600,
                         ),
@@ -88,7 +87,7 @@ class PendingBookingCard extends StatelessWidget {
                   ),
                   child: Text(
                     '₹${booking.fareDetails.totalFare.toStringAsFixed(0)}',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.green.shade700,
@@ -111,7 +110,7 @@ class PendingBookingCard extends StatelessWidget {
                     booking.userName.isNotEmpty
                         ? booking.userName[0].toUpperCase()
                         : 'U',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.deepPurple,
@@ -125,7 +124,7 @@ class PendingBookingCard extends StatelessWidget {
                     children: [
                       Text(
                         booking.userName,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -140,7 +139,7 @@ class PendingBookingCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             '${booking.estimatedDistance?.toStringAsFixed(1) ?? '-'} km',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               fontSize: 13,
                               color: Colors.grey.shade600,
                             ),
@@ -154,7 +153,7 @@ class PendingBookingCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             '${booking.estimatedDuration ?? '-'} min',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               fontSize: 13,
                               color: Colors.grey.shade600,
                             ),
@@ -195,7 +194,7 @@ class PendingBookingCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         booking.pickupLocation.shortAddress,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 14,
                           color: Colors.grey.shade800,
                         ),
@@ -236,7 +235,7 @@ class PendingBookingCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         booking.dropLocation.shortAddress,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 14,
                           color: Colors.grey.shade800,
                         ),
@@ -276,7 +275,7 @@ class PendingBookingCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           'Reject',
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -312,7 +311,7 @@ class PendingBookingCard extends StatelessWidget {
                               const SizedBox(width: 8),
                               Text(
                                 'Accept',
-                                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../router/routes_name.dart';
 import '../../models/booking_model.dart';
@@ -171,7 +170,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
           const SizedBox(width: 16),
           Text(
             'Local Transport',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -197,8 +196,8 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
         ),
         labelColor: Colors.deepPurple,
         unselectedLabelColor: Colors.white,
-        labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+        labelStyle: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
         tabs: const [
           Tab(text: 'One Way'),
           Tab(text: 'Rental'),
@@ -262,7 +261,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.poppins(
+      style: TextStyle(fontFamily: 'Poppins', 
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: Colors.white,
@@ -286,7 +285,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
             const SizedBox(width: 6),
             Text(
               'Saved Places',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Colors.white70,
@@ -297,7 +296,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
               onPressed: () => showAddAddressModal(context),
               child: Text(
                 '+ Add',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   color: Colors.white,
                   fontSize: 12,
                 ),
@@ -363,7 +362,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
               SnackBar(
                 content: Text(
                   '${address.displayLabel} selected as pickup',
-                  style: GoogleFonts.poppins(),
+                  style: TextStyle(fontFamily: 'Poppins'),
                 ),
                 backgroundColor: Colors.green,
                 behavior: SnackBarBehavior.floating,
@@ -380,7 +379,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                     SnackBar(
                       content: Text(
                         '${address.displayLabel} selected as drop',
-                        style: GoogleFonts.poppins(),
+                        style: TextStyle(fontFamily: 'Poppins'),
                       ),
                       backgroundColor: Colors.green,
                       behavior: SnackBarBehavior.floating,
@@ -407,7 +406,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                   children: [
                     Text(
                       address.displayLabel,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -416,7 +415,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                     if (address.area != null)
                       Text(
                         address.area,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 10,
                           color: Colors.white70,
                         ),
@@ -470,7 +469,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                     const SizedBox(height: 8),
                     Text(
                       ride['name'],
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: isSelected ? Colors.deepPurple : Colors.white,
@@ -480,7 +479,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                     const SizedBox(height: 2),
                     Text(
                       '${ride['multiplier']}x',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 10,
                         color: isSelected ? Colors.deepPurple.shade300 : Colors.white70,
                       ),
@@ -556,10 +555,10 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
             label: '$hint input field',
             child: TextField(
               controller: controller,
-              style: GoogleFonts.poppins(color: Colors.white),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: GoogleFonts.poppins(color: Colors.white54),
+                hintStyle: TextStyle(fontFamily: 'Poppins', color: Colors.white54),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -596,7 +595,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
               const SizedBox(width: 12),
               Text(
                 'Number of Passengers',
-                style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+                style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 14),
               ),
             ],
           ),
@@ -611,7 +610,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   '$_passengerCount',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -690,7 +689,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                     Expanded(
                       child: Text(
                         dest['name'] as String,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           color: Colors.white,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -737,7 +736,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                 children: [
                   Text(
                     '${package['hours']}h',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: isSelected ? Colors.deepPurple : Colors.white,
@@ -745,7 +744,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                   ),
                   Text(
                     '${package['km']} km',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 11,
                       color: isSelected ? Colors.deepPurple.shade300 : Colors.white70,
                     ),
@@ -753,7 +752,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                   const SizedBox(height: 4),
                   Text(
                     '₹${package['price']}',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: isSelected ? Colors.green : Colors.greenAccent,
@@ -790,7 +789,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
               const SizedBox(width: 8),
               Text(
                 'Package Details',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   color: Colors.white,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -809,7 +808,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
             children: [
               Text(
                 'Base Fare',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   color: Colors.white,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -817,7 +816,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
               ),
               Text(
                 '₹${selectedPackage['price']}',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   color: Colors.greenAccent,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -838,11 +837,11 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
         children: [
           Text(
             label,
-            style: GoogleFonts.poppins(color: Colors.white70, fontSize: 13),
+            style: TextStyle(fontFamily: 'Poppins', color: Colors.white70, fontSize: 13),
           ),
           Text(
             value,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 13),
+            style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 13),
           ),
         ],
       ),
@@ -895,7 +894,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                         const SizedBox(width: 12),
                         Text(
                           'Searching...',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -904,7 +903,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
                     )
                   : Text(
                       isOneWay ? 'Find Rides' : 'Book Rental',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -922,7 +921,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
         SnackBar(
           content: Text(
             'Please enter pickup location',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
@@ -936,7 +935,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
         SnackBar(
           content: Text(
             'Please enter drop location',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
@@ -953,7 +952,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
           SnackBar(
             content: Text(
               'You already have an active booking',
-              style: GoogleFonts.poppins(),
+              style: TextStyle(fontFamily: 'Poppins'),
             ),
             backgroundColor: Colors.orange,
             behavior: SnackBarBehavior.floating,
@@ -1039,7 +1038,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
           SnackBar(
             content: Text(
               e.toString().replaceAll('Exception: ', ''),
-              style: GoogleFonts.poppins(),
+              style: TextStyle(fontFamily: 'Poppins'),
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,

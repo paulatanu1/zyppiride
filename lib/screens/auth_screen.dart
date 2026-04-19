@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart'; // Or use local Poppins
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
@@ -22,7 +21,7 @@ class AuthScreen extends StatelessWidget {
             children: [
               Text(
                 'Welcome to Zyppi Ride',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -43,7 +42,7 @@ class AuthScreen extends StatelessWidget {
                 ),
                 child: Text(
                   'Login',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
@@ -63,7 +62,7 @@ class AuthScreen extends StatelessWidget {
                 ),
                 child: Text(
                   'Register',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,

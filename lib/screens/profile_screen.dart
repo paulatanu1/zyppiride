@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:animations/animations.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:ui';
@@ -240,7 +239,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         title: Text(
           'Profile',
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             color: Colors.white,
             fontWeight: FontWeight.w600,
             fontSize: 20,
@@ -312,7 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 16),
             Text(
               'Profile Not Found',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -321,7 +320,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 8),
             Text(
               'Unable to load your profile data.\nPlease try again.',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 color: Colors.white70,
               ),
@@ -341,7 +340,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               icon: const Icon(Icons.refresh),
               label: Text(
                 'Retry',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -390,7 +389,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       backgroundColor: Colors.white.withValues(alpha:0.3),
                       child: Text(
                         name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 40,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -401,7 +400,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 16),
                   Text(
                     name,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -411,7 +410,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 4),
                   Text(
                     email,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 14,
                       color: Colors.white.withValues(alpha:0.8),
                     ),
@@ -425,7 +424,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: Text(
                       role,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -473,7 +472,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(
                 "Profile Details",
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -514,7 +513,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               icon: const Icon(Icons.edit),
               label: Text(
                 "Edit Profile",
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -545,7 +544,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 12,
                     color: Colors.white.withValues(alpha:0.7),
                   ),
@@ -553,7 +552,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,

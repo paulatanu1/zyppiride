@@ -6,24 +6,25 @@ service firebase.storage {
     // User profile photos
     match /users/{userId}/{allPaths=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null && request.auth.uid == userId;
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Vehicle images
+    // Vehicle images - supports paths like: vehicles/{userId}/vehicle/{filename}
     match /vehicles/{userId}/{allPaths=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null &&
-                   request.auth.uid == userId &&
-                   request.resource.size < 5 * 1024 * 1024 &&
-                   request.resource.contentType.matches('image/.*');
+      allow create, update: if request.auth != null &&
+                            request.auth.uid == userId &&
+                            request.resource.size < 5 * 1024 * 1024 &&
+                            request.resource.contentType.matches('image/.*');
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
     // Support attachments
     match /support/{userId}/{allPaths=**} {
       allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
   }
 }

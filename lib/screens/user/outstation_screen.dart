@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../router/routes_name.dart';
 
 class OutstationScreen extends ConsumerStatefulWidget {
@@ -171,7 +170,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
           const SizedBox(width: 16),
           Text(
             'Outstation',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -197,8 +196,8 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
         ),
         labelColor: Colors.deepPurple,
         unselectedLabelColor: Colors.white,
-        labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+        labelStyle: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
         tabs: const [
           Tab(text: 'One Way'),
           Tab(text: 'Round Trip'),
@@ -210,7 +209,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.poppins(
+      style: TextStyle(fontFamily: 'Poppins', 
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: Colors.white,
@@ -277,10 +276,10 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
             label: '$hint input field',
             child: TextField(
               controller: controller,
-              style: GoogleFonts.poppins(color: Colors.white, fontSize: 15),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 15),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: GoogleFonts.poppins(color: Colors.white54),
+                hintStyle: TextStyle(fontFamily: 'Poppins', color: Colors.white54),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -354,7 +353,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
           children: [
             Text(
               label,
-              style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.white70, fontSize: 11),
             ),
             const SizedBox(height: 4),
             Row(
@@ -366,7 +365,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
                     date != null
                         ? '${date.day}/${date.month}/${date.year}'
                         : 'Select Date',
-                    style: GoogleFonts.poppins(color: Colors.white, fontSize: 13),
+                    style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 13),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -395,7 +394,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
               _departureTime != null
                   ? 'Pickup at ${_departureTime!.format(context)}'
                   : 'Select Pickup Time',
-              style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 14),
             ),
           ],
         ),
@@ -442,7 +441,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
                     const SizedBox(height: 8),
                     Text(
                       car['name'],
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: isSelected ? Colors.deepPurple : Colors.white,
@@ -452,7 +451,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
                     const SizedBox(height: 4),
                     Text(
                       car['price'],
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: isSelected ? Colors.green : Colors.greenAccent,
@@ -494,7 +493,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
                   children: [
                     Text(
                       selectedCar['name'],
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -502,7 +501,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
                     ),
                     Text(
                       selectedCar['price'],
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         color: Colors.greenAccent,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -548,7 +547,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
         Expanded(
           child: Text(
             text,
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 12),
+            style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 12),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -585,7 +584,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
                       children: [
                         Text(
                           route['from'],
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             color: Colors.white,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -597,7 +596,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
                         ),
                         Text(
                           route['to'],
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             color: Colors.white,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -611,14 +610,14 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
                     children: [
                       Text(
                         route['distance'],
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           color: Colors.white70,
                           fontSize: 12,
                         ),
                       ),
                       Text(
                         route['time'],
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           color: Colors.greenAccent,
                           fontSize: 11,
                         ),
@@ -665,7 +664,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
               ),
               child: Text(
                 'Search Cabs',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -718,7 +717,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
         SnackBar(
           content: Text(
             'Please enter from and to cities',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
@@ -732,7 +731,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
         SnackBar(
           content: Text(
             'Please select departure date',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
@@ -746,7 +745,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
         SnackBar(
           content: Text(
             'Please select return date',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
@@ -760,7 +759,7 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
       SnackBar(
         content: Text(
           'Searching for available cabs...',
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,

@@ -1124,11 +1124,12 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
     for (int i = 0; i < images.length; i++) {
       final compressed = await _compressImage(images[i]);
       if (compressed != null) {
-        final fileName = '${type}_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
+        final fileName = '${type}_${selectedVehicleId}_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
         final ref = FirebaseStorage.instance
             .ref()
             .child('vehicles')
-            .child(selectedVehicleId!)
+            .child(widget.userId)
+            .child('documents')
             .child(fileName);
 
         final uploadTask = ref.putFile(compressed);

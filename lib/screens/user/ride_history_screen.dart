@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class UserRideHistoryScreen extends ConsumerStatefulWidget {
@@ -177,7 +176,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
           const SizedBox(width: 16),
           Text(
             'Ride History',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -237,7 +236,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
         const SizedBox(height: 4),
         Text(
           value,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -245,7 +244,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
         ),
         Text(
           label,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 11,
             color: Colors.white60,
           ),
@@ -277,7 +276,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                 child: Center(
                   child: Text(
                     filter,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: isSelected ? Colors.deepPurple : Colors.white,
@@ -304,7 +303,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
             const SizedBox(height: 16),
             Text(
               'No rides found',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 18,
                 color: Colors.white70,
               ),
@@ -368,7 +367,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                     children: [
                       Text(
                         ride['vehicleType'],
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -376,7 +375,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                       ),
                       Text(
                         _formatDate(ride['date']),
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 12,
                           color: Colors.white60,
                         ),
@@ -389,7 +388,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                   children: [
                     Text(
                       '₹${ride['fare']}',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -403,7 +402,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                       ),
                       child: Text(
                         status.toUpperCase(),
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: statusColor,
@@ -461,7 +460,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                       backgroundColor: Colors.white24,
                       child: Text(
                         ride['driverName'][0],
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 12,
                           color: Colors.white,
                         ),
@@ -470,7 +469,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                     const SizedBox(width: 8),
                     Text(
                       ride['driverName'],
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 13,
                         color: Colors.white,
                       ),
@@ -481,7 +480,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                   children: [
                     Text(
                       ride['distance'],
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         color: Colors.white60,
                       ),
@@ -492,7 +491,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                       const SizedBox(width: 2),
                       Text(
                         '${ride['rating']}',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 12,
                           color: Colors.white,
                         ),
@@ -523,7 +522,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                       ),
                       child: Text(
                         'Receipt',
-                        style: GoogleFonts.poppins(fontSize: 12),
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 12),
                       ),
                     ),
                   ),
@@ -542,7 +541,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                       ),
                       child: Text(
                         'Rebook',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -570,7 +569,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
                   ),
                   child: Text(
                     'Track Ride',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -588,7 +587,7 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
         Expanded(
           child: Text(
             location,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 13,
               color: Colors.white,
             ),

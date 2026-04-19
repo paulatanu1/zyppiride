@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/available_vehicle_model.dart';
@@ -68,7 +67,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
                 const SizedBox(height: 16),
                 Text(
                   'Vehicle not found',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 18,
                     color: Colors.white,
                   ),
@@ -258,7 +257,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
             ),
             child: Text(
               vehicle.isAvailable ? 'Available' : 'Busy',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -280,7 +279,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
             children: [
               Text(
                 vehicle.vehicleInfo.displayName,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -289,7 +288,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
               const SizedBox(height: 4),
               Text(
                 '${_formatVehicleType(vehicle.vehicleInfo.type)} • ${vehicle.vehicleInfo.year} • ${vehicle.vehicleInfo.color}',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 14,
                   color: Colors.white70,
                 ),
@@ -310,7 +309,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
                         const SizedBox(width: 4),
                         Text(
                           vehicle.driverRating.toStringAsFixed(1),
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -322,7 +321,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
                   const SizedBox(width: 12),
                   Text(
                     '${vehicle.totalTrips} trips',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 14,
                       color: Colors.white70,
                     ),
@@ -385,7 +384,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
               fit: BoxFit.scaleDown,
               child: Text(
                 value,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -397,7 +396,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
             const SizedBox(height: 2),
             Text(
               label,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 10,
                 color: Colors.white60,
               ),
@@ -433,7 +432,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
               children: [
                 Text(
                   vehicle.driverName,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -447,7 +446,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
                     Flexible(
                       child: Text(
                         '${vehicle.driverRating.toStringAsFixed(1)} • ${vehicle.totalTrips} trips',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 13,
                           color: Colors.white70,
                         ),
@@ -521,7 +520,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
                   children: [
                     Text(
                       vehicle.location.displayLocation,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -530,7 +529,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
                     if (vehicle.location.state.isNotEmpty)
                       Text(
                         vehicle.location.state,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 13,
                           color: Colors.white70,
                         ),
@@ -568,14 +567,14 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
                         const SizedBox(height: 8),
                         Text(
                           'Lat: ${vehicle.location.latitude!.toStringAsFixed(4)}',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 12,
                             color: Colors.white60,
                           ),
                         ),
                         Text(
                           'Lng: ${vehicle.location.longitude!.toStringAsFixed(4)}',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 12,
                             color: Colors.white60,
                           ),
@@ -592,7 +591,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
                       icon: const Icon(Icons.open_in_new, size: 18),
                       label: Text(
                         'Open in Maps',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                        style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
@@ -622,7 +621,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
                   Expanded(
                     child: Text(
                       'Exact location will be shared after booking',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 13,
                         color: Colors.white70,
                       ),
@@ -683,7 +682,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
               const SizedBox(width: 10),
               Text(
                 title,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -706,7 +705,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
         children: [
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 14,
               color: Colors.white60,
             ),
@@ -715,7 +714,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
           Flexible(
             child: Text(
               value,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Colors.white,
@@ -739,7 +738,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
           Flexible(
             child: Text(
               label,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: isTotal ? 16 : 14,
                 fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
                 color: isTotal ? Colors.white : Colors.white60,
@@ -750,7 +749,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
           const SizedBox(width: 12),
           Text(
             value,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: isTotal ? 18 : 14,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
               color: isTotal ? Colors.greenAccent : Colors.white,
@@ -792,7 +791,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
                 children: [
                   Text(
                     '₹${vehicle.pricing.perKmRate.toInt()}/km',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -800,7 +799,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
                   ),
                   Text(
                     'Min. fare: ₹${vehicle.pricing.minimumFare.toInt()}',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 13,
                       color: Colors.white60,
                     ),
@@ -821,7 +820,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
               ),
               child: Text(
                 vehicle.isAvailable ? 'Book Now' : 'Not Available',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -846,7 +845,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
       SnackBar(
         content: Text(
           'Share ${vehicle.vehicleInfo.displayName}',
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         backgroundColor: Colors.deepPurple,
         behavior: SnackBarBehavior.floating,
@@ -860,7 +859,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
       SnackBar(
         content: Text(
           'Contact info will be available after booking',
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         backgroundColor: Colors.deepPurple,
         behavior: SnackBarBehavior.floating,
@@ -914,7 +913,7 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: GoogleFonts.poppins()),
+        content: Text(message, style: TextStyle(fontFamily: 'Poppins')),
         backgroundColor: Colors.deepPurple,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -998,7 +997,7 @@ class _BookingConfirmationSheet extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Confirm Booking',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -1007,7 +1006,7 @@ class _BookingConfirmationSheet extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             vehicle.vehicleInfo.displayName,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 16,
               color: Colors.white70,
             ),
@@ -1024,14 +1023,14 @@ class _BookingConfirmationSheet extends StatelessWidget {
               children: [
                 Text(
                   'Estimated Fare',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 16,
                     color: Colors.white70,
                   ),
                 ),
                 Text(
                   '₹${vehicle.pricing.minimumFare.toInt()} onwards',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.greenAccent,
@@ -1056,7 +1055,7 @@ class _BookingConfirmationSheet extends StatelessWidget {
                   ),
                   child: Text(
                     'Cancel',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -1069,7 +1068,7 @@ class _BookingConfirmationSheet extends StatelessWidget {
                       SnackBar(
                         content: Text(
                           'Booking request sent!',
-                          style: GoogleFonts.poppins(),
+                          style: TextStyle(fontFamily: 'Poppins'),
                         ),
                         backgroundColor: Colors.green,
                         behavior: SnackBarBehavior.floating,
@@ -1089,7 +1088,7 @@ class _BookingConfirmationSheet extends StatelessWidget {
                   ),
                   child: Text(
                     'Confirm',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

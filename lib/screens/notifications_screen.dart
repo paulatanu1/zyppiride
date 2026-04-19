@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -197,7 +196,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           Expanded(
             child: Text(
               'Notifications',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -214,7 +213,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               ),
               child: Text(
                 'Mark all read',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 12,
                   color: Colors.white,
                   fontWeight: FontWeight.w500,
@@ -258,7 +257,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               children: [
                 Text(
                   '$_unreadCount Unread Notifications',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -266,7 +265,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 ),
                 Text(
                   'Tap to view and take action',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 12,
                   ),
@@ -301,7 +300,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               ),
               child: Text(
                 filter,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   color: isSelected ? Colors.deepPurple : Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
@@ -329,7 +328,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             const SizedBox(height: 16),
             Text(
               'No notifications',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 color: Colors.white70,
                 fontSize: 16,
               ),
@@ -384,7 +383,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             SnackBar(
               content: Text(
                 'Notification deleted',
-                style: GoogleFonts.poppins(),
+                style: TextStyle(fontFamily: 'Poppins'),
               ),
               behavior: SnackBarBehavior.floating,
               action: SnackBarAction(
@@ -437,7 +436,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                           Expanded(
                             child: Text(
                               notification['title'],
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(fontFamily: 'Poppins', 
                                 color: isUnread ? Colors.black87 : Colors.white,
                                 fontSize: 14,
                                 fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
@@ -458,7 +457,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                       const SizedBox(height: 4),
                       Text(
                         notification['message'],
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           color: isUnread ? Colors.black54 : Colors.white70,
                           fontSize: 12,
                         ),
@@ -468,7 +467,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                       const SizedBox(height: 8),
                       Text(
                         notification['time'],
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           color: isUnread ? Colors.grey : Colors.white54,
                           fontSize: 11,
                         ),
@@ -494,7 +493,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       SnackBar(
         content: Text(
           'All notifications marked as read',
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
@@ -515,7 +514,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         SnackBar(
           content: Text(
             'Opening ride details...',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           behavior: SnackBarBehavior.floating,
         ),

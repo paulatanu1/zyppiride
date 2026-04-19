@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../router/routes_name.dart';
 import '../services/auth_service.dart';
@@ -132,7 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login', style: GoogleFonts.poppins()),
+        title: Text('Login', style: TextStyle(fontFamily: 'Poppins')),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
       ),
@@ -143,7 +142,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           children: [
             Text(
               'Welcome Back',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Colors.deepPurple,
@@ -152,7 +151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             const SizedBox(height: 8),
             Text(
               'Sign in to continue',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
@@ -172,7 +171,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     'OR',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       color: Colors.grey[500],
                       fontWeight: FontWeight.w500,
                     ),
@@ -274,7 +273,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onPressed: _navigateToForgotPassword,
                         child: Text(
                           'Forgot Password?',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             color: Colors.deepPurple,
                           ),
                         ),
@@ -344,7 +343,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               )
                             : Text(
                                 'Login',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -361,7 +360,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     children: [
                       Text(
                         "Don't have an account? ",
-                        style: GoogleFonts.poppins(color: Colors.grey[600]),
+                        style: TextStyle(fontFamily: 'Poppins', color: Colors.grey[600]),
                       ),
                       Semantics(
                         label: 'Sign up link',
@@ -372,7 +371,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           },
                           child: Text(
                             'Sign Up',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               color: Colors.deepPurple,
                               fontWeight: FontWeight.w600,
                             ),
@@ -425,7 +424,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
               label: Text(
                 'Continue with Google',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey[800],
@@ -455,7 +454,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               icon: Icon(Icons.phone, color: Colors.green[700], size: 24),
               label: Text(
                 'Continue with Phone',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey[800],

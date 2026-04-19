@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/booking_model.dart';
 import '../../models/driver_location_model.dart';
@@ -99,7 +98,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             const SizedBox(height: 24),
             Text(
               'No Active Booking',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -108,7 +107,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             const SizedBox(height: 12),
             Text(
               'You don\'t have any active rides.\nBook a ride to get started!',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 color: Colors.white70,
               ),
@@ -120,7 +119,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               icon: const Icon(Icons.home),
               label: Text(
                 'Go to Dashboard',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -155,7 +154,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             const SizedBox(height: 16),
             Text(
               'Something went wrong',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
@@ -164,7 +163,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             const SizedBox(height: 8),
             Text(
               error,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 color: Colors.white70,
               ),
@@ -241,7 +240,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               children: [
                 Text(
                   'Track Booking',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -249,7 +248,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                 ),
                 Text(
                   '#${booking.bookingId.substring(0, 8).toUpperCase()}',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 12,
                     color: Colors.white70,
                   ),
@@ -301,7 +300,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               children: [
                 Text(
                   statusInfo.title,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -310,7 +309,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                 const SizedBox(height: 4),
                 Text(
                   statusInfo.subtitle,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
@@ -327,7 +326,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               ),
               child: Text(
                 booking.estimatedArrival!,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: statusInfo.color,
@@ -389,7 +388,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
           const SizedBox(height: 12),
           Text(
             'Getting driver location...',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               color: Colors.white70,
               fontSize: 14,
             ),
@@ -430,7 +429,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                       children: [
                         Text(
                           'Driver Location',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -438,7 +437,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                         ),
                         Text(
                           location.isStale ? 'Last updated' : 'Live',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             color: location.isStale
                                 ? Colors.orange.shade300
                                 : Colors.green.shade300,
@@ -470,7 +469,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                           const SizedBox(width: 6),
                           Text(
                             'LIVE',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               color: Colors.greenAccent,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -506,7 +505,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
           child: ElevatedButton.icon(
             onPressed: () => _openInMaps(location, booking),
             icon: const Icon(Icons.navigation, size: 18),
-            label: Text('View in Maps', style: GoogleFonts.poppins(fontSize: 12)),
+            label: Text('View in Maps', style: TextStyle(fontFamily: 'Poppins', fontSize: 12)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.deepPurple,
@@ -535,7 +534,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               color: Colors.white,
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -558,7 +557,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               const SizedBox(height: 8),
               Text(
                 'Live tracking map',
-                style: GoogleFonts.poppins(color: Colors.white70),
+                style: TextStyle(fontFamily: 'Poppins', color: Colors.white70),
               ),
             ],
           ),
@@ -569,7 +568,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
           child: ElevatedButton.icon(
             onPressed: () => _openTripInMaps(booking),
             icon: const Icon(Icons.fullscreen, size: 18),
-            label: Text('View Route', style: GoogleFonts.poppins(fontSize: 12)),
+            label: Text('View Route', style: TextStyle(fontFamily: 'Poppins', fontSize: 12)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.deepPurple,
@@ -626,7 +625,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                 child: booking.driver.photoUrl == null
                     ? Text(
                         booking.driver.name[0].toUpperCase(),
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -641,7 +640,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                   children: [
                     Text(
                       booking.driver.name,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -653,7 +652,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                         const SizedBox(width: 4),
                         Text(
                           booking.driver.rating.toStringAsFixed(1),
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 14,
                             color: Colors.white70,
                           ),
@@ -661,7 +660,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                         const SizedBox(width: 12),
                         Text(
                           booking.vehicle.registrationNumber,
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 14,
                             color: Colors.white70,
                           ),
@@ -670,7 +669,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                     ),
                     Text(
                       '${booking.vehicle.brand} ${booking.vehicle.model}',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         color: Colors.white54,
                       ),
@@ -728,7 +727,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             const SizedBox(width: 8),
             Text(
               label,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 color: color,
                 fontWeight: FontWeight.w600,
               ),
@@ -818,14 +817,14 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             children: [
               Text(
                 label,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 11,
                   color: Colors.white54,
                 ),
               ),
               Text(
                 value,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 14,
                   color: Colors.white,
                 ),
@@ -853,7 +852,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
           const SizedBox(width: 6),
           Text(
             value,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               color: Colors.white,
               fontSize: 13,
               fontWeight: FontWeight.w500,
@@ -879,7 +878,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
         children: [
           Text(
             'Trip Progress',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -1005,7 +1004,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 14,
                     color: completed ? Colors.white : Colors.white54,
                     fontWeight: completed ? FontWeight.w500 : FontWeight.normal,
@@ -1014,7 +1013,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                 if (time.isNotEmpty)
                   Text(
                     time,
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 12,
                       color: Colors.white54,
                     ),
@@ -1051,7 +1050,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               children: [
                 Text(
                   'Share OTP with driver to start ride',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
@@ -1059,7 +1058,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                 const SizedBox(height: 4),
                 Text(
                   booking.rideOtp!,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -1086,7 +1085,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
         children: [
           Text(
             'Rate your ride',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -1144,7 +1143,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                   ),
                   child: Text(
                     'Cancel Ride',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -1167,7 +1166,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                     const SizedBox(width: 8),
                     Text(
                       'SOS',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -1247,7 +1246,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
         SnackBar(
           content: Text(
             'Phone number not available',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: Colors.red,
         ),
@@ -1267,7 +1266,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
         SnackBar(
           content: Text(
             'Phone number not available',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: Colors.red,
         ),
@@ -1287,7 +1286,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
       SnackBar(
         content: Text(
           'Share feature coming soon',
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
       ),
     );
@@ -1304,20 +1303,20 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             const SizedBox(width: 8),
             Text(
               'Emergency SOS',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
             ),
           ],
         ),
         content: Text(
           'This will alert emergency contacts and share your live location. Continue?',
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: GoogleFonts.poppins(color: Colors.grey),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
             ),
           ),
           ElevatedButton(
@@ -1328,7 +1327,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                 SnackBar(
                   content: Text(
                     'Emergency contacts notified',
-                    style: GoogleFonts.poppins(),
+                    style: TextStyle(fontFamily: 'Poppins'),
                   ),
                   backgroundColor: Colors.red,
                 ),
@@ -1340,7 +1339,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             ),
             child: Text(
               'Call Emergency',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -1355,18 +1354,18 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Cancel Ride?',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
         ),
         content: Text(
           'Are you sure you want to cancel this ride? Cancellation charges may apply.',
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'No, Keep Ride',
-              style: GoogleFonts.poppins(color: Colors.grey),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
             ),
           ),
           ElevatedButton(
@@ -1381,7 +1380,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                   SnackBar(
                     content: Text(
                       'Booking cancelled',
-                      style: GoogleFonts.poppins(),
+                      style: TextStyle(fontFamily: 'Poppins'),
                     ),
                     backgroundColor: Colors.green,
                   ),
@@ -1395,7 +1394,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             ),
             child: Text(
               'Yes, Cancel',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -1415,7 +1414,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Rate Your Ride',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1458,7 +1457,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               onPressed: () => Navigator.pop(context),
               child: Text(
                 'Skip',
-                style: GoogleFonts.poppins(color: Colors.grey),
+                style: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
               ),
             ),
             ElevatedButton(
@@ -1479,7 +1478,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                     SnackBar(
                       content: Text(
                         'Thank you for your feedback!',
-                        style: GoogleFonts.poppins(),
+                        style: TextStyle(fontFamily: 'Poppins'),
                       ),
                       backgroundColor: Colors.green,
                     ),
@@ -1492,7 +1491,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               ),
               child: Text(
                 'Submit',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
               ),
             ),
           ],

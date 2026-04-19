@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 
 import '../../providers/user_dashboard_provider.dart';
@@ -100,7 +99,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
               padding: const EdgeInsets.all(24),
               child: Text(
                 'Error loading profile',
-                style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+                style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 16),
               ),
             ),
           ),
@@ -180,7 +179,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
                   children: [
                     Text(
                       user.userName,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -191,7 +190,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
                     const SizedBox(height: 4),
                     Text(
                       user.email ?? user.phoneNumber ?? 'Zyppi User',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 13,
                         color: Colors.white70,
                       ),
@@ -264,7 +263,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
           child: Text(
             'MENU',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Colors.white54,
@@ -347,7 +346,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
           child: Text(
             'SETTINGS',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: Colors.white54,
@@ -449,7 +448,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
                     children: [
                       Text(
                         'Logout',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.red.shade300,
@@ -457,7 +456,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
                       ),
                       Text(
                         'Sign out from your account',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 12,
                           color: Colors.red.shade200.withValues(alpha: 0.7),
                         ),
@@ -516,7 +515,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
                     children: [
                       Text(
                         title,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -524,7 +523,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
                       ),
                       Text(
                         subtitle,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 12,
                           color: Colors.white60,
                         ),
@@ -544,7 +543,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
                     ),
                     child: Text(
                       badge,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -577,7 +576,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
         const SizedBox(height: 4),
         Text(
           value,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 14,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -585,7 +584,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
         ),
         Text(
           label,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 10,
             color: Colors.white70,
           ),
@@ -636,7 +635,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
               const SizedBox(width: 8),
               Text(
                 'ZYPPI RIDE',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -648,7 +647,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
           const SizedBox(height: 8),
           Text(
             'Version 1.0.0',
-            style: GoogleFonts.poppins(fontSize: 12, color: Colors.white54),
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.white54),
           ),
         ],
       ),
@@ -681,7 +680,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
               const SizedBox(height: 20),
               Text(
                 'Logout',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
@@ -690,7 +689,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
               const SizedBox(height: 12),
               Text(
                 'Are you sure you want to logout from your account?',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 14,
                   color: Colors.black54,
                   height: 1.5,
@@ -712,7 +711,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
                       ),
                       child: Text(
                         'Cancel',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
@@ -734,7 +733,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
                       ),
                       child: Text(
                         'Logout',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,

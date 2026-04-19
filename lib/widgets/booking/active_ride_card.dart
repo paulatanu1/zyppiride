@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/booking_model.dart';
 
@@ -74,14 +73,14 @@ class ActiveRideCard extends StatelessWidget {
                     children: [
                       Text(
                         'Active Ride',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 14,
                           color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                       Text(
                         _getStatusText(),
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -99,7 +98,7 @@ class ActiveRideCard extends StatelessWidget {
                   ),
                   child: Text(
                     '₹${booking.fareDetails.totalFare.toStringAsFixed(0)}',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: _getStatusColor().shade700,
@@ -129,7 +128,7 @@ class ActiveRideCard extends StatelessWidget {
                         booking.userName.isNotEmpty
                             ? booking.userName[0].toUpperCase()
                             : 'U',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.deepPurple,
@@ -143,7 +142,7 @@ class ActiveRideCard extends StatelessWidget {
                         children: [
                           Text(
                             booking.userName,
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
                             ),
@@ -154,7 +153,7 @@ class ActiveRideCard extends StatelessWidget {
                               const SizedBox(width: 4),
                               Text(
                                 booking.userPhone,
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 13,
                                   color: Colors.grey.shade600,
                                 ),
@@ -216,7 +215,7 @@ class ActiveRideCard extends StatelessWidget {
                         children: [
                           Text(
                             booking.pickupLocation.shortAddress,
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
@@ -226,7 +225,7 @@ class ActiveRideCard extends StatelessWidget {
                           const SizedBox(height: 20),
                           Text(
                             booking.dropLocation.shortAddress,
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
@@ -260,7 +259,7 @@ class ActiveRideCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Text(
                       'Enter OTP:',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
                       ),
@@ -272,7 +271,7 @@ class ActiveRideCard extends StatelessWidget {
                         keyboardType: TextInputType.number,
                         maxLength: 4,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -281,7 +280,7 @@ class ActiveRideCard extends StatelessWidget {
                         decoration: InputDecoration(
                           counterText: '',
                           hintText: '----',
-                          hintStyle: GoogleFonts.poppins(
+                          hintStyle: TextStyle(fontFamily: 'Poppins', 
                             color: Colors.white.withValues(alpha: 0.5),
                             letterSpacing: 8,
                           ),
@@ -336,7 +335,7 @@ class ActiveRideCard extends StatelessWidget {
                       icon: const Icon(Icons.navigation),
                       label: Text(
                         'Navigate',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                        style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -370,7 +369,7 @@ class ActiveRideCard extends StatelessWidget {
                               const SizedBox(width: 8),
                               Text(
                                 _getMainActionText(),
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),

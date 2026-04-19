@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../router/routes_name.dart';
@@ -134,7 +133,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Register', style: GoogleFonts.poppins()),
+        title: Text('Register', style: TextStyle(fontFamily: 'Poppins')),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
       ),
@@ -145,7 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           children: [
             Text(
               'Create Account',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Colors.deepPurple,
@@ -154,7 +153,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             const SizedBox(height: 8),
             Text(
               'Sign up to get started',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
@@ -174,7 +173,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     'OR',
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       color: Colors.grey[500],
                       fontWeight: FontWeight.w500,
                     ),
@@ -402,7 +401,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               )
                             : Text(
                                 'Create Account',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -419,7 +418,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     children: [
                       Text(
                         'Already have an account? ',
-                        style: GoogleFonts.poppins(color: Colors.grey[600]),
+                        style: TextStyle(fontFamily: 'Poppins', color: Colors.grey[600]),
                       ),
                       Semantics(
                         label: 'Sign in link',
@@ -428,7 +427,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           onPressed: () => context.pop(),
                           child: Text(
                             'Sign In',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               color: Colors.deepPurple,
                               fontWeight: FontWeight.w600,
                             ),
@@ -481,7 +480,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
               label: Text(
                 'Sign up with Google',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey[800],
@@ -511,7 +510,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               icon: Icon(Icons.phone, color: Colors.green[700], size: 24),
               label: Text(
                 'Sign up with Phone',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey[800],

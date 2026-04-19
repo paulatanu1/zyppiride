@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../providers/verification_provider.dart';
 import '../../services/document_verification_service.dart';
 
-/// A badge widget that displays the user's verification status
+/// A badge widget that displays vehicle document verification status
 class VerificationStatusBadge extends ConsumerWidget {
   final String userId;
   final bool showDetails;
@@ -19,17 +18,31 @@ class VerificationStatusBadge extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final verificationAsync = ref.watch(verificationStatusStreamProvider(userId));
+    // Use stream provider for real-time eligibility updates
+    final eligibilityAsync = ref.watch(onlineEligibilityStreamProvider(userId));
 
-    return verificationAsync.when(
-      data: (status) => _buildBadge(context, status),
+    return eligibilityAsync.when(
+      data: (eligibility) {
+        // Determine status based on eligibility
+        String status;
+        if (eligibility.canGoOnline) {
+          status = 'approved';
+        } else if (eligibility.missingItems.contains('vehicle_registration')) {
+          status = 'pending';
+        } else if (eligibility.reason?.contains('under review') == true) {
+          status = 'submitted';
+        } else {
+          status = 'pending';
+        }
+        return _buildSimpleBadge(context, status);
+      },
       loading: () => _buildLoadingBadge(),
       error: (e, s) => _buildErrorBadge(),
     );
   }
 
-  Widget _buildBadge(BuildContext context, VerificationStatus status) {
-    final (color, icon, text) = switch (status.status) {
+  Widget _buildSimpleBadge(BuildContext context, String status) {
+    final (color, icon, text) = switch (status) {
       'approved' => (Colors.green, Icons.verified, 'Verified'),
       'submitted' => (Colors.blue, Icons.hourglass_empty, 'Under Review'),
       'rejected' => (Colors.red, Icons.error_outline, 'Rejected'),
@@ -47,38 +60,27 @@ class VerificationStatusBadge extends ConsumerWidget {
       );
     }
 
-    return GestureDetector(
-      onTap: showDetails ? () => _showDetailsDialog(context, status) : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.5)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 6),
-            Text(
-              text,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(fontFamily: 'Poppins', 
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
             ),
-            if (showDetails) ...[
-              const SizedBox(width: 4),
-              Icon(
-                Icons.info_outline,
-                size: 14,
-                color: color.withValues(alpha: 0.7),
-              ),
-            ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -112,95 +114,13 @@ class VerificationStatusBadge extends ConsumerWidget {
           const SizedBox(width: 6),
           Text(
             'Unknown',
-            style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Colors.grey),
           ),
         ],
       ),
     );
   }
 
-  void _showDetailsDialog(BuildContext context, VerificationStatus status) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Verification Status',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStatusRow('Status', status.displayStatus),
-            if (status.submittedAt != null)
-              _buildStatusRow(
-                'Submitted',
-                _formatDate(status.submittedAt!),
-              ),
-            if (status.approvedAt != null)
-              _buildStatusRow(
-                'Approved',
-                _formatDate(status.approvedAt!),
-              ),
-            if (status.notes != null && status.notes!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                'Notes:',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                status.notes!,
-                style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700]),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Close',
-              style: GoogleFonts.poppins(color: Colors.deepPurple),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
 }
 
 /// A card widget showing verification requirement warning
@@ -256,7 +176,7 @@ class VerificationRequiredCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Verification Required',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -268,7 +188,7 @@ class VerificationRequiredCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             eligibility.reason ?? 'Complete verification to go online',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 14,
               color: Colors.white.withValues(alpha: 0.9),
             ),
@@ -288,7 +208,7 @@ class VerificationRequiredCard extends StatelessWidget {
               ),
               child: Text(
                 _getActionButtonText(),
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
               ),
             ),
           ),

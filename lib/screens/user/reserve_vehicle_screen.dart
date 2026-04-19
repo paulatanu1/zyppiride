@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 
 import '../../models/available_vehicle_model.dart';
@@ -91,7 +90,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
         ),
         title: Text(
           'Reserve Vehicle',
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -237,7 +236,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
             children: [
               Text(
                 'Active Filters',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.white70,
@@ -247,7 +246,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
                 onPressed: () => ref.read(vehicleFiltersProvider.notifier).clearAllFilters(),
                 child: Text(
                   'Clear All',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -280,7 +279,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
         children: [
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 13,
               fontWeight: FontWeight.w500,
               color: Colors.white,
@@ -305,7 +304,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
           const SizedBox(height: 16),
           Text(
             'Finding vehicles...',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 16,
               color: Colors.white70,
             ),
@@ -333,7 +332,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
             const SizedBox(height: 20),
             Text(
               'Oops! Something went wrong',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -342,7 +341,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
             const SizedBox(height: 8),
             Text(
               error,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 color: Colors.white70,
               ),
@@ -354,7 +353,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
               icon: const Icon(Icons.refresh),
               label: Text(
                 'Try Again',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -389,7 +388,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
             const SizedBox(height: 24),
             Text(
               'No vehicles found',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -398,7 +397,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
             const SizedBox(height: 8),
             Text(
               'Try adjusting your filters to find more vehicles',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 color: Colors.white70,
               ),
@@ -410,7 +409,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
               icon: const Icon(Icons.filter_alt_off),
               label: Text(
                 'Clear Filters',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -504,7 +503,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
                         ),
                         child: Text(
                           vehicle.isAvailable ? 'Available' : 'Busy',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -528,7 +527,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
                             const SizedBox(width: 4),
                             Text(
                               vehicle.driverRating.toStringAsFixed(1),
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(fontFamily: 'Poppins', 
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
@@ -571,7 +570,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
                             children: [
                               Text(
                                 vehicle.vehicleInfo.displayName,
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -581,7 +580,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
                               ),
                               Text(
                                 '${_formatVehicleType(vehicle.vehicleInfo.type)} • ${vehicle.vehicleInfo.year}',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 13,
                                   color: Colors.white70,
                                 ),
@@ -594,7 +593,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
                           children: [
                             Text(
                               '₹${vehicle.pricing.perKmRate.toInt()}',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(fontFamily: 'Poppins', 
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -602,7 +601,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
                             ),
                             Text(
                               'per km',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(fontFamily: 'Poppins', 
                                 fontSize: 12,
                                 color: Colors.white70,
                               ),
@@ -658,7 +657,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
                             children: [
                               Text(
                                 vehicle.driverName,
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
@@ -666,7 +665,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
                               ),
                               Text(
                                 '${vehicle.totalTrips} trips • ${vehicle.location.displayLocation}',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 12,
                                   color: Colors.white70,
                                 ),
@@ -696,7 +695,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
                         ),
                         child: Text(
                           vehicle.isAvailable ? 'Book Now' : 'Not Available',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
@@ -728,7 +727,7 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
           const SizedBox(width: 4),
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 12,
               color: Colors.white,
             ),
@@ -886,7 +885,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                   children: [
                     Text(
                       'Filters',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -896,7 +895,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                       onPressed: _resetFilters,
                       child: Text(
                         'Reset',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.white70,
@@ -938,7 +937,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                       data: (cities) => cities.isEmpty
                           ? Text(
                               'No cities available',
-                              style: GoogleFonts.poppins(color: Colors.white70),
+                              style: TextStyle(fontFamily: 'Poppins', color: Colors.white70),
                             )
                           : _buildChipSelector(
                               items: cities,
@@ -949,7 +948,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                       loading: () => const CircularProgressIndicator(color: Colors.white),
                       error: (e, s) => Text(
                         'Failed to load cities',
-                        style: GoogleFonts.poppins(color: Colors.white70),
+                        style: TextStyle(fontFamily: 'Poppins', color: Colors.white70),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -962,7 +961,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                       children: [
                         Text(
                           '₹${_priceRange.start.toInt()}',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -970,7 +969,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                         ),
                         Text(
                           '₹${_priceRange.end.toInt()}',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -1068,7 +1067,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
                       ),
                       child: Text(
                         'Apply Filters',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1089,7 +1088,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: GoogleFonts.poppins(
+        style: TextStyle(fontFamily: 'Poppins', 
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: Colors.white,
@@ -1124,7 +1123,7 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
             ),
             child: Text(
               labelBuilder(item),
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: isSelected ? Colors.deepPurple : Colors.white,

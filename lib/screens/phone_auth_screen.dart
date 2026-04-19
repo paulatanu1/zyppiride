@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:pinput/pinput.dart';
 import 'package:sms_autofill/sms_autofill.dart';
 import '../services/auth_service.dart';
@@ -203,7 +202,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Phone Login', style: GoogleFonts.poppins()),
+        title: Text('Phone Login', style: TextStyle(fontFamily: 'Poppins')),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         leading: Semantics(
@@ -225,7 +224,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
           children: [
             Text(
               isOtpSent ? 'Verify OTP' : 'Enter Phone Number',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.deepPurple,
@@ -236,7 +235,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
               isOtpSent
                   ? 'Enter the 6-digit code sent to your phone'
                   : 'We will send you a verification code',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
@@ -267,7 +266,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
                       isOtpSent
                           ? 'OTP will be auto-filled when SMS is received'
                           : 'Standard SMS charges may apply',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         color: Colors.blue.shade700,
                       ),
@@ -387,7 +386,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
                       )
                     : Text(
                         'Send OTP',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -404,7 +403,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
     final defaultPinTheme = PinTheme(
       width: 50,
       height: 56,
-      textStyle: GoogleFonts.poppins(
+      textStyle: TextStyle(fontFamily: 'Poppins', 
         fontSize: 22,
         fontWeight: FontWeight.w600,
         color: Colors.deepPurple,
@@ -452,7 +451,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
               const SizedBox(width: 8),
               Text(
                 '$_selectedCountryCode ${_phoneController.text}',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontWeight: FontWeight.w600,
                   color: Colors.deepPurple,
                 ),
@@ -468,7 +467,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
                   },
                   child: Text(
                     'Change',
-                    style: GoogleFonts.poppins(color: Colors.deepPurple),
+                    style: TextStyle(fontFamily: 'Poppins', color: Colors.deepPurple),
                   ),
                 ),
               ),
@@ -517,7 +516,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
             const SizedBox(width: 8),
             Text(
               'OTP will auto-fill from SMS',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 12,
                 color: Colors.grey[600],
               ),
@@ -533,7 +532,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
           children: [
             Text(
               "Didn't receive the code? ",
-              style: GoogleFonts.poppins(color: Colors.grey[600]),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.grey[600]),
             ),
             Semantics(
               label: 'Resend OTP button',
@@ -542,7 +541,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
                 onPressed: phoneAuthState.isLoading ? null : _resendOtp,
                 child: Text(
                   'Resend',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     color: Colors.deepPurple,
                     fontWeight: FontWeight.w600,
                   ),
@@ -587,7 +586,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
                     )
                   : Text(
                       'Verify OTP',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),

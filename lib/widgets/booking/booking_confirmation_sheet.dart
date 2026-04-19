@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/available_vehicle_model.dart';
 import '../../models/booking_model.dart';
@@ -79,7 +78,7 @@ class _BookingConfirmationSheetState
               children: [
                 Text(
                   'Confirm Booking',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -139,7 +138,7 @@ class _BookingConfirmationSheetState
                           Expanded(
                             child: Text(
                               bookingState.error!,
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(fontFamily: 'Poppins', 
                                 color: Colors.red.shade700,
                                 fontSize: 13,
                               ),
@@ -175,14 +174,14 @@ class _BookingConfirmationSheetState
                     children: [
                       Text(
                         'Total Fare',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       Text(
                         _getFinalFare(),
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.green.shade700,
@@ -215,7 +214,7 @@ class _BookingConfirmationSheetState
                             )
                           : Text(
                               'Confirm Booking',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(fontFamily: 'Poppins', 
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -264,7 +263,7 @@ class _BookingConfirmationSheetState
               children: [
                 Text(
                   widget.vehicle.driverName,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -272,7 +271,7 @@ class _BookingConfirmationSheetState
                 const SizedBox(height: 4),
                 Text(
                   widget.vehicle.vehicleInfo.displayName,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 13,
                     color: Colors.grey.shade700,
                   ),
@@ -284,7 +283,7 @@ class _BookingConfirmationSheetState
                     const SizedBox(width: 4),
                     Text(
                       widget.vehicle.driverRating.toStringAsFixed(1),
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -292,7 +291,7 @@ class _BookingConfirmationSheetState
                     const SizedBox(width: 12),
                     Text(
                       '${widget.vehicle.totalTrips} trips',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         color: Colors.grey.shade600,
                       ),
@@ -312,7 +311,7 @@ class _BookingConfirmationSheetState
             ),
             child: Text(
               widget.vehicle.vehicleInfo.registrationNumber,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: Colors.deepPurple,
@@ -370,14 +369,14 @@ class _BookingConfirmationSheetState
                   children: [
                     Text(
                       'Pickup',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 11,
                         color: Colors.grey.shade600,
                       ),
                     ),
                     Text(
                       widget.pickupLocation.address,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -387,14 +386,14 @@ class _BookingConfirmationSheetState
                     const SizedBox(height: 16),
                     Text(
                       'Drop',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 11,
                         color: Colors.grey.shade600,
                       ),
                     ),
                     Text(
                       widget.dropLocation.address,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -439,14 +438,14 @@ class _BookingConfirmationSheetState
         const SizedBox(height: 4),
         Text(
           value,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
         ),
         Text(
           label,
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 11,
             color: Colors.grey.shade600,
           ),
@@ -478,7 +477,7 @@ class _BookingConfirmationSheetState
         children: [
           Text(
             'Fare Breakdown',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -491,7 +490,7 @@ class _BookingConfirmationSheetState
                   children: [
                     Text(
                       item.label,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 13,
                         color: item.isDiscount
                             ? Colors.green.shade700
@@ -500,7 +499,7 @@ class _BookingConfirmationSheetState
                     ),
                     Text(
                       item.formattedAmount,
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: item.isDiscount
@@ -533,7 +532,7 @@ class _BookingConfirmationSheetState
               const SizedBox(width: 8),
               Text(
                 'Promo Code',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -550,7 +549,7 @@ class _BookingConfirmationSheetState
                   textCapitalization: TextCapitalization.characters,
                   decoration: InputDecoration(
                     hintText: 'Enter promo code',
-                    hintStyle: GoogleFonts.poppins(
+                    hintStyle: TextStyle(fontFamily: 'Poppins', 
                       color: Colors.grey.shade500,
                       fontSize: 14,
                     ),
@@ -589,7 +588,7 @@ class _BookingConfirmationSheetState
                 ),
                 child: Text(
                   _promoApplied ? 'Remove' : 'Apply',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -602,7 +601,7 @@ class _BookingConfirmationSheetState
                 const SizedBox(width: 6),
                 Text(
                   'Promo applied! You save ₹${_promoDiscount.toStringAsFixed(0)}',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 12,
                     color: Colors.green.shade700,
                     fontWeight: FontWeight.w500,
@@ -629,7 +628,7 @@ class _BookingConfirmationSheetState
         children: [
           Text(
             'Payment Method',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -670,7 +669,7 @@ class _BookingConfirmationSheetState
                       const SizedBox(width: 8),
                       Text(
                         method.displayName,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           color:
@@ -721,7 +720,7 @@ class _BookingConfirmationSheetState
         SnackBar(
           content: Text(
             'Please enter a promo code',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: Colors.red,
         ),
@@ -741,7 +740,7 @@ class _BookingConfirmationSheetState
       SnackBar(
         content: Text(
           'Promo code applied!',
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         backgroundColor: Colors.green,
       ),

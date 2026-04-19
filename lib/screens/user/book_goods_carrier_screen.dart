@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../router/routes_name.dart';
 
 class BookGoodsCarrierScreen extends ConsumerStatefulWidget {
@@ -142,7 +141,7 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
           const SizedBox(width: 16),
           Text(
             'Book Goods Carrier',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -156,7 +155,7 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.poppins(
+      style: TextStyle(fontFamily: 'Poppins', 
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: Colors.white,
@@ -203,7 +202,7 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
                     const SizedBox(height: 8),
                     Text(
                       vehicle['name'],
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: isSelected ? Colors.deepPurple : Colors.white,
@@ -213,7 +212,7 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
                     const SizedBox(height: 4),
                     Text(
                       vehicle['capacity'],
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 9,
                         color: isSelected ? Colors.deepPurple.shade300 : Colors.white70,
                       ),
@@ -274,10 +273,10 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
             label: '$hint input field',
             child: TextField(
               controller: controller,
-              style: GoogleFonts.poppins(color: Colors.white),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: GoogleFonts.poppins(color: Colors.white54),
+                hintStyle: TextStyle(fontFamily: 'Poppins', color: Colors.white54),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -310,11 +309,11 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
         children: [
           TextField(
             controller: _goodsDescController,
-            style: GoogleFonts.poppins(color: Colors.white),
+            style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
             maxLines: 2,
             decoration: InputDecoration(
               hintText: 'Describe your goods (e.g., Furniture, Electronics)',
-              hintStyle: GoogleFonts.poppins(color: Colors.white54, fontSize: 14),
+              hintStyle: TextStyle(fontFamily: 'Poppins', color: Colors.white54, fontSize: 14),
               prefixIcon: const Icon(Icons.inventory_2_outlined, color: Colors.white70),
               border: InputBorder.none,
             ),
@@ -323,7 +322,7 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
           const SizedBox(height: 8),
           Text(
             'Estimated Weight: ${_estimatedWeight.toInt()} kg',
-            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+            style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 14),
           ),
           Slider(
             value: _estimatedWeight,
@@ -365,7 +364,7 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
                       _scheduledDate != null
                           ? '${_scheduledDate!.day}/${_scheduledDate!.month}/${_scheduledDate!.year}'
                           : 'Select Date',
-                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 13),
+                      style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 13),
                     ),
                   ],
                 ),
@@ -390,7 +389,7 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
                       _scheduledTime != null
                           ? _scheduledTime!.format(context)
                           : 'Select Time',
-                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 13),
+                      style: TextStyle(fontFamily: 'Poppins', color: Colors.white, fontSize: 13),
                     ),
                   ],
                 ),
@@ -425,11 +424,11 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
             children: [
               Text(
                 'Selected Vehicle',
-                style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
+                style: TextStyle(fontFamily: 'Poppins', color: Colors.white70, fontSize: 14),
               ),
               Text(
                 _selectedVehicleType,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   color: Colors.white,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -443,11 +442,11 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
             children: [
               Text(
                 'Rate',
-                style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
+                style: TextStyle(fontFamily: 'Poppins', color: Colors.white70, fontSize: 14),
               ),
               Text(
                 selectedVehicle['price'],
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   color: Colors.greenAccent,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -491,7 +490,7 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
               ),
               child: Text(
                 'Find Carriers',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -531,7 +530,7 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
         SnackBar(
           content: Text(
             'Please enter pickup and drop locations',
-            style: GoogleFonts.poppins(),
+            style: TextStyle(fontFamily: 'Poppins'),
           ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
@@ -545,7 +544,7 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
       SnackBar(
         content: Text(
           'Searching for available carriers...',
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class OffersRewardsScreen extends ConsumerStatefulWidget {
   const OffersRewardsScreen({super.key});
@@ -153,7 +152,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
           const SizedBox(width: 16),
           Text(
             'Offers & Rewards',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -172,7 +171,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
                 const SizedBox(width: 4),
                 Text(
                   '1,250',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -227,7 +226,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
                   Expanded(
                     child: Text(
                       'Complete 5 more rides to unlock Gold membership!',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         color: Colors.white,
                       ),
@@ -256,7 +255,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
         const SizedBox(height: 8),
         Text(
           reward['value'],
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -264,7 +263,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
         ),
         Text(
           reward['label'],
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 12,
             color: Colors.white.withValues(alpha: 0.8),
           ),
@@ -289,7 +288,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
           ),
           labelColor: Colors.deepPurple,
           unselectedLabelColor: Colors.white,
-          labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          labelStyle: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
           tabs: const [
             Tab(text: 'Offers'),
             Tab(text: 'My Rewards'),
@@ -354,7 +353,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
                     children: [
                       Text(
                         offer['title'],
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -362,7 +361,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
                       ),
                       Text(
                         offer['validTill'],
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 11,
                           color: Colors.white.withValues(alpha: 0.8),
                         ),
@@ -378,7 +377,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
                   ),
                   child: Text(
                     offer['discount'],
-                    style: GoogleFonts.poppins(
+                    style: TextStyle(fontFamily: 'Poppins', 
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: offer['color'] as Color,
@@ -396,7 +395,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
               children: [
                 Text(
                   offer['description'],
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 13,
                     color: Colors.grey.shade700,
                   ),
@@ -427,7 +426,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
                           children: [
                             Text(
                               offer['code'],
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(fontFamily: 'Poppins', 
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.deepPurple,
@@ -458,7 +457,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
                       ),
                       child: Text(
                         'Apply',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                        style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
@@ -480,7 +479,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
       ),
       child: Text(
         text,
-        style: GoogleFonts.poppins(
+        style: TextStyle(fontFamily: 'Poppins', 
           fontSize: 11,
           color: Colors.grey.shade600,
         ),
@@ -496,7 +495,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
         children: [
           Text(
             'Points History',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -511,7 +510,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
           const SizedBox(height: 24),
           Text(
             'Redeem Points',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -557,7 +556,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 14,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
@@ -565,7 +564,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
                 ),
                 Text(
                   time,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 11,
                     color: Colors.white60,
                   ),
@@ -575,7 +574,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
           ),
           Text(
             points,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: isCredit ? Colors.green : Colors.red,
@@ -612,7 +611,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
               children: [
                 Text(
                   value,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -620,7 +619,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
                 ),
                 Text(
                   description,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 12,
                     color: Colors.white60,
                   ),
@@ -642,7 +641,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
             ),
             child: Text(
               points,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -659,7 +658,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
       SnackBar(
         content: Text(
           'Code "$code" copied to clipboard',
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,

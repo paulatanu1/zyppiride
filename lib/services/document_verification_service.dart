@@ -42,11 +42,12 @@ class DocumentVerificationService {
 
       final vehicles = vehiclesSnapshot.docs.map((doc) {
         final data = doc.data();
+        final rawStatus = data['documentStatus'] as String? ?? 'pending';
         return VehicleVerificationInfo(
           vehicleId: doc.id,
           registrationNumber:
               data['vehicleDetails']?['registrationNumber'] ?? '',
-          documentStatus: data['documentStatus'] as String? ?? 'pending',
+          documentStatus: rawStatus.toLowerCase(),
           hasAllDocuments: _hasAllRequiredDocuments(data['documents']),
         );
       }).toList();
@@ -134,8 +135,6 @@ class DocumentVerificationService {
         return Result.failure(DatabaseException.notFound('User'));
       }
 
-      final verificationStatus = userData['verificationStatus'] as String?;
-
       // Check vehicles
       final vehiclesSnapshot = await _firestore
           .collection('vehicles')
@@ -156,7 +155,7 @@ class DocumentVerificationService {
       bool hasApprovedVehicle = false;
       for (final doc in vehiclesSnapshot.docs) {
         final data = doc.data();
-        final docStatus = data['documentStatus'] as String?;
+        final docStatus = (data['documentStatus'] as String?)?.toLowerCase();
 
         if (docStatus == 'approved') {
           hasApprovedVehicle = true;
@@ -165,31 +164,27 @@ class DocumentVerificationService {
         }
       }
 
-      // Check user verification
-      if (verificationStatus != 'approved') {
-        if (verificationStatus == 'submitted') {
-          missingItems.add('verification_under_review');
-        } else if (verificationStatus == 'rejected') {
-          missingItems.add('verification_rejected');
-        } else {
-          missingItems.add('profile_verification');
-        }
-      }
-
-      // Can go online if at least one vehicle is approved and user is verified
-      final canGoOnline =
-          hasApprovedVehicle && verificationStatus == 'approved';
+      // Can go online if at least one vehicle document is approved
+      // User verification status is optional - vehicle approval is sufficient
+      final canGoOnline = hasApprovedVehicle;
 
       String? reason;
       if (!canGoOnline) {
-        if (!hasApprovedVehicle) {
-          reason = 'Vehicle documents pending verification';
-        } else if (verificationStatus == 'submitted') {
-          reason = 'Verification under review';
-        } else if (verificationStatus == 'rejected') {
-          reason = 'Verification was rejected. Please resubmit.';
+        // Check if any vehicle has documents submitted for review
+        bool hasSubmittedVehicle = false;
+        for (final doc in vehiclesSnapshot.docs) {
+          final data = doc.data();
+          final docStatus = (data['documentStatus'] as String?)?.toLowerCase();
+          if (docStatus == 'submitted') {
+            hasSubmittedVehicle = true;
+            break;
+          }
+        }
+
+        if (hasSubmittedVehicle) {
+          reason = 'Vehicle documents under review';
         } else {
-          reason = 'Please complete verification to go online';
+          reason = 'Please upload and submit vehicle documents';
         }
       }
 
@@ -217,6 +212,68 @@ class DocumentVerificationService {
         .doc(userId)
         .snapshots()
         .map((snapshot) => VerificationStatus.fromMap(snapshot.data() ?? {}));
+  }
+
+  /// Stream online eligibility - auto-updates when vehicle status changes
+  Stream<OnlineEligibility> watchOnlineEligibility(String userId) {
+    return _firestore
+        .collection('vehicles')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.docs.isEmpty) {
+        return OnlineEligibility(
+          canGoOnline: false,
+          reason: 'No vehicles registered',
+          missingItems: ['vehicle_registration'],
+        );
+      }
+
+      bool hasApprovedVehicle = false;
+      bool hasSubmittedVehicle = false;
+      final List<String> missingItems = [];
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final docStatus = (data['documentStatus'] as String?)?.toLowerCase();
+
+        AppLogger.debug(
+          'Vehicle ${doc.id} documentStatus: $docStatus',
+          tag: 'DocumentVerificationService',
+        );
+
+        if (docStatus == 'approved') {
+          hasApprovedVehicle = true;
+        } else if (docStatus == 'submitted') {
+          hasSubmittedVehicle = true;
+          missingItems.add('vehicle_documents');
+        } else {
+          missingItems.add('vehicle_documents');
+        }
+      }
+
+      final canGoOnline = hasApprovedVehicle;
+
+      String? reason;
+      if (!canGoOnline) {
+        if (hasSubmittedVehicle) {
+          reason = 'Vehicle documents under review';
+        } else {
+          reason = 'Please upload and submit vehicle documents';
+        }
+      }
+
+      AppLogger.debug(
+        'Stream eligibility: canGoOnline=$canGoOnline, hasApproved=$hasApprovedVehicle',
+        tag: 'DocumentVerificationService',
+      );
+
+      return OnlineEligibility(
+        canGoOnline: canGoOnline,
+        reason: reason,
+        missingItems: missingItems,
+      );
+    });
   }
 
   /// Update verification status (for admin use or testing)

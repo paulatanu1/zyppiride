@@ -8,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/utils/app_logger.dart';
@@ -271,7 +270,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           const SizedBox(height: 20),
           Text(
             'Choose Photo Source',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -321,7 +320,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           const SizedBox(height: 8),
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontWeight: FontWeight.w500,
               color: Colors.grey.shade700,
             ),
@@ -352,7 +351,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           const SizedBox(height: 16),
           Text(
             'Unable to load profile',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 18,
               color: Colors.grey.shade600,
             ),
@@ -460,7 +459,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                                 child: profileUrl == null
                                     ? Text(
                                         name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                                        style: GoogleFonts.poppins(
+                                        style: TextStyle(fontFamily: 'Poppins', 
                                           fontSize: 44,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
@@ -513,7 +512,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       const SizedBox(height: 16),
                       Text(
                         name,
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -522,7 +521,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       const SizedBox(height: 4),
                       Text(
                         'Member since $memberSince',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 14,
                           color: Colors.white.withValues(alpha:0.8),
                         ),
@@ -659,7 +658,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       icon: const Icon(Icons.logout),
                       label: Text(
                         'Logout',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                        style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -709,7 +708,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -765,14 +764,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             children: [
               Text(
                 label,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 12,
                   color: Colors.grey.shade500,
                 ),
               ),
               Text(
                 value,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                 ),
@@ -797,14 +796,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           const SizedBox(height: 8),
           Text(
             value,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 12,
               color: Colors.grey.shade500,
             ),
@@ -837,7 +836,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             const SizedBox(width: 14),
             Text(
               label,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
@@ -901,7 +900,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 const SizedBox(height: 20),
                 Text(
                   'Edit Profile',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -944,7 +943,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                           dob != null
                               ? DateFormat('dd MMM yyyy').format(dob!)
                               : 'Select Date of Birth',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             color: dob != null ? Colors.black : Colors.grey.shade600,
                           ),
                         ),
@@ -986,7 +985,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     ),
                     child: Text(
                       'Save Changes',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                      style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -1006,18 +1005,18 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Logout',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
         ),
         content: Text(
           'Are you sure you want to logout?',
-          style: GoogleFonts.poppins(),
+          style: TextStyle(fontFamily: 'Poppins'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: GoogleFonts.poppins(color: Colors.grey),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
             ),
           ),
           ElevatedButton(
@@ -1037,7 +1036,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             ),
             child: Text(
               'Logout',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
             ),
           ),
         ],

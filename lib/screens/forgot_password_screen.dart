@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -52,7 +51,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Reset Password', style: GoogleFonts.poppins()),
+        title: Text('Reset Password', style: TextStyle(fontFamily: 'Poppins')),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
       ),
@@ -83,7 +82,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         const SizedBox(height: 32),
         Text(
           'Check Your Email',
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.deepPurple,
@@ -95,7 +94,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           child: Text(
             'We have sent a password reset link to:',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 14,
               color: Colors.grey[600],
             ),
@@ -104,7 +103,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         const SizedBox(height: 8),
         Text(
           _emailController.text.trim(),
-          style: GoogleFonts.poppins(
+          style: TextStyle(fontFamily: 'Poppins', 
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: Colors.deepPurple,
@@ -124,7 +123,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               Expanded(
                 child: Text(
                   'Click the link in your email to reset your password. The link expires in 1 hour.',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 12,
                     color: Colors.blue.shade700,
                   ),
@@ -148,7 +147,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             ),
             child: Text(
               'Back to Login',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -165,7 +164,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           },
           child: Text(
             'Didn\'t receive email? Try again',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               color: Colors.deepPurple,
             ),
           ),
@@ -182,7 +181,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         children: [
           Text(
             'Forgot Password?',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Colors.deepPurple,
@@ -191,7 +190,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           const SizedBox(height: 8),
           Text(
             'Enter your email address and we\'ll send you a link to reset your password.',
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 14,
               color: Colors.grey[600],
             ),
@@ -288,7 +287,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       )
                     : Text(
                         'Send Reset Link',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(fontFamily: 'Poppins', 
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -306,7 +305,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               icon: const Icon(Icons.arrow_back, size: 18),
               label: Text(
                 'Back to Login',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   color: Colors.deepPurple,
                 ),
               ),

@@ -150,7 +150,7 @@ final verificationStatusStreamProvider =
   return service.watchVerificationStatus(userId);
 });
 
-// Provider for online eligibility
+// Provider for online eligibility (one-time fetch)
 final onlineEligibilityProvider =
     FutureProvider.family<OnlineEligibility, String>((ref, userId) async {
   final service = ref.watch(verificationServiceProvider);
@@ -159,6 +159,13 @@ final onlineEligibilityProvider =
     canGoOnline: false,
     reason: 'Unable to check eligibility',
   ));
+});
+
+// Stream provider for online eligibility (auto-updates)
+final onlineEligibilityStreamProvider =
+    StreamProvider.family<OnlineEligibility, String>((ref, userId) {
+  final service = ref.watch(verificationServiceProvider);
+  return service.watchOnlineEligibility(userId);
 });
 
 // Provider for vehicle verification info

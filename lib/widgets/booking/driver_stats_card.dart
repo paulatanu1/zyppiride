@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../services/booking_service.dart';
 
 /// Card widget for displaying driver statistics
@@ -102,14 +101,14 @@ class DriverStatsCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
             label,
-            style: GoogleFonts.poppins(
+            style: TextStyle(fontFamily: 'Poppins', 
               fontSize: 11,
               color: Colors.grey.shade500,
             ),
@@ -198,7 +197,7 @@ class DriverQuickStats extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   value,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(fontFamily: 'Poppins', 
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: color,
@@ -209,7 +208,7 @@ class DriverQuickStats extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 11,
                 color: Colors.grey.shade600,
               ),

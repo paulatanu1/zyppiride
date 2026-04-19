@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../router/routes_name.dart';
@@ -124,7 +123,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select Role', style: GoogleFonts.poppins()),
+        title: Text('Select Role', style: TextStyle(fontFamily: 'Poppins')),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
@@ -137,7 +136,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             children: [
               Text(
                 'Complete Your Profile',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.deepPurple,
@@ -146,7 +145,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               const SizedBox(height: 8),
               Text(
                 'Please fill in your details to continue',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 14,
                   color: Colors.grey[600],
                 ),
@@ -158,11 +157,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 label: 'Select your role dropdown',
                 child: DropdownButtonFormField<String>(
                   initialValue: _role,
-                  hint: Text('Select Role', style: GoogleFonts.poppins()),
+                  hint: Text('Select Role', style: TextStyle(fontFamily: 'Poppins')),
                   items: ['User', 'Vehicle Owner', 'Driver'].map((String role) {
                     return DropdownMenuItem<String>(
                       value: role,
-                      child: Text(role, style: GoogleFonts.poppins()),
+                      child: Text(role, style: TextStyle(fontFamily: 'Poppins')),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -250,7 +249,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         });
                       },
                     ),
-                    Text('I accept the ', style: GoogleFonts.poppins()),
+                    Text('I accept the ', style: TextStyle(fontFamily: 'Poppins')),
                     Semantics(
                       label: 'View terms and conditions',
                       button: true,
@@ -258,7 +257,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         onTap: _showTermsPopup,
                         child: Text(
                           'Terms & Conditions',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             color: Colors.deepPurple,
                             decoration: TextDecoration.underline,
                             fontWeight: FontWeight.w500,
@@ -290,7 +289,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         Expanded(
                           child: Text(
                             _errorMessage!,
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               color: Colors.red.shade700,
                             ),
                           ),
@@ -330,7 +329,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           )
                         : Text(
                             'Continue',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(fontFamily: 'Poppins', 
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
                             ),

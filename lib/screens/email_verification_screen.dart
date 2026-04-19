@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../router/routes_name.dart';
 import 'role_selection_screen.dart';
@@ -164,7 +163,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Verify Email', style: GoogleFonts.poppins()),
+        title: Text('Verify Email', style: TextStyle(fontFamily: 'Poppins')),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
@@ -173,7 +172,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
             onPressed: _signOutAndReturn,
             child: Text(
               'Sign Out',
-              style: GoogleFonts.poppins(color: Colors.white),
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
             ),
           ),
         ],
@@ -205,7 +204,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
 
             Text(
               'Verify Your Email',
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.deepPurple,
@@ -217,7 +216,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
             Text(
               'We have sent a verification email to:',
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
@@ -229,7 +228,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
               label: 'Email address: $email',
               child: Text(
                 email,
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Colors.deepPurple,
@@ -255,7 +254,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                       Expanded(
                         child: Text(
                           'Click the verification link in your email to continue.',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 13,
                             color: Colors.blue.shade700,
                           ),
@@ -271,7 +270,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                       Expanded(
                         child: Text(
                           'This page will automatically redirect once verified.',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 12,
                             color: Colors.blue.shade700,
                           ),
@@ -376,7 +375,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                         )
                       : Text(
                           'I\'ve Verified My Email',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -416,7 +415,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                           _resendCooldown > 0
                               ? 'Resend in ${_resendCooldown}s'
                               : 'Resend Verification Email',
-                          style: GoogleFonts.poppins(
+                          style: TextStyle(fontFamily: 'Poppins', 
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                             color: _resendCooldown > 0 ? Colors.grey : Colors.deepPurple,
@@ -432,7 +431,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
             Text(
               'Didn\'t receive the email? Check your spam folder.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
+              style: TextStyle(fontFamily: 'Poppins', 
                 fontSize: 12,
                 color: Colors.grey[500],
               ),

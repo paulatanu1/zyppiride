@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../models/offer_banner_model.dart';
 
 class OfferBannerSlider extends StatefulWidget {
@@ -34,7 +33,7 @@ class _OfferBannerSliderState extends State<OfferBannerSlider> {
             const SizedBox(width: 12),
             Text(
               'Promo code "$code" copied!',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -63,7 +62,7 @@ class _OfferBannerSliderState extends State<OfferBannerSlider> {
             children: [
               Text(
                 'Special Offers',
-                style: GoogleFonts.poppins(
+                style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -84,7 +83,7 @@ class _OfferBannerSliderState extends State<OfferBannerSlider> {
                     const SizedBox(width: 4),
                     Text(
                       'Hot Deals',
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(fontFamily: 'Poppins', 
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Colors.orange,
@@ -204,7 +203,7 @@ class _OfferBannerSliderState extends State<OfferBannerSlider> {
                               ),
                               child: Text(
                                 banner.discount,
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(fontFamily: 'Poppins', 
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -222,7 +221,7 @@ class _OfferBannerSliderState extends State<OfferBannerSlider> {
                               children: [
                                 Text(
                                   banner.title,
-                                  style: GoogleFonts.poppins(
+                                  style: TextStyle(fontFamily: 'Poppins', 
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
@@ -233,7 +232,7 @@ class _OfferBannerSliderState extends State<OfferBannerSlider> {
                                 const SizedBox(height: 4),
                                 Text(
                                   banner.subtitle,
-                                  style: GoogleFonts.poppins(
+                                  style: TextStyle(fontFamily: 'Poppins', 
                                     fontSize: 13,
                                     color: Colors.white.withValues(alpha: 0.9),
                                   ),
@@ -268,7 +267,7 @@ class _OfferBannerSliderState extends State<OfferBannerSlider> {
                                               children: [
                                                 Text(
                                                   banner.promoCode!,
-                                                  style: GoogleFonts.poppins(
+                                                  style: TextStyle(fontFamily: 'Poppins', 
                                                     fontSize: 13,
                                                     fontWeight: FontWeight.bold,
                                                     color: Colors.white,
@@ -298,7 +297,7 @@ class _OfferBannerSliderState extends State<OfferBannerSlider> {
                                         ),
                                         child: Text(
                                           'Use Now',
-                                          style: GoogleFonts.poppins(
+                                          style: TextStyle(fontFamily: 'Poppins', 
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
                                             color: const Color(0xFFFF6B6B),

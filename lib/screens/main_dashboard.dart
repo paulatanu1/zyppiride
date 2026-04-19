@@ -16,16 +16,31 @@ class MainDashboard extends StatefulWidget {
 
 class _MainDashboardState extends State<MainDashboard> {
   int _currentIndex = 0;
-  final String userId = FirebaseAuth.instance.currentUser!.uid;
+  String? _userId;
+  List<Widget> _screens = [];
 
-  final List<Widget> _screens = [
-    DashboardScreen(userId: FirebaseAuth.instance.currentUser!.uid), // Overview tab
-    DriverProfileScreen(
-      userId: FirebaseAuth.instance.currentUser!.uid,
-      embedded: true, // Embedded mode - hides back button and logout (mainDashboard handles these)
-    ),
-    EmergencyScreen(), // Emergency tab
-  ];
+  @override
+  void initState() {
+    super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.isEmpty) {
+      // Auth state has lapsed — redirect to login on the next frame
+      // (cannot call context.go() synchronously during initState)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.go('/login');
+      });
+      return;
+    }
+    _userId = uid;
+    _screens = [
+      DashboardScreen(userId: uid),
+      DriverProfileScreen(
+        userId: uid,
+        embedded: true,
+      ),
+      EmergencyScreen(),
+    ];
+  }
 
   Future<void> _logout(BuildContext context) async {
     try {
@@ -49,6 +64,13 @@ class _MainDashboardState extends State<MainDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    // Guard: _userId is null only for the single frame before the login redirect fires.
+    if (_userId == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
