@@ -1,0 +1,30 @@
+rules_version = '2';                                                                                                    
+                                                                                                                          
+  service firebase.storage {                                                                                              
+    match /b/{bucket}/o {                                                                                                 
+                                                                                                                          
+      // User profile photos                                                                                              
+      match /users/{userId}/{allPaths=**} {                                                                               
+        allow read: if request.auth != null;                                                                              
+        allow create, update: if request.auth != null && request.auth.uid == userId;                                      
+        allow delete: if request.auth != null && request.auth.uid == userId;                                              
+      }                                                                                                                   
+                                                                                                                          
+      // Vehicle images - supports paths like: vehicles/{userId}/vehicle/{filename}                                       
+      match /vehicles/{userId}/{allPaths=**} {                                                                            
+        allow read: if request.auth != null;                                                                              
+        allow create, update: if request.auth != null &&                                                                  
+                              request.auth.uid == userId &&                                                               
+                              request.resource.size < 5 * 1024 * 1024 &&                                                  
+                              request.resource.contentType.matches('image/.*');                                           
+        allow delete: if request.auth != null && request.auth.uid == userId;                                              
+      }                                                                                                                   
+                                                                                                                          
+      // Support attachments                                                                                              
+      match /support/{userId}/{allPaths=**} {                                                                             
+        allow read: if request.auth != null && request.auth.uid == userId;                                                
+        allow create, update: if request.auth != null && request.auth.uid == userId;                                      
+        allow delete: if request.auth != null && request.auth.uid == userId;                                              
+      }                                                                                                                   
+    }                                                                                                                     
+  } 

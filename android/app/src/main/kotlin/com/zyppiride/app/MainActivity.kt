@@ -1,4 +1,4 @@
-package com.example.zyppi_ride
+package com.zyppiride.app
 
 import io.flutter.embedding.android.FlutterActivity
 

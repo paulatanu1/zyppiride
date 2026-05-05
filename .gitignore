@@ -44,6 +44,11 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Production signing — NEVER commit these
+/android/key.properties
+*.keystore
+*.jks
+
 # Reports
 *.xlsx
 *.xls

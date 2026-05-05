@@ -120,11 +120,45 @@ class VehicleService {
       });
 
       AppLogger.success('Vehicle registered with ID: ${docRef.id}');
+
+      // Keep the search-metadata document up to date so dropdown queries
+      // read a single doc instead of scanning the whole collection.
+      final city = (locationData['city'] as String? ?? '').trim();
+      final type = (vehicleDetails['type'] as String? ?? '').trim();
+      if (city.isNotEmpty || type.isNotEmpty) {
+        await _updateSearchMeta(city: city, vehicleType: type);
+      }
+
       return Result.success(docRef.id);
     } catch (e, stackTrace) {
       final exception = ErrorHandler.handle(e, stackTrace);
       AppLogger.logException(exception, context: 'registerVehicle');
       return Result.failure(exception);
+    }
+  }
+
+  /// Adds the vehicle's city and type to the search-metadata document using
+  /// arrayUnion — safe to call concurrently and idempotent on re-registration.
+  Future<void> _updateSearchMeta({
+    required String city,
+    required String vehicleType,
+  }) async {
+    try {
+      final updates = <String, dynamic>{
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      if (city.isNotEmpty) updates['cities'] = FieldValue.arrayUnion([city]);
+      if (vehicleType.isNotEmpty) {
+        updates['vehicleTypes'] = FieldValue.arrayUnion([vehicleType]);
+      }
+      await _firestore
+          .doc('metadata/vehicleSearchMeta')
+          .set(updates, SetOptions(merge: true));
+      AppLogger.debug('Search metadata updated: city=$city, type=$vehicleType');
+    } catch (e) {
+      // Non-fatal — search dropdowns fall back to a limited query when the
+      // metadata doc is missing or stale.
+      AppLogger.warning('Could not update search metadata: $e');
     }
   }
 

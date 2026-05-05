@@ -12,10 +12,10 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21")
         
         // Google Services is up-to-date
-        classpath("com.google.gms:google-services:4.4.3")
+        classpath("com.google.gms:google-services:4.4.4")
     }
 }
-
+    
 allprojects {
     repositories {
         google()
