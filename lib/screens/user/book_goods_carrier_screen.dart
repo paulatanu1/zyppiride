@@ -4,7 +4,14 @@ import 'package:go_router/go_router.dart';
 import '../../router/routes_name.dart';
 
 class BookGoodsCarrierScreen extends ConsumerStatefulWidget {
-  const BookGoodsCarrierScreen({super.key});
+  final String? initialVehicleType;
+  final String? title;
+
+  const BookGoodsCarrierScreen({
+    super.key,
+    this.initialVehicleType,
+    this.title,
+  });
 
   @override
   ConsumerState<BookGoodsCarrierScreen> createState() => _BookGoodsCarrierScreenState();
@@ -15,7 +22,7 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  String _selectedVehicleType = 'Mini Truck';
+  late String _selectedVehicleType;
   final _pickupController = TextEditingController();
   final _dropController = TextEditingController();
   final _goodsDescController = TextEditingController();
@@ -34,6 +41,9 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
   @override
   void initState() {
     super.initState();
+    // Pre-select the vehicle type passed from the dashboard tile.
+    // Falls back to 'Mini Truck' when opened via the generic goods-transport route.
+    _selectedVehicleType = widget.initialVehicleType ?? 'Mini Truck';
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
@@ -140,8 +150,8 @@ class _BookGoodsCarrierScreenState extends ConsumerState<BookGoodsCarrierScreen>
           ),
           const SizedBox(width: 16),
           Text(
-            'Book Goods Carrier',
-            style: TextStyle(fontFamily: 'Poppins', 
+            widget.title ?? 'Book Goods Carrier',
+            style: TextStyle(fontFamily: 'Poppins',
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,

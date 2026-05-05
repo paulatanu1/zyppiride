@@ -82,7 +82,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
       final bookingsSnapshot = await FirebaseFirestore.instance
           .collection('bookings')
           .where('vehicleId', isEqualTo: selectedVehicleId)
-          .where('status', whereIn: ['pending', 'confirmed', 'ongoing'])
+          .where('status', whereIn: ['pending', 'confirmed', 'inProgress'])
           .where('bookingDate', isGreaterThanOrEqualTo: Timestamp.fromDate(now))
           .orderBy('bookingDate')
           .limit(5)

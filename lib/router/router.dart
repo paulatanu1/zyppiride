@@ -194,6 +194,32 @@ class AppRouter {
       ),
 
       GoRoute(
+        path: '/goods-transport',
+        name: RoutesName.goodsTransport,
+        builder: (context, state) => const BookGoodsCarrierScreen(
+          title: 'Goods Transport',
+        ),
+      ),
+
+      GoRoute(
+        path: '/mini-truck-delivery',
+        name: RoutesName.miniTruckDelivery,
+        builder: (context, state) => const BookGoodsCarrierScreen(
+          initialVehicleType: 'Mini Truck',
+          title: 'Mini Truck Delivery',
+        ),
+      ),
+
+      GoRoute(
+        path: '/bike-parcel',
+        name: RoutesName.bikeParcel,
+        builder: (context, state) => const BookGoodsCarrierScreen(
+          initialVehicleType: 'Bike',
+          title: 'Bike Parcel',
+        ),
+      ),
+
+      GoRoute(
         path: '/track-booking',
         name: RoutesName.trackActiveBooking,
         builder: (context, state) => const TrackBookingScreen(),

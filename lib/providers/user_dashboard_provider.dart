@@ -129,7 +129,7 @@ final activeBookingProvider = StreamProvider<ActiveBooking?>((ref) {
   return firestore
       .collection('bookings')
       .where('userId', isEqualTo: authUser.uid)
-      .where('status', whereIn: ['pending', 'confirmed', 'in_progress'])
+      .where('status', whereIn: ['pending', 'confirmed', 'driverArriving', 'arrived', 'inProgress'])
       .limit(1)
       .snapshots()
       .map((snapshot) {
@@ -356,7 +356,7 @@ class BookingHistoryNotifier extends PaginatedNotifier<ActiveBooking> {
     return firestore
         .collection('bookings')
         .where('userId', isEqualTo: userId)
-        .orderBy('bookingTime', descending: true);
+        .orderBy('createdAt', descending: true);
   }
 
   @override

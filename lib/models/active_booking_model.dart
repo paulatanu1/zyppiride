@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ActiveBooking {
   final String bookingId;
   final String userId;
@@ -37,9 +39,7 @@ class ActiveBooking {
       pickupLocation: json['pickupLocation'] ?? '',
       dropLocation: json['dropLocation'] ?? '',
       fare: (json['fare'] ?? 0).toDouble(),
-      bookingTime: json['bookingTime'] != null
-          ? DateTime.parse(json['bookingTime'])
-          : DateTime.now(),
+      bookingTime: _parseDateTime(json['createdAt'] ?? json['bookingTime']),
     );
   }
 
@@ -85,6 +85,14 @@ class ActiveBooking {
       fare: fare ?? this.fare,
       bookingTime: bookingTime ?? this.bookingTime,
     );
+  }
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
+    return DateTime.now();
   }
 
   @override
