@@ -718,8 +718,8 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
+              if (context.canPop()) {
+                context.pop();
               } else {
                 context.go('/user-dashboard');
               }

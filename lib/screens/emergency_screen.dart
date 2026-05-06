@@ -22,8 +22,8 @@ class EmergencyScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
+            if (context.canPop()) {
+              context.pop();
             } else {
               context.go('/user-dashboard');
             }
