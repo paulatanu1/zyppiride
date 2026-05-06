@@ -960,7 +960,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
               label: 'View',
               textColor: Colors.white,
               onPressed: () {
-                context.goNamed(RoutesName.trackActiveBooking);
+                context.pushNamed(RoutesName.trackActiveBooking);
               },
             ),
           ),
@@ -1025,7 +1025,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
               estimatedDuration: duration,
               onBookingCreated: (booking) {
                 // Navigate to tracking screen
-                context.goNamed(RoutesName.trackActiveBooking);
+                context.pushNamed(RoutesName.trackActiveBooking);
               },
             );
           },

@@ -288,7 +288,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
           subtitle: 'View past bookings',
           onTap: () {
             Navigator.pop(context);
-            context.goNamed(
+            context.pushNamed(
               RoutesName.rideHistory,
               queryParameters: {'userId': user.userId},
             );
@@ -312,7 +312,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
           badge: '3',
           onTap: () {
             Navigator.pop(context);
-            context.goNamed(
+            context.pushNamed(
               RoutesName.offersRewards,
               queryParameters: {'userId': user.userId},
             );
@@ -328,7 +328,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
               : null,
           onTap: () {
             Navigator.pop(context);
-            context.goNamed(
+            context.pushNamed(
               RoutesName.notifications,
               queryParameters: {'userId': user.userId},
             );
@@ -374,7 +374,7 @@ class _ModernDrawerState extends ConsumerState<ModernDrawer>
           subtitle: 'Get help',
           onTap: () {
             Navigator.pop(context);
-            context.goNamed(
+            context.pushNamed(
               RoutesName.supportCenter,
               queryParameters: {'userId': user.userId},
             );

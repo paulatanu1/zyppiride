@@ -168,7 +168,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                     icon: const Icon(Icons.notifications_outlined, size: 28),
                     color: Colors.white,
                     onPressed: () {
-                      context.goNamed(
+                      context.pushNamed(
                         RoutesName.notifications,
                         queryParameters: {'userId': user.userId},
                       );
@@ -253,7 +253,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
                               onBannerTap: (banner) {
                                 if (banner.actionRoute != null) {
                                   userState.whenData((user) {
-                                    context.goNamed(
+                                    context.pushNamed(
                                       banner.actionRoute!,
                                       queryParameters: {'userId': user.userId},
                                     );
@@ -516,7 +516,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
           gradientStart: action['gradientStart'] as Color,
           gradientEnd: action['gradientEnd'] as Color,
           onTap: () {
-            context.goNamed(
+            context.pushNamed(
               action['route'] as String,
               queryParameters: {'userId': userId},
             );
@@ -670,7 +670,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  context.goNamed(RoutesName.trackActiveBooking);
+                  context.pushNamed(RoutesName.trackActiveBooking);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
@@ -732,7 +732,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
-              context.goNamed(RoutesName.reserveVehicle);
+              context.pushNamed(RoutesName.reserveVehicle);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
@@ -822,7 +822,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
           final service = services[index];
           return GestureDetector(
             onTap: () {
-              context.goNamed(
+              context.pushNamed(
                 service['route'] as String,
                 queryParameters: {'userId': userId},
               );
