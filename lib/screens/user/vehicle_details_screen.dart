@@ -833,8 +833,8 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
   }
 
   void _goBack() {
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context);
+    if (context.canPop()) {
+      context.pop();
     } else {
       context.go('/reserve-vehicle');
     }

@@ -81,8 +81,8 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
             child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
           ),
           onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
+            if (context.canPop()) {
+              context.pop();
             } else {
               context.go('/user-dashboard');
             }

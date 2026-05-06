@@ -134,8 +134,8 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
         children: [
           GestureDetector(
             onTap: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
+              if (context.canPop()) {
+                context.pop();
               } else {
                 context.go('/user-dashboard');
               }
