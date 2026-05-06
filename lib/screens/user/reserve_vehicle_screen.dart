@@ -267,30 +267,39 @@ class _ReserveVehicleScreenState extends ConsumerState<ReserveVehicleScreen>
   }
 
   Widget _buildFilterChip({required String label, required VoidCallback onRemove}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: TextStyle(fontFamily: 'Poppins', 
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
+    return GestureDetector(
+      onTap: onRemove,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.only(left: 12, top: 8, bottom: 8, right: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(fontFamily: 'Poppins',
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
             ),
-          ),
-          const SizedBox(width: 6),
-          GestureDetector(
-            onTap: onRemove,
-            child: const Icon(Icons.close, size: 16, color: Colors.white70),
-          ),
-        ],
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.3),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, size: 12, color: Colors.white),
+            ),
+            const SizedBox(width: 2),
+          ],
+        ),
       ),
     );
   }
