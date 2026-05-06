@@ -328,24 +328,22 @@ class VehicleSearchFilters {
   }
 
   // Clear a specific filter
+  // NOTE: cannot use copyWith here — `field ?? this.field` in copyWith means passing null
+  // keeps the old value. Each case constructs a new object with that field explicitly null.
   VehicleSearchFilters clearFilter(String filterName) {
     switch (filterName) {
       case 'vehicleType':
-        return copyWith(vehicleType: null);
+        return VehicleSearchFilters(city: city, minPrice: minPrice, maxPrice: maxPrice, minSeats: minSeats, hasAC: hasAC, fuelType: fuelType, transmission: transmission, onlyAvailable: onlyAvailable, onlyOnline: onlyOnline);
       case 'city':
-        return copyWith(city: null);
-      case 'minPrice':
-        return copyWith(minPrice: null);
-      case 'maxPrice':
-        return copyWith(maxPrice: null);
+        return VehicleSearchFilters(vehicleType: vehicleType, minPrice: minPrice, maxPrice: maxPrice, minSeats: minSeats, hasAC: hasAC, fuelType: fuelType, transmission: transmission, onlyAvailable: onlyAvailable, onlyOnline: onlyOnline);
       case 'minSeats':
-        return copyWith(minSeats: null);
+        return VehicleSearchFilters(vehicleType: vehicleType, city: city, minPrice: minPrice, maxPrice: maxPrice, hasAC: hasAC, fuelType: fuelType, transmission: transmission, onlyAvailable: onlyAvailable, onlyOnline: onlyOnline);
       case 'hasAC':
-        return copyWith(hasAC: null);
+        return VehicleSearchFilters(vehicleType: vehicleType, city: city, minPrice: minPrice, maxPrice: maxPrice, minSeats: minSeats, fuelType: fuelType, transmission: transmission, onlyAvailable: onlyAvailable, onlyOnline: onlyOnline);
       case 'fuelType':
-        return copyWith(fuelType: null);
+        return VehicleSearchFilters(vehicleType: vehicleType, city: city, minPrice: minPrice, maxPrice: maxPrice, minSeats: minSeats, hasAC: hasAC, transmission: transmission, onlyAvailable: onlyAvailable, onlyOnline: onlyOnline);
       case 'transmission':
-        return copyWith(transmission: null);
+        return VehicleSearchFilters(vehicleType: vehicleType, city: city, minPrice: minPrice, maxPrice: maxPrice, minSeats: minSeats, hasAC: hasAC, fuelType: fuelType, onlyAvailable: onlyAvailable, onlyOnline: onlyOnline);
       default:
         return this;
     }
