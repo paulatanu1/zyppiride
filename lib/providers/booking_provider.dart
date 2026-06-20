@@ -8,6 +8,7 @@ import '../services/booking_service.dart';
 import '../services/live_location_service.dart';
 import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
+import '../core/errors/errors.dart';
 
 // ============================================
 // SERVICE PROVIDER
@@ -70,6 +71,11 @@ class BookingNotifier extends StateNotifier<BookingState> {
   final BookingService _bookingService;
   StreamSubscription<Booking?>? _activeBookingSubscription;
   String? _userId;
+
+  // Pagination cursor — retained between loadBookingHistory calls
+  DocumentSnapshot? _historyLastDoc;
+  BookingStatus? _historyStatusFilter;
+  BookingType? _historyTypeFilter;
 
   BookingNotifier(this._bookingService) : super(const BookingState()) {
     _initializeUser();
@@ -278,7 +284,7 @@ class BookingNotifier extends StateNotifier<BookingState> {
     }
   }
 
-  /// Load booking history
+  /// Load booking history with correct cursor-based pagination.
   Future<void> loadBookingHistory({
     bool refresh = false,
     BookingStatus? statusFilter,
@@ -286,27 +292,41 @@ class BookingNotifier extends StateNotifier<BookingState> {
   }) async {
     if (_userId == null) return;
 
-    if (refresh) {
+    // Reset cursor when refreshing or when filters change
+    final filtersChanged =
+        statusFilter != _historyStatusFilter || typeFilter != _historyTypeFilter;
+    if (refresh || filtersChanged) {
+      _historyLastDoc = null;
+      _historyStatusFilter = statusFilter;
+      _historyTypeFilter = typeFilter;
       state = state.copyWith(bookingHistory: [], hasMore: true);
     }
 
-    if (!state.hasMore && !refresh) return;
+    if (!state.hasMore && !refresh && !filtersChanged) return;
 
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      final bookings = await _bookingService.getUserBookings(
+      final result = await _bookingService.getUserBookingsPaginated(
         _userId!,
-        statusFilter: statusFilter,
-        typeFilter: typeFilter,
+        lastDocument: _historyLastDoc,
+        statusFilter: _historyStatusFilter,
+        typeFilter: _historyTypeFilter,
       );
+
+      _historyLastDoc = result.lastDocument;
+
+      // Deduplicate by bookingId in case of concurrent updates
+      final existingIds = state.bookingHistory.map((b) => b.bookingId).toSet();
+      final newBookings =
+          result.items.where((b) => !existingIds.contains(b.bookingId)).toList();
 
       state = state.copyWith(
         isLoading: false,
-        bookingHistory: refresh
-            ? bookings
-            : [...state.bookingHistory, ...bookings],
-        hasMore: bookings.length >= 20,
+        bookingHistory: (refresh || filtersChanged)
+            ? result.items
+            : [...state.bookingHistory, ...newBookings],
+        hasMore: result.hasMore,
       );
     } catch (e) {
       state = state.copyWith(
@@ -589,6 +609,18 @@ class DriverBookingNotifier extends StateNotifier<DriverBookingState> {
       state = state.copyWith(isLoading: false);
       return false;
     }
+  }
+
+  /// Record cash payment received after trip completion.
+  Future<Result<void>> recordPaymentReceived(String bookingId, double amountReceived) async {
+    if (_driverId == null) {
+      return Result.failure(const AuthException(message: 'Not authenticated'));
+    }
+    return _bookingService.recordPaymentReceived(
+      bookingId: bookingId,
+      driverId: _driverId!,
+      amountReceived: amountReceived,
+    );
   }
 
   /// Rate the user after trip

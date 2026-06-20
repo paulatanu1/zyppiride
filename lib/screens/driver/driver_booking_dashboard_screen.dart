@@ -559,17 +559,100 @@ class _DriverBookingDashboardScreenState
           .read(driverBookingProvider.notifier)
           .completeTrip(booking.bookingId);
 
-      if (mounted) {
-        _showSnackBar(
-          success ? 'Trip completed successfully!' : 'Failed to complete trip',
-          success ? Colors.green : Colors.red,
-        );
+      if (!mounted) return;
+
+      if (success) {
+        _showSnackBar('Trip completed!', Colors.green);
+        // Immediately prompt for cash collection
+        await _showPaymentRecordDialog(booking);
+      } else {
+        _showSnackBar('Failed to complete trip', Colors.red);
       }
     } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
+      if (mounted) setState(() => _isProcessing = false);
     }
+  }
+
+  Future<void> _showPaymentRecordDialog(Booking booking) async {
+    final totalFare = booking.fareDetails.totalFare;
+    final controller = TextEditingController(
+      text: totalFare.toStringAsFixed(0),
+    );
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Record Cash Received',
+          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _paymentRow('Final fare', '₹${totalFare.toStringAsFixed(0)}'),
+            const SizedBox(height: 16),
+            const Text(
+              'Amount received (₹)',
+              style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                prefixText: '₹ ',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              ),
+              style: const TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.bold),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Skip', style: TextStyle(fontFamily: 'Poppins', color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () async {
+              final amount = double.tryParse(controller.text.trim());
+              if (amount == null || amount <= 0) return;
+              Navigator.pop(ctx);
+              final result = await ref
+                  .read(driverBookingProvider.notifier)
+                  .recordPaymentReceived(booking.bookingId, amount);
+              if (mounted) {
+                result.when(
+                  success: (_) => _showSnackBar('Payment recorded: ₹${amount.toStringAsFixed(0)}', Colors.green),
+                  failure: (e) => _showSnackBar('Could not record payment: ${e.message}', Colors.red),
+                );
+              }
+            },
+            child: const Text('Record', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+  }
+
+  Widget _paymentRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: Colors.grey)),
+        Text(value, style: const TextStyle(fontFamily: 'Poppins', fontSize: 15, fontWeight: FontWeight.w600)),
+      ],
+    );
   }
 
   Future<void> _handleNavigate(Booking booking) async {

@@ -4,6 +4,8 @@ import '../models/booking_model.dart';
 import '../models/available_vehicle_model.dart';
 import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
+import '../core/errors/errors.dart';
+import '../core/utils/pagination.dart';
 
 /// Service for managing bookings in Firestore
 class BookingService {
@@ -236,6 +238,44 @@ class BookingService {
     }
   }
 
+  /// Paginated user booking history — returns items + cursor for next page.
+  Future<PaginatedResult<Booking>> getUserBookingsPaginated(
+    String userId, {
+    int limit = 20,
+    DocumentSnapshot? lastDocument,
+    BookingStatus? statusFilter,
+    BookingType? typeFilter,
+  }) async {
+    try {
+      Query<Map<String, dynamic>> query = _bookingsRef
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true);
+
+      if (statusFilter != null) {
+        query = query.where('status', isEqualTo: statusFilter.name);
+      }
+      if (typeFilter != null) {
+        query = query.where('bookingType', isEqualTo: typeFilter.name);
+      }
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
+      }
+      query = query.limit(limit);
+
+      final snapshot = await query.get();
+      final bookings = snapshot.docs.map((doc) => Booking.fromFirestore(doc)).toList();
+      return PaginatedResult(
+        items: bookings,
+        lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
+        hasMore: bookings.length >= limit,
+      );
+    } catch (e, stack) {
+      AppLogger.error('Failed to get paginated user bookings',
+          error: e, stackTrace: stack, tag: 'BookingService');
+      return const PaginatedResult(items: [], hasMore: false);
+    }
+  }
+
   /// Stream user's booking history
   Stream<List<Booking>> getUserBookingsStream(String userId, {int limit = 20}) {
     return _bookingsRef
@@ -354,7 +394,6 @@ class BookingService {
           break;
         case BookingStatus.completed:
           updateData['completedAt'] = Timestamp.now();
-          updateData['paymentStatus'] = PaymentStatus.completed.name;
           break;
         case BookingStatus.cancelled:
           updateData['cancelledAt'] = Timestamp.now();
@@ -503,7 +542,6 @@ class BookingService {
       Map<String, dynamic> updateData = {
         'status': BookingStatus.completed.name,
         'completedAt': Timestamp.now(),
-        'paymentStatus': PaymentStatus.completed.name,
         'updatedAt': Timestamp.now(),
       };
 
@@ -610,6 +648,56 @@ class BookingService {
       AppLogger.error('Failed to update payment status',
           error: e, stackTrace: stack, tag: 'BookingService');
       return false;
+    }
+  }
+
+  /// Record manual cash payment received after trip completion.
+  /// Only the assigned driver can call this, and only on completed bookings.
+  Future<Result<void>> recordPaymentReceived({
+    required String bookingId,
+    required String driverId,
+    required double amountReceived,
+  }) async {
+    try {
+      final booking = await getBooking(bookingId);
+      if (booking == null) {
+        return Result.failure(DatabaseException.notFound('Booking'));
+      }
+      if (booking.driver.driverId != driverId) {
+        return Result.failure(
+          const AuthException(message: 'Only the assigned driver can record payment'),
+        );
+      }
+      if (booking.status != BookingStatus.completed) {
+        return Result.failure(
+          ValidationException(message: 'Payment can only be recorded on a completed trip'),
+        );
+      }
+
+      final totalFare = booking.fareDetails.totalFare;
+      final alreadyReceived = (booking.amountReceived ?? 0.0);
+      final remaining = (totalFare - alreadyReceived - amountReceived).clamp(0.0, totalFare);
+      final newTotal = alreadyReceived + amountReceived;
+      final isPaid = remaining <= 0;
+
+      await _bookingsRef.doc(bookingId).update({
+        'amountReceived': newTotal,
+        'remainingAmount': remaining,
+        'paymentStatus': isPaid
+            ? PaymentStatus.completed.name
+            : PaymentStatus.pending.name,
+        'paymentReceivedAt': Timestamp.now(),
+        'paymentReceivedBy': driverId,
+        'paymentRecordedManually': true,
+        'updatedAt': Timestamp.now(),
+      });
+
+      AppLogger.success('Payment recorded: ₹$amountReceived for $bookingId', tag: 'BookingService');
+      return Result.success(null);
+    } catch (e, stack) {
+      final exception = ErrorHandler.handle(e, stack);
+      AppLogger.logException(exception, context: 'recordPaymentReceived');
+      return Result.failure(exception);
     }
   }
 

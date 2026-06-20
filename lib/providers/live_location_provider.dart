@@ -156,19 +156,20 @@ final locationTrackingProvider =
   return LocationTrackingNotifier(service);
 });
 
-/// Stream provider for driver location (user/rider side)
-/// Use this to watch driver's location during a trip
+/// Stream provider for driver location (user/rider side).
+/// Pass the driverId (booking.driver.driverId) — reads from drivers/{driverId}.
 final driverLocationStreamProvider =
-    StreamProvider.family<DriverLocationData?, String>((ref, bookingId) {
+    StreamProvider.family<DriverLocationData?, String>((ref, driverId) {
   final service = ref.watch(liveLocationServiceProvider);
-  return service.getDriverLocationStream(bookingId);
+  return service.getDriverLocationStream(driverId);
 });
 
-/// Future provider to get driver location once
+/// Future provider to get driver location once.
+/// Pass the driverId (booking.driver.driverId).
 final driverLocationProvider =
-    FutureProvider.family<DriverLocationData?, String>((ref, bookingId) async {
+    FutureProvider.family<DriverLocationData?, String>((ref, driverId) async {
   final service = ref.watch(liveLocationServiceProvider);
-  return await service.getDriverLocation(bookingId);
+  return await service.getDriverLocation(driverId);
 });
 
 /// Provider to check if location permission is granted

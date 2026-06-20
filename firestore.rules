@@ -172,6 +172,15 @@ service cloud.firestore {
                                  'estimatedDuration', 'driverRating', 'driverReview',
                                  'updatedAt']);
 
+      // Driver records manual cash payment after trip completion.
+      // Only receipt fields may change; fare, participants, and status are locked.
+      allow update: if request.auth != null && isBookingDriver() &&
+                     resource.data.status == 'completed' &&
+                     request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['amountReceived', 'remainingAmount', 'paymentStatus',
+                                 'paymentReceivedAt', 'paymentReceivedBy',
+                                 'paymentRecordedManually', 'updatedAt']);
+
       // No direct deletes - use status updates instead
       allow delete: if false;
     }

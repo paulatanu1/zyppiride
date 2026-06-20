@@ -28,8 +28,9 @@ class DriverLocationData {
       heading: (data['heading'] as num?)?.toDouble(),
       speed: (data['speed'] as num?)?.toDouble(),
       accuracy: (data['accuracy'] as num?)?.toDouble(),
-      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      bookingId: data['bookingId'] as String?,
+      // drivers doc uses 'lastUpdated'; fall back to 'updatedAt' for old data
+      updatedAt: ((data['lastUpdated'] ?? data['updatedAt']) as Timestamp?)?.toDate() ?? DateTime.now(),
+      bookingId: (data['currentBookingId'] ?? data['bookingId']) as String?,
     );
   }
 

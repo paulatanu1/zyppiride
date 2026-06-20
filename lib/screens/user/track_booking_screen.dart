@@ -358,7 +358,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
   }
 
   Widget _buildLiveLocationCard(Booking booking) {
-    final locationAsync = ref.watch(driverLocationStreamProvider(booking.bookingId));
+    final locationAsync = ref.watch(driverLocationStreamProvider(booking.driver.driverId));
 
     return locationAsync.when(
       data: (location) {

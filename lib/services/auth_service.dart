@@ -558,7 +558,6 @@ class AuthService {
         'verificationStatus': 'pending',
         'createdAt': FieldValue.serverTimestamp(),
         'lastLoginAt': FieldValue.serverTimestamp(),
-        'isAdmin': false,
       });
     } else {
       // Update existing user document with any new info

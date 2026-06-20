@@ -526,6 +526,13 @@ class Booking {
   final double? driverRating;
   final String? driverReview;
 
+  // Manual payment receipt (cash collected after trip completion)
+  final double? amountReceived;
+  final double? remainingAmount;
+  final DateTime? paymentReceivedAt;
+  final String? paymentReceivedBy;
+  final bool paymentRecordedManually;
+
   // OTP for ride verification
   final String? rideOtp;
 
@@ -567,6 +574,11 @@ class Booking {
     this.userReview,
     this.driverRating,
     this.driverReview,
+    this.amountReceived,
+    this.remainingAmount,
+    this.paymentReceivedAt,
+    this.paymentReceivedBy,
+    this.paymentRecordedManually = false,
     this.rideOtp,
     this.userNotes,
     this.driverNotes,
@@ -630,6 +642,11 @@ class Booking {
       userReview: map['userReview']?.toString(),
       driverRating: _parseDoubleNullable(map['driverRating']),
       driverReview: map['driverReview']?.toString(),
+      amountReceived: _parseDoubleNullable(map['amountReceived']),
+      remainingAmount: _parseDoubleNullable(map['remainingAmount']),
+      paymentReceivedAt: _parseDateTime(map['paymentReceivedAt']),
+      paymentReceivedBy: map['paymentReceivedBy']?.toString(),
+      paymentRecordedManually: map['paymentRecordedManually'] == true,
       rideOtp: map['rideOtp']?.toString(),
       userNotes: map['userNotes']?.toString(),
       driverNotes: map['driverNotes']?.toString(),
@@ -650,6 +667,7 @@ class Booking {
       'estimatedDistance': estimatedDistance,
       'estimatedDuration': estimatedDuration,
       'estimatedArrival': estimatedArrival,
+      'vehicleId': vehicle.vehicleId,
       'vehicle': vehicle.toMap(),
       'driver': driver.toMap(),
       'fareDetails': fareDetails.toMap(),
@@ -671,6 +689,11 @@ class Booking {
       'userReview': userReview,
       'driverRating': driverRating,
       'driverReview': driverReview,
+      'amountReceived': amountReceived,
+      'remainingAmount': remainingAmount,
+      'paymentReceivedAt': paymentReceivedAt != null ? Timestamp.fromDate(paymentReceivedAt!) : null,
+      'paymentReceivedBy': paymentReceivedBy,
+      'paymentRecordedManually': paymentRecordedManually,
       'rideOtp': rideOtp,
       'userNotes': userNotes,
       'driverNotes': driverNotes,
@@ -747,6 +770,11 @@ class Booking {
     String? userReview,
     double? driverRating,
     String? driverReview,
+    double? amountReceived,
+    double? remainingAmount,
+    DateTime? paymentReceivedAt,
+    String? paymentReceivedBy,
+    bool? paymentRecordedManually,
     String? rideOtp,
     String? userNotes,
     String? driverNotes,
@@ -785,6 +813,11 @@ class Booking {
       userReview: userReview ?? this.userReview,
       driverRating: driverRating ?? this.driverRating,
       driverReview: driverReview ?? this.driverReview,
+      amountReceived: amountReceived ?? this.amountReceived,
+      remainingAmount: remainingAmount ?? this.remainingAmount,
+      paymentReceivedAt: paymentReceivedAt ?? this.paymentReceivedAt,
+      paymentReceivedBy: paymentReceivedBy ?? this.paymentReceivedBy,
+      paymentRecordedManually: paymentRecordedManually ?? this.paymentRecordedManually,
       rideOtp: rideOtp ?? this.rideOtp,
       userNotes: userNotes ?? this.userNotes,
       driverNotes: driverNotes ?? this.driverNotes,
