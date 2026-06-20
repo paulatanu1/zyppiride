@@ -4,4 +4,11 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Same fixed debug token as debug builds — profile mode also needs it -->
+    <application>
+        <meta-data
+            android:name="com.google.firebase.appcheck.debug.token"
+            android:value="633f46d8-6d26-4c5e-9f9d-afc4eb1dbb24" />
+    </application>
 </manifest>

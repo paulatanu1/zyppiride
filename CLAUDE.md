@@ -107,7 +107,7 @@ Use `AppLogger` from `lib/core/utils/app_logger.dart` for all logging. It gates 
 
 ## Android Build Notes
 
-- **Package name:** Currently `com.example.zyppi_ride` — must be changed to a production package name before Play Store submission.
+- **Package name:** `com.zyppiride.app` (Firebase app ID: `1:1026775080853:android:60b4bc7aa3e46e6843a09c`).
 - **Signing:** The release build type currently uses the debug keystore (`signingConfigs.getByName("debug")`). A production `key.properties` + keystore must be configured before any Play Store upload. The `key.properties` file must never be committed.
 - **compileSdk / targetSdk:** 36 (Android 16).
 - **minSdk:** Inherited from Flutter default (typically 21).

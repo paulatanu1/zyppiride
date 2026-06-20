@@ -533,7 +533,7 @@ class TestRunner {
     _currentSuiteResults.clear();
     _suiteStartTime = DateTime.now();
     print('\n📋 Starting Test Suite: $suiteName');
-    print('${'─' * 50}');
+    print('─' * 50);
   }
 
   /// Record a test result

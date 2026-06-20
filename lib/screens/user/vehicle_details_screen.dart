@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/available_vehicle_model.dart';
 import '../../providers/vehicle_search_provider.dart';
+import '../../router/routes_name.dart';
 
 class VehicleDetailsScreen extends ConsumerStatefulWidget {
   final String? vehicleId;
@@ -926,7 +927,10 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => _BookingConfirmationSheet(vehicle: vehicle),
+      builder: (ctx) => _BookingConfirmationSheet(
+        vehicle: vehicle,
+        parentContext: context,
+      ),
     );
   }
 
@@ -965,8 +969,12 @@ class _VehicleDetailsScreenState extends ConsumerState<VehicleDetailsScreen>
 
 class _BookingConfirmationSheet extends StatelessWidget {
   final AvailableVehicle vehicle;
+  final BuildContext parentContext;
 
-  const _BookingConfirmationSheet({required this.vehicle});
+  const _BookingConfirmationSheet({
+    required this.vehicle,
+    required this.parentContext,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1063,19 +1071,12 @@ class _BookingConfirmationSheet extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
+                    // Close this sheet first, then navigate to the full booking
+                    // flow where the user enters pickup/drop location and confirms.
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Booking request sent!',
-                          style: TextStyle(fontFamily: 'Poppins'),
-                        ),
-                        backgroundColor: Colors.green,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
+                    parentContext.pushNamed(
+                      RoutesName.reserveVehicle,
+                      queryParameters: {'vehicleId': vehicle.id},
                     );
                   },
                   style: ElevatedButton.styleFrom(

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/constants/test_mode.dart';
 import '../core/errors/errors.dart';
 import '../core/utils/app_logger.dart';
 
@@ -18,7 +19,7 @@ class DriverStatusService {
 
       // Get all vehicles for this driver
       final vehiclesSnapshot = await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('userId', isEqualTo: userId)
           .get();
 
@@ -39,7 +40,7 @@ class DriverStatusService {
       }
 
       // Also update user document with online status
-      batch.update(_firestore.collection('users').doc(userId), {
+      batch.update(_firestore.collection(TestMode.usersCollection).doc(userId), {
         'isOnline': isOnline,
         'lastOnlineAt': isOnline ? FieldValue.serverTimestamp() : null,
       });
@@ -62,7 +63,7 @@ class DriverStatusService {
     AppLogger.firestore('GET', 'users', docId: '$userId (online status)');
 
     try {
-      final userDoc = await _firestore.collection('users').doc(userId).get();
+      final userDoc = await _firestore.collection(TestMode.usersCollection).doc(userId).get();
 
       if (!userDoc.exists) {
         return Result.failure(DatabaseException.notFound('User'));
@@ -80,7 +81,7 @@ class DriverStatusService {
   /// Stream driver online status
   Stream<bool> watchOnlineStatus(String userId) {
     return _firestore
-        .collection('users')
+        .collection(TestMode.usersCollection)
         .doc(userId)
         .snapshots()
         .map((snapshot) => snapshot.data()?['isOnline'] ?? false);
@@ -92,7 +93,7 @@ class DriverStatusService {
 
     try {
       Query<Map<String, dynamic>> query = _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('isOnline', isEqualTo: true);
 
       if (city != null && city.isNotEmpty) {
@@ -116,7 +117,7 @@ class DriverStatusService {
     try {
       // Get all vehicles for this driver
       final vehiclesSnapshot = await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('userId', isEqualTo: userId)
           .get();
 
@@ -129,7 +130,7 @@ class DriverStatusService {
         });
       }
 
-      batch.update(_firestore.collection('users').doc(userId), {
+      batch.update(_firestore.collection(TestMode.usersCollection).doc(userId), {
         'isOnline': false,
       });
 
@@ -149,7 +150,7 @@ class DriverStatusService {
     try {
       // Update location for all vehicles
       final vehiclesSnapshot = await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('userId', isEqualTo: userId)
           .get();
 

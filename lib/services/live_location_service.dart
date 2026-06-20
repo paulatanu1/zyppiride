@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/driver_location_model.dart';
+import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
 
 /// Service for managing real-time driver location tracking during trips
@@ -144,12 +145,12 @@ class LiveLocationService {
       );
 
       // Update in booking document
-      await _firestore.collection('bookings').doc(_activeBookingId).update({
+      await _firestore.collection(TestMode.bookingsCollection).doc(_activeBookingId).update({
         'driverLocation': locationData.toFirestore(),
       });
 
       // Also update driver's current location
-      await _firestore.collection('drivers').doc(_activeDriverId).update({
+      await _firestore.collection(TestMode.driversCollection).doc(_activeDriverId).update({
         'currentLocation': {
           'latitude': position.latitude,
           'longitude': position.longitude,
@@ -179,7 +180,7 @@ class LiveLocationService {
     // Clear location from booking if active
     if (_activeBookingId != null) {
       try {
-        await _firestore.collection('bookings').doc(_activeBookingId).update({
+        await _firestore.collection(TestMode.bookingsCollection).doc(_activeBookingId).update({
           'driverLocation': FieldValue.delete(),
         });
       } catch (e) {
@@ -199,7 +200,7 @@ class LiveLocationService {
   /// Get stream of driver location for a booking (for user/rider side)
   Stream<DriverLocationData?> getDriverLocationStream(String bookingId) {
     return _firestore
-        .collection('bookings')
+        .collection(TestMode.bookingsCollection)
         .doc(bookingId)
         .snapshots()
         .map((snapshot) {
@@ -217,7 +218,7 @@ class LiveLocationService {
   /// Get current driver location (one-time fetch)
   Future<DriverLocationData?> getDriverLocation(String bookingId) async {
     try {
-      final doc = await _firestore.collection('bookings').doc(bookingId).get();
+      final doc = await _firestore.collection(TestMode.bookingsCollection).doc(bookingId).get();
 
       if (!doc.exists) return null;
 

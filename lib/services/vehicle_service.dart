@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import '../core/constants/test_mode.dart';
 import '../core/errors/errors.dart';
 import '../core/utils/app_logger.dart';
 
@@ -104,7 +105,7 @@ class VehicleService {
     AppLogger.firestore('ADD', 'vehicles');
 
     try {
-      final docRef = await _firestore.collection('vehicles').add({
+      final docRef = await _firestore.collection(TestMode.vehiclesCollection).add({
         'userId': userId,
         'location': locationData,
         'vehicleDetails': vehicleDetails,
@@ -171,7 +172,7 @@ class VehicleService {
     AppLogger.firestore('UPDATE', 'users', docId: userId);
 
     try {
-      await _firestore.collection('users').doc(userId).update({
+      await _firestore.collection(TestMode.usersCollection).doc(userId).update({
         'drivingLicenseNumber': licenseNumber,
         'drivingLicenseValidUpto': Timestamp.fromDate(licenseValidUpto),
       });
@@ -191,7 +192,7 @@ class VehicleService {
 
     try {
       final querySnapshot = await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('vehicleDetails.registrationNumber',
               isEqualTo: registrationNumber.toUpperCase())
           .limit(1)

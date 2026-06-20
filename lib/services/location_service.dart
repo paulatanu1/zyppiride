@@ -136,12 +136,10 @@ class LocationService {
     try {
       // Check permission first
       final permissionResult = await checkPermission();
-      LocationPermissionStatus? permissionStatus;
-
-      permissionResult.when(
-        success: (status) => permissionStatus = status,
-        failure: (e) => throw e,
-      );
+      if (permissionResult.isFailure) {
+        return Result.failure(permissionResult.exceptionOrNull!);
+      }
+      final permissionStatus = permissionResult.dataOrNull!;
 
       if (permissionStatus != LocationPermissionStatus.granted) {
         final errorMessage = switch (permissionStatus) {

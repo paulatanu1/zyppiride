@@ -9,6 +9,7 @@ class ActiveVehiclesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -16,50 +17,57 @@ class ActiveVehiclesScreen extends StatelessWidget {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go('/user-dashboard');
+              context.go('/dashboard');
             }
           },
         ),
         title: const Text(
           'Active Vehicles',
-          style: TextStyle(fontFamily: 'Poppins'),
+          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         elevation: 2,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Active Vehicles',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.teal.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.directions_car_outlined,
+                    size: 64, color: Colors.teal),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'User ID: $userId',
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                color: Colors.grey,
+              const SizedBox(height: 24),
+              const Text(
+                'Coming Soon',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.teal,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            // Add your active vehicles list here
-            const Center(
-              child: Text(
-                'Active vehicles will be displayed here',
-                style: TextStyle(fontFamily: 'Poppins', fontSize: 16),
+              const SizedBox(height: 12),
+              Text(
+                'Live vehicle tracking will be available here. '
+                'You\'ll be able to monitor all your active vehicles in real time.',
                 textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                  height: 1.5,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

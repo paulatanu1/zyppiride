@@ -45,6 +45,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (result.isSuccess) {
           // Send email verification
           await authService.sendEmailVerification();
+          if (!mounted) return;
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -98,6 +99,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         } else {
           // Existing user - check if they have a role
           final hasRole = await authService.checkUserHasRole(result.user!.uid);
+          if (!mounted) return;
 
           if (hasRole) {
             context.goNamed(RoutesName.userDashboard);

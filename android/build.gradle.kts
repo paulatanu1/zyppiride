@@ -4,14 +4,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // Updated to latest stable AGP for Flutter 3.35+ (as of Oct 2025)
-        // AGP 8.12.0 is recommended for compatibility with modern plugins like geolocator ^14+
-        classpath("com.android.tools.build:gradle:8.12.0")
-        
-        // Updated Kotlin to 2.0.21 for Flutter 3.29+ compatibility
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21")
-        
-        // Google Services is up-to-date
+        // AGP and Kotlin versions are declared in settings.gradle.kts pluginManagement.
+        // Only Google Services is here because it has no pluginManagement entry.
         classpath("com.google.gms:google-services:4.4.4")
     }
 }
@@ -37,6 +31,18 @@ subprojects {
 
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+// Upgrade any plugin that still targets Java 8 to Java 11 so JDK 21 doesn't emit
+// deprecation warnings (e.g. geolocator_android). Configured at the task level to
+// avoid the "project already evaluated" error with afterEvaluate.
+subprojects {
+    tasks.withType<JavaCompile>().configureEach {
+        if (sourceCompatibility == "1.8" || sourceCompatibility == "8") {
+            sourceCompatibility = "11"
+            targetCompatibility = "11"
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

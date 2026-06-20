@@ -1,6 +1,7 @@
 // lib/providers/schedule_provider.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/constants/test_mode.dart';
 import '../models/weekly_schedule.dart';
 
 class ScheduleNotifier extends StateNotifier<AsyncValue<WeeklySchedule>> {
@@ -15,7 +16,7 @@ class ScheduleNotifier extends StateNotifier<AsyncValue<WeeklySchedule>> {
     state = const AsyncValue.loading();
     try {
       final doc = await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .doc(vehicleId)
           .collection('schedules')
           .doc('weekly')
@@ -31,19 +32,21 @@ class ScheduleNotifier extends StateNotifier<AsyncValue<WeeklySchedule>> {
     }
   }
 
-  Future<void> saveSchedule() async {
+  Future<bool> saveSchedule() async {
     final currentSchedule = state.valueOrNull;
-    if (currentSchedule == null) return;
+    if (currentSchedule == null) return false;
 
     try {
       await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .doc(vehicleId)
           .collection('schedules')
           .doc('weekly')
           .set(currentSchedule.toFirestore());
-    } catch (e) {
-      rethrow;
+      return true;
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+      return false;
     }
   }
 

@@ -2,17 +2,19 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/booking_model.dart';
 import '../models/available_vehicle_model.dart';
+import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
 
 /// Service for managing bookings in Firestore
 class BookingService {
   final FirebaseFirestore _firestore;
-  static const String _collection = 'bookings';
-  static const String _vehiclesCollection = 'vehicles';
-  static const String _usersCollection = 'users';
 
   BookingService({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
+
+  String get _collection => TestMode.bookingsCollection;
+  String get _vehiclesCollection => TestMode.vehiclesCollection;
+  String get _usersCollection => TestMode.usersCollection;
 
   /// Collection reference
   CollectionReference<Map<String, dynamic>> get _bookingsRef =>
@@ -776,9 +778,9 @@ class BookingService {
   // HELPER METHODS
   // ============================================
 
-  /// Generate 4-digit OTP
+  /// Generate 6-digit OTP (900,000 combinations — significantly harder to brute-force)
   String _generateOtp() {
-    return (1000 + Random().nextInt(9000)).toString();
+    return (100000 + Random().nextInt(900000)).toString();
   }
 
   /// Calculate ETA string
@@ -817,44 +819,36 @@ class BookingService {
     return null;
   }
 
-  /// Update driver's average rating
+  /// Update driver's average rating using an incremental approach.
+  /// Reads current ratingSum/ratingCount from the vehicle doc and increments
+  /// atomically — avoids a full collection scan on every rating.
   Future<void> _updateDriverRating(String driverId, double newRating) async {
     try {
-      // Get all ratings for this driver
-      final bookingsWithRating = await _bookingsRef
-          .where('driver.driverId', isEqualTo: driverId)
-          .where('status', isEqualTo: BookingStatus.completed.name)
+      final vehiclesQuery = await _firestore
+          .collection(_vehiclesCollection)
+          .where('userId', isEqualTo: driverId)
           .get();
 
-      double totalRating = 0;
-      int ratingCount = 0;
+      if (vehiclesQuery.docs.isEmpty) return;
 
-      for (final doc in bookingsWithRating.docs) {
-        final data = doc.data();
-        if (data['userRating'] != null) {
-          totalRating += (data['userRating'] as num).toDouble();
-          ratingCount++;
-        }
+      final batch = _firestore.batch();
+      for (final vehicleDoc in vehiclesQuery.docs) {
+        final driverData =
+            vehicleDoc.data()['driver'] as Map<String, dynamic>? ?? {};
+        final currentSum =
+            (driverData['ratingSum'] as num?)?.toDouble() ?? 0.0;
+        final currentCount = (driverData['ratingCount'] as num?)?.toInt() ?? 0;
+        final newSum = currentSum + newRating;
+        final newCount = currentCount + 1;
+
+        batch.update(vehicleDoc.reference, {
+          'driver.ratingSum': newSum,
+          'driver.ratingCount': newCount,
+          'driver.rating': newSum / newCount,
+          'driver.totalTrips': FieldValue.increment(1),
+        });
       }
-
-      if (ratingCount > 0) {
-        final averageRating = totalRating / ratingCount;
-
-        // Update all vehicles owned by this driver
-        final vehiclesQuery = await _firestore
-            .collection(_vehiclesCollection)
-            .where('userId', isEqualTo: driverId)
-            .get();
-
-        final batch = _firestore.batch();
-        for (final vehicleDoc in vehiclesQuery.docs) {
-          batch.update(vehicleDoc.reference, {
-            'driver.rating': averageRating,
-            'driver.totalTrips': ratingCount,
-          });
-        }
-        await batch.commit();
-      }
+      await batch.commit();
     } catch (e) {
       AppLogger.warning('Failed to update driver rating: $e',
           tag: 'BookingService');
@@ -867,8 +861,22 @@ class BookingService {
     return activeBooking == null;
   }
 
-  /// Expire old pending bookings (call periodically or via Cloud Function)
-  Future<int> expireOldBookings({int minutesOld = 10}) async {
+  /// Expire old pending bookings.
+  /// This should only be called from a Cloud Function or an admin context.
+  /// Client callers must pass [adminOverride: true] to acknowledge the risk;
+  /// omitting it is a no-op so accidental calls from user sessions are safe.
+  Future<int> expireOldBookings({
+    int minutesOld = 10,
+    bool adminOverride = false,
+  }) async {
+    if (!adminOverride) {
+      AppLogger.warning(
+        'expireOldBookings called without adminOverride — skipped. '
+        'Move this to a Cloud Function.',
+        tag: 'BookingService',
+      );
+      return 0;
+    }
     try {
       final cutoffTime = DateTime.now().subtract(Duration(minutes: minutesOld));
 

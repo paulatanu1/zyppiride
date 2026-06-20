@@ -1,7 +1,64 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../models/notification_model.dart';
 import '../services/notification_service.dart';
 import '../core/utils/app_logger.dart';
+
+// ── In-app notification history (Firestore) ───────────────────────────────────
+
+/// Streams notification items for [userId] from Firestore, newest first.
+/// Collection path: users/{userId}/notifications
+final userNotificationsProvider =
+    StreamProvider.family<List<NotificationItem>, String>((ref, userId) {
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(userId)
+      .collection('notifications')
+      .orderBy('createdAt', descending: true)
+      .limit(50)
+      .snapshots()
+      .map((snap) => snap.docs.map(NotificationItem.fromFirestore).toList());
+});
+
+/// Marks a single notification as read in Firestore.
+Future<void> markNotificationRead(String userId, String notifId) async {
+  await FirebaseFirestore.instance
+      .collection('users')
+      .doc(userId)
+      .collection('notifications')
+      .doc(notifId)
+      .update({'isRead': true});
+}
+
+/// Marks all unread notifications as read (batch write).
+Future<void> markAllNotificationsRead(
+    String userId, List<NotificationItem> items) async {
+  final batch = FirebaseFirestore.instance.batch();
+  for (final item in items.where((n) => !n.isRead)) {
+    batch.update(
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('notifications')
+          .doc(item.id),
+      {'isRead': true},
+    );
+  }
+  await batch.commit();
+}
+
+/// Deletes a notification document from Firestore.
+Future<void> deleteNotification(String userId, String notifId) async {
+  await FirebaseFirestore.instance
+      .collection('users')
+      .doc(userId)
+      .collection('notifications')
+      .doc(notifId)
+      .delete();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Service provider
 final notificationServiceProvider = Provider<NotificationService>((ref) {

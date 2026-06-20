@@ -1,4 +1,5 @@
 import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
@@ -14,6 +15,12 @@ val keyProperties = Properties().apply {
     if (keyPropertiesFile.exists()) load(keyPropertiesFile.inputStream())
 }
 
+// Load local.properties for keys that must not be committed to git
+val localProperties = Properties().apply {
+    val f = rootProject.file("../local.properties")
+    if (f.exists()) load(FileInputStream(f))
+}
+
 dependencies {
   // Import the Firebase BoM (latest stable as of Oct 2025)
   implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
@@ -23,8 +30,7 @@ dependencies {
   implementation("com.google.firebase:firebase-auth")
   implementation("com.google.firebase:firebase-appcheck-playintegrity")
 
-  // Required for Phone Auth silent verification (avoids reCAPTCHA)
-  implementation("com.google.android.gms:play-services-safetynet:18.0.1")
+  // Play Integrity for Phone Auth silent verification (SafetyNet is deprecated)
   implementation("com.google.android.play:integrity:1.3.0")
 
   // Core library desugaring for flutter_local_notifications
@@ -56,15 +62,15 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         
-        // Explicitly set for compatibility (Flutter default may be lower)
-        minSdk = flutter.minSdkVersion
-        targetSdk = 36  // Updated to match compileSdk for latest security/best practices
+        minSdk = 24
+        targetSdk = 36
         
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        
-        // Recommended: Add multiDexEnabled if your app exceeds 64K methods (common with Firebase/plugins)
+
         multiDexEnabled = true
+
+        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY") ?: ""
     }
 
     signingConfigs {
@@ -89,9 +95,3 @@ flutter {
     source = "../.."
 }
 
-// Optional: Add this block for better build performance with AGP 8+
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs += "-Xcontext-receivers"
-    }
-}

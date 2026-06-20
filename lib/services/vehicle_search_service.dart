@@ -143,14 +143,16 @@ class VehicleSearchService {
     if (userId.isNotEmpty) {
       try {
         final userDoc =
-            await _firestore.collection('users').doc(userId).get();
+            await _firestore.collection(TestMode.usersCollection).doc(userId).get();
         if (userDoc.exists) {
           final userData = userDoc.data();
-          driverName = userData?['name']?.toString() ??
+          // Firestore user documents store the name under 'fullName'
+          driverName = userData?['fullName']?.toString() ??
+              userData?['name']?.toString() ??
               userData?['displayName']?.toString() ??
               'Vehicle Owner';
-          driverPhotoUrl = userData?['photoUrl']?.toString() ??
-              userData?['profileImageUrl']?.toString();
+          driverPhotoUrl = userData?['profileImageUrl']?.toString() ??
+              userData?['photoUrl']?.toString();
           driverRating = _parseDoubleSafe(userData?['rating'], 4.5);
           totalTrips = _parseIntSafe(userData?['totalTrips'], 0);
         }

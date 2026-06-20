@@ -1050,7 +1050,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               children: [
                 Text(
                   'Share OTP with driver to start ride',
-                  style: TextStyle(fontFamily: 'Poppins', 
+                  style: TextStyle(fontFamily: 'Poppins',
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
@@ -1058,12 +1058,27 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                 const SizedBox(height: 4),
                 Text(
                   booking.rideOtp!,
-                  style: TextStyle(fontFamily: 'Poppins', 
+                  style: TextStyle(fontFamily: 'Poppins',
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     letterSpacing: 8,
                   ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.notifications_outlined, color: Colors.white70, size: 13),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Also sent as a push notification',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 11,
+                        color: Colors.white.withValues(alpha: 0.75),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1350,7 +1365,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
   void _showCancelDialog(Booking booking) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Cancel Ride?',
@@ -1362,7 +1377,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'No, Keep Ride',
               style: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
@@ -1370,12 +1385,13 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               final success = await ref
                   .read(bookingProvider.notifier)
                   .cancelBooking(reason: 'Cancelled by user');
 
-              if (success && mounted) {
+              if (success) {
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -1408,8 +1424,8 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
@@ -1454,7 +1470,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'Skip',
                 style: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
@@ -1462,7 +1478,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
                 final success = await ref
                     .read(bookingProvider.notifier)
                     .rateBooking(
@@ -1473,7 +1489,8 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                           : null,
                     );
 
-                if (success && mounted) {
+                if (success) {
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(

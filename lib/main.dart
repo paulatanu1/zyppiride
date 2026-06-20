@@ -9,20 +9,43 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'services/notification_service.dart';
 import 'providers/notification_provider.dart';
 
+/// Global scaffold messenger key — use this for all app-wide snackbars so they
+/// survive route transitions and never hit "deactivated widget" assertion errors.
+final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
 
-  // Initialize Firebase App Check with Play Integrity (Android) / Device Check (iOS)
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    runApp(_FirebaseErrorApp(error: e.toString()));
+    return;
+  }
+
+  // Initialize Firebase App Check with Play Integrity (Android) / Device Check (iOS).
+  // Use debug provider for debug AND profile builds; Play Integrity only for release.
+  // kDebugMode is false in profile mode, so we check kReleaseMode instead.
   await FirebaseAppCheck.instance.activate(
-    // Use debug provider for debug builds, Play Integrity for release
-    androidProvider: kDebugMode
-        ? AndroidProvider.debug
-        : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode
-        ? AppleProvider.debug
-        : AppleProvider.appAttest,
+    // ignore: deprecated_member_use
+    androidProvider: kReleaseMode
+        ? AndroidProvider.playIntegrity
+        : AndroidProvider.debug,
+    // ignore: deprecated_member_use
+    appleProvider: kReleaseMode
+        ? AppleProvider.appAttest
+        : AppleProvider.debug,
   );
+
+  // DIAGNOSTIC: verify App Check token is valid — remove once confirmed working
+  if (!kReleaseMode) {
+    try {
+      final token = await FirebaseAppCheck.instance.getToken(true);
+      debugPrint('[AppCheck] Token obtained: ${token != null ? 'OK (${token.length} chars)' : 'null'}');
+    } catch (e) {
+      debugPrint('[AppCheck] *** TOKEN FAILED: $e ***');
+    }
+  }
 
   // Setup FCM background message handler
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -61,6 +84,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Zyppi Ride',
+      scaffoldMessengerKey: scaffoldMessengerKey,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         textTheme: const TextTheme(
@@ -72,6 +96,63 @@ class _MyAppState extends ConsumerState<MyApp> {
         useMaterial3: true,
       ),
       routerConfig: AppRouter.router,
+    );
+  }
+}
+
+/// Shown only when Firebase fails to initialise (e.g. no internet on cold start,
+/// corrupted google-services.json, or missing SHA certificate in Firebase Console).
+class _FirebaseErrorApp extends StatelessWidget {
+  final String error;
+  const _FirebaseErrorApp({required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: Colors.deepPurple,
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.cloud_off, size: 72, color: Colors.white54),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Could not connect',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Please check your internet connection and restart the app.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  if (kDebugMode) ...[
+                    const SizedBox(height: 20),
+                    Text(
+                      error,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 11, color: Colors.white38),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

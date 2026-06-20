@@ -37,12 +37,7 @@ class _LocationBarState extends ConsumerState<LocationBar> {
         margin: const EdgeInsets.symmetric(horizontal: 20),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.white.withValues(alpha: 0.2),
-              Colors.white.withValues(alpha: 0.1),
-            ],
-          ),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: Colors.white.withValues(alpha: 0.25),

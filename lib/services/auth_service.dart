@@ -256,6 +256,10 @@ class AuthService {
       );
 
       if (credential.user != null) {
+        await firestore.collection('users').doc(credential.user!.uid).set(
+          {'lastLoginAt': FieldValue.serverTimestamp()},
+          SetOptions(merge: true),
+        );
         await _logAnalyticsEvent('login', method: 'email');
         return AuthResult.success(credential.user!);
       }
@@ -275,6 +279,16 @@ class AuthService {
     required String mobile,
   }) async {
     try {
+      final existing = await firestore
+          .collection('users')
+          .where('mobile', isEqualTo: mobile.trim())
+          .limit(1)
+          .get();
+
+      if (existing.docs.isNotEmpty) {
+        return AuthResult.failure('This mobile number is already registered.');
+      }
+
       final credential = await auth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password.trim(),
@@ -516,8 +530,9 @@ class AuthService {
       'email': email,
       'mobile': mobile,
       'authMethod': authMethod,
+      'verificationStatus': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
-      'is_admin': false,
+      'lastLoginAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -535,13 +550,15 @@ class AuthService {
     if (isNewUser) {
       // Create new user document
       await userDoc.set({
-        if (email != null) 'email': email,
-        if (phoneNumber != null) 'mobile': phoneNumber,
-        if (displayName != null) 'fullName': displayName,
-        if (photoUrl != null) 'profileImageUrl': photoUrl,
+        'email': ?email,
+        'mobile': ?phoneNumber,
+        'fullName': ?displayName,
+        'profileImageUrl': ?photoUrl,
         'authMethod': authMethod,
+        'verificationStatus': 'pending',
         'createdAt': FieldValue.serverTimestamp(),
-        'is_admin': false,
+        'lastLoginAt': FieldValue.serverTimestamp(),
+        'isAdmin': false,
       });
     } else {
       // Update existing user document with any new info

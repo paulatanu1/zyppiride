@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
+import '../router/routes_name.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -64,7 +66,20 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         if (role == 'User') {
           context.goNamed('user-dashboard');
         } else if (role == 'Driver' || role == 'Vehicle Owner') {
-          context.goNamed('mainDashboard');
+          // Recover mid-trip state: if the driver had an active booking when
+          // the app was killed, send them straight back to the booking dashboard
+          // so they can see the current trip without hunting for it manually.
+          final hasActiveTrip = await _hasActiveDriverTrip(user.uid);
+          if (!mounted) return;
+          if (hasActiveTrip) {
+            AppLogger.info(
+              'Active trip detected on launch — resuming driver booking dashboard',
+              tag: 'Splash',
+            );
+            context.goNamed(RoutesName.driverBookingDashboard);
+          } else {
+            context.goNamed('mainDashboard');
+          }
         } else {
           // Default fallback if role is null or unexpected - go to role selection
           AppLogger.warning('Unknown or missing role: $role, redirecting to role selection', tag: 'Splash');
@@ -81,6 +96,33 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         _hasNavigated = true;
         context.goNamed('auth');
       }
+    }
+  }
+
+  /// Returns true when the driver has at least one booking in an active
+  /// lifecycle state (confirmed → arriving → arrived → inProgress).
+  /// Called on launch so the app can restore mid-trip state after a kill.
+  Future<bool> _hasActiveDriverTrip(String uid) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection(TestMode.bookingsCollection)
+          .where('driver.driverId', isEqualTo: uid)
+          .where('status', whereIn: [
+            'confirmed',
+            'driverArriving',
+            'arrived',
+            'inProgress',
+          ])
+          .limit(1)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      AppLogger.error(
+        'Active trip check failed — defaulting to main dashboard',
+        tag: 'Splash',
+        error: e,
+      );
+      return false; // Fail safe: go to main dashboard, driver can navigate manually
     }
   }
 

@@ -48,6 +48,29 @@ class _BannerSliderState extends State<BannerSlider> {
                           Image.network(
                             banner.imageUrl,
                             fit: BoxFit.cover,
+                            loadingBuilder: (_, child, progress) {
+                              if (progress == null) return child;
+                              return Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.deepPurple.shade300,
+                                      Colors.deepPurple.shade600,
+                                    ],
+                                  ),
+                                ),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value: progress.expectedTotalBytes != null
+                                        ? progress.cumulativeBytesLoaded /
+                                            progress.expectedTotalBytes!
+                                        : null,
+                                    color: Colors.white54,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              );
+                            },
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
                                 decoration: BoxDecoration(

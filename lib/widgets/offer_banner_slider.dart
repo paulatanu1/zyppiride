@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import '../main.dart' show scaffoldMessengerKey;
 import '../models/offer_banner_model.dart';
 
 class OfferBannerSlider extends StatefulWidget {
@@ -25,25 +26,30 @@ class _OfferBannerSliderState extends State<OfferBannerSlider> {
   void _copyPromoCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
     widget.onCopyCode?.call(code);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Text(
-              'Promo code "$code" copied!',
-              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
-            ),
-          ],
+    // Use global messenger key — avoids "deactivated widget" crash when
+    // navigating away while a snackbar dismiss animation is still running.
+    scaffoldMessengerKey.currentState
+      ?..removeCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white, size: 20),
+              const SizedBox(width: 12),
+              Text(
+                'Promo code "$code" copied!',
+                style: const TextStyle(
+                    fontFamily: 'Poppins', fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green.shade600,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
         ),
-        backgroundColor: Colors.green.shade600,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
+      );
   }
 
   @override
@@ -62,10 +68,10 @@ class _OfferBannerSliderState extends State<OfferBannerSlider> {
             children: [
               Text(
                 'Special Offers',
-                style: TextStyle(fontFamily: 'Poppins', 
+                style: TextStyle(fontFamily: 'Poppins',
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Color(0xFF111827),
                 ),
               ),
               Container(
@@ -353,7 +359,7 @@ class _OfferBannerSliderState extends State<OfferBannerSlider> {
                     : null,
                 color: _currentIndex == entry.key
                     ? null
-                    : Colors.white.withValues(alpha: 0.4),
+                    : const Color(0xFFD1D5DB),
               ),
             );
           }).toList(),

@@ -470,7 +470,114 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     }
   }
 
+  /// Shows a bottom sheet asking the user to choose Camera or Gallery.
   Future<void> _pickImages(String type) async {
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.camera_alt_outlined, color: Colors.green),
+                  ),
+                  title: const Text(
+                    'Camera',
+                    style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Take a new photo',
+                    style: TextStyle(fontFamily: 'Poppins', fontSize: 12),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetCtx);
+                    _pickFromCamera(type);
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.photo_library_outlined, color: Colors.blue),
+                  ),
+                  title: const Text(
+                    'Gallery',
+                    style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Choose one or more from gallery',
+                    style: TextStyle(fontFamily: 'Poppins', fontSize: 12),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetCtx);
+                    _pickFromGallery(type);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Captures a single photo from the camera.
+  Future<void> _pickFromCamera(String type) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1920,
+      maxHeight: 1080,
+      imageQuality: 85,
+    );
+
+    if (pickedFile == null) return;
+    if (!mounted) return;
+
+    _showCompressionDialog();
+
+    final compressed = await _compressImage(File(pickedFile.path));
+
+    if (mounted) {
+      Navigator.of(context).pop(); // close compression dialog
+      if (compressed != null) {
+        setState(() => _imageGroups[type]!.add(compressed));
+        _showSnackBar('Photo added successfully');
+        await _logEvent('images_picked', parameters: {'type': type, 'source': 'camera', 'count': 1});
+      }
+    }
+  }
+
+  /// Picks multiple photos from the gallery (existing behaviour).
+  Future<void> _pickFromGallery(String type) async {
     final startTime = DateTime.now();
     final picker = ImagePicker();
     final pickedFiles = await picker.pickMultiImage(imageQuality: 85);
@@ -479,30 +586,13 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
     await _logEvent('images_picked', parameters: {
       'type': type,
+      'source': 'gallery',
       'count': pickedFiles.length,
     });
 
     if (!mounted) return;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: Card(
-          child: Padding(
-            padding: EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Compressing images...'),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    _showCompressionDialog();
 
     final compressedImages = <File>[];
     for (var pickedFile in pickedFiles) {
@@ -528,6 +618,28 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         'processing_time_ms': processingTime,
       });
     }
+  }
+
+  void _showCompressionDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Compressing image...', style: TextStyle(fontFamily: 'Poppins')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _removeImage(String type, int index) {

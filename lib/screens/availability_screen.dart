@@ -279,6 +279,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
               child: DropdownButton<String>(
                 value: selectedVehicleId,
                 isExpanded: true,
+                itemHeight: null,
                 icon: Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
                 style: const TextStyle(
                   fontFamily: 'Poppins',

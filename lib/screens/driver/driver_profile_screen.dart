@@ -768,7 +768,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
                   ),
                 ),
                 const Spacer(),
-                if (trailing != null) trailing,
+                ?trailing,
                 if (onEdit != null)
                   GestureDetector(
                     onTap: onEdit,

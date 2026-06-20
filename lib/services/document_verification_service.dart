@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/constants/test_mode.dart';
 import '../core/errors/errors.dart';
 import '../core/utils/app_logger.dart';
 
@@ -11,7 +12,7 @@ class DocumentVerificationService {
     try {
       AppLogger.firestore('GET', 'users', docId: '$userId (verification)');
 
-      final userDoc = await _firestore.collection('users').doc(userId).get();
+      final userDoc = await _firestore.collection(TestMode.usersCollection).doc(userId).get();
 
       if (!userDoc.exists) {
         return Result.failure(DatabaseException.notFound('User'));
@@ -36,7 +37,7 @@ class DocumentVerificationService {
       AppLogger.firestore('QUERY', 'vehicles', docId: 'user: $userId');
 
       final vehiclesSnapshot = await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('userId', isEqualTo: userId)
           .get();
 
@@ -90,14 +91,14 @@ class DocumentVerificationService {
       final batch = _firestore.batch();
 
       // Update user verification status
-      batch.update(_firestore.collection('users').doc(userId), {
+      batch.update(_firestore.collection(TestMode.usersCollection).doc(userId), {
         'verificationStatus': 'submitted',
         'verificationSubmittedAt': FieldValue.serverTimestamp(),
       });
 
       // Update all vehicles to submitted
       final vehiclesSnapshot = await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('userId', isEqualTo: userId)
           .get();
 
@@ -128,7 +129,7 @@ class DocumentVerificationService {
     try {
       AppLogger.firestore('GET', 'users', docId: '$userId (eligibility)');
 
-      final userDoc = await _firestore.collection('users').doc(userId).get();
+      final userDoc = await _firestore.collection(TestMode.usersCollection).doc(userId).get();
       final userData = userDoc.data();
 
       if (userData == null) {
@@ -137,7 +138,7 @@ class DocumentVerificationService {
 
       // Check vehicles
       final vehiclesSnapshot = await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('userId', isEqualTo: userId)
           .get();
 
@@ -208,7 +209,7 @@ class DocumentVerificationService {
   /// Stream verification status
   Stream<VerificationStatus> watchVerificationStatus(String userId) {
     return _firestore
-        .collection('users')
+        .collection(TestMode.usersCollection)
         .doc(userId)
         .snapshots()
         .map((snapshot) => VerificationStatus.fromMap(snapshot.data() ?? {}));
@@ -217,7 +218,7 @@ class DocumentVerificationService {
   /// Stream online eligibility - auto-updates when vehicle status changes
   Stream<OnlineEligibility> watchOnlineEligibility(String userId) {
     return _firestore
-        .collection('vehicles')
+        .collection(TestMode.vehiclesCollection)
         .where('userId', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
@@ -231,6 +232,7 @@ class DocumentVerificationService {
 
       bool hasApprovedVehicle = false;
       bool hasSubmittedVehicle = false;
+      bool hasRejectedVehicle = false;
       final List<String> missingItems = [];
 
       for (final doc in snapshot.docs) {
@@ -246,7 +248,10 @@ class DocumentVerificationService {
           hasApprovedVehicle = true;
         } else if (docStatus == 'submitted') {
           hasSubmittedVehicle = true;
-          missingItems.add('vehicle_documents');
+          missingItems.add('verification_under_review');
+        } else if (docStatus == 'rejected') {
+          hasRejectedVehicle = true;
+          missingItems.add('verification_rejected');
         } else {
           missingItems.add('vehicle_documents');
         }
@@ -257,9 +262,11 @@ class DocumentVerificationService {
       String? reason;
       if (!canGoOnline) {
         if (hasSubmittedVehicle) {
-          reason = 'Vehicle documents under review';
+          reason = 'Vehicle documents under review — pending admin approval';
+        } else if (hasRejectedVehicle) {
+          reason = 'Vehicle documents rejected — please resubmit';
         } else {
-          reason = 'Please upload and submit vehicle documents';
+          reason = 'Please upload vehicle documents';
         }
       }
 
@@ -276,7 +283,9 @@ class DocumentVerificationService {
     });
   }
 
-  /// Update verification status (for admin use or testing)
+  /// Update verification status (for admin use or testing).
+  /// When approving or rejecting, also syncs all vehicles' documentStatus
+  /// so the client eligibility check and Firestore rules stay consistent.
   Future<Result<void>> updateVerificationStatus({
     required String userId,
     required String status,
@@ -295,7 +304,28 @@ class DocumentVerificationService {
         updateData['verificationNotes'] = notes;
       }
 
-      await _firestore.collection('users').doc(userId).update(updateData);
+      await _firestore.collection(TestMode.usersCollection).doc(userId).update(updateData);
+
+      // Sync vehicle documentStatus so the Firestore rule (which checks
+      // resource.data.documentStatus on the vehicle) and client eligibility
+      // check are both satisfied when driver tries to go online.
+      if (status == 'approved' || status == 'rejected') {
+        final vehiclesSnapshot = await _firestore
+            .collection(TestMode.vehiclesCollection)
+            .where('userId', isEqualTo: userId)
+            .get();
+
+        if (vehiclesSnapshot.docs.isNotEmpty) {
+          final batch = _firestore.batch();
+          for (final doc in vehiclesSnapshot.docs) {
+            batch.update(doc.reference, {
+              'documentStatus': status,
+              'documentStatusUpdatedAt': FieldValue.serverTimestamp(),
+            });
+          }
+          await batch.commit();
+        }
+      }
 
       AppLogger.success(
         'Verification status updated to: $status',

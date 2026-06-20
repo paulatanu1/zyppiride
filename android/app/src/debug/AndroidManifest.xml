@@ -4,4 +4,16 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!--
+        Fixed App Check debug token for development builds.
+        REQUIRED: Register this UUID in Firebase console:
+          App Check → Apps → com.zyppiride.app (Android) → Manage debug tokens → Add token
+        Token: 633f46d8-6d26-4c5e-9f9d-afc4eb1dbb24
+    -->
+    <application>
+        <meta-data
+            android:name="com.google.firebase.appcheck.debug.token"
+            android:value="633f46d8-6d26-4c5e-9f9d-afc4eb1dbb24" />
+    </application>
 </manifest>

@@ -189,8 +189,7 @@ class _DriverAvailabilityScreenState extends ConsumerState<DriverAvailabilityScr
           ),
         ],
       ),
-      child: SafeArea(
-        child: ElevatedButton(
+      child: ElevatedButton(
           onPressed: _isSaving ? null : _saveAvailability,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue[700],
@@ -225,7 +224,6 @@ class _DriverAvailabilityScreenState extends ConsumerState<DriverAvailabilityScr
                     ),
                   ],
                 ),
-        ),
       ),
     );
   }

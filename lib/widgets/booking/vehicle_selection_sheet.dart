@@ -39,6 +39,7 @@ class VehicleSelectionSheet extends ConsumerStatefulWidget {
 class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
   AvailableVehicle? _selectedVehicle;
   FareEstimate? _selectedFare;
+  bool _isConfirming = false;
 
   @override
   void initState() {
@@ -164,9 +165,16 @@ class _VehicleSelectionSheetState extends ConsumerState<VehicleSelectionSheet> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () {
-                        widget.onVehicleSelected(_selectedVehicle!, _selectedFare!);
-                      },
+                      onPressed: (_isConfirming || _selectedVehicle == null)
+                          ? null
+                          : () {
+                              setState(() => _isConfirming = true);
+                              widget.onVehicleSelected(_selectedVehicle!, _selectedFare!);
+                              // Reset after a short delay in case the sheet stays open
+                              Future.delayed(const Duration(seconds: 2), () {
+                                if (mounted) setState(() => _isConfirming = false);
+                              });
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.deepPurple,
                         foregroundColor: Colors.white,

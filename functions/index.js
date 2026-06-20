@@ -1,8 +1,118 @@
-const functions = require("firebase-functions");
+const {onDocumentCreated} = require("firebase-functions/v2/firestore");
+const {onRequest} = require("firebase-functions/v2/https");
+const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 admin.initializeApp();
 
-exports.seedVehicleCatalog = functions.https.onRequest(async (req, res) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// OTP DELIVERY via Firebase Cloud Messaging (FCM)
+//
+// Fires whenever a new booking document is created.
+// Reads the rideOtp from the booking and pushes it to the passenger's device
+// via FCM — no third-party SMS provider required.
+//
+// The passenger sees it as a high-priority notification even when the app
+// is in the background or closed. The OTP is also shown inside the app on
+// the Track Booking screen as a fallback.
+// ─────────────────────────────────────────────────────────────────────────────
+exports.onBookingCreated = onDocumentCreated("bookings/{bookingId}", async (event) => {
+  const snap = event.data;
+  const booking = snap.data();
+  const {userId, rideOtp} = booking;
+  const vehicleType = booking.vehicle?.type ?? "vehicle";
+  const bookingId = event.params.bookingId;
+
+  if (!rideOtp) {
+    logger.warn("onBookingCreated: no OTP on booking", bookingId);
+    return null;
+  }
+
+  try {
+    await _sendOtpFcm(userId, rideOtp, vehicleType, bookingId);
+    logger.info("OTP FCM notification sent for booking", bookingId);
+  } catch (err) {
+    logger.error("OTP FCM notification failed:", err);
+  }
+
+  return null;
+});
+
+/**
+ * Pushes the ride OTP to the passenger's device via Firebase Cloud Messaging.
+ *
+ * The FCM token is stored on the user document under the key `fcmToken`
+ * (written by NotificationService.saveFcmToken on the Flutter side).
+ * If no token is found the function exits silently — the passenger can
+ * still read the OTP from the Track Booking screen in the app.
+ */
+async function _sendOtpFcm(userId, otp, vehicleType, bookingId) {
+  if (!userId) {
+    logger.warn("No userId on booking — cannot send OTP notification");
+    return;
+  }
+
+  const userSnap = await admin.firestore().collection("users").doc(userId).get();
+  const fcmToken = userSnap.data()?.fcmToken;
+
+  if (!fcmToken) {
+    logger.info("No FCM token for user", userId, "— skipping OTP push");
+    return;
+  }
+
+  await admin.messaging().send({
+    token: fcmToken,
+    notification: {
+      title: "Your Ride OTP",
+      body: `OTP: ${otp} — Tell this to your ${vehicleType} driver when they arrive.`,
+    },
+    // Include otp in data so the app can handle/display it programmatically
+    data: {
+      type: "RIDE_OTP",
+      bookingId: bookingId,
+      otp: otp,
+    },
+    android: {
+      priority: "high",
+      notification: {
+        channelId: "zyppi_ride_channel",
+        // Keep notification visible until the user dismisses it
+        sticky: false,
+      },
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: "default",
+          badge: 1,
+        },
+      },
+    },
+  });
+}
+
+exports.seedVehicleCatalog = onRequest(async (req, res) => {
+  // Restrict to POST from authorized admin calls only
+  if (req.method !== "POST") {
+    res.status(405).send("Method Not Allowed");
+    return;
+  }
+  const authHeader = req.headers.authorization || "";
+  if (!authHeader.startsWith("Bearer ")) {
+    res.status(401).send("Unauthorized");
+    return;
+  }
+  try {
+    const token = authHeader.split("Bearer ")[1];
+    const decoded = await admin.auth().verifyIdToken(token);
+    const userDoc = await admin.firestore().collection("users").doc(decoded.uid).get();
+    if (!userDoc.exists || !userDoc.data().isAdmin) {
+      res.status(403).send("Forbidden");
+      return;
+    }
+  } catch (e) {
+    res.status(401).send("Unauthorized");
+    return;
+  }
   const catalogData = {
     colors: [
       "White",

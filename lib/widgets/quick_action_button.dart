@@ -1,21 +1,20 @@
-
 import 'package:flutter/material.dart';
-import 'dart:ui';
 
 class QuickActionButton extends StatefulWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final Color gradientStart;
-  final Color gradientEnd;
+  final Color iconColor;
 
   const QuickActionButton({
     super.key,
     required this.icon,
     required this.label,
     required this.onTap,
-    this.gradientStart = const Color(0xFF6A11CB),
-    this.gradientEnd = const Color(0xFF2575FC),
+    this.iconColor = const Color(0xFF4F46E5),
+    // Legacy params kept for call-site compatibility; not used in new design
+    Color gradientStart = const Color(0xFF4F46E5),
+    Color gradientEnd = const Color(0xFF7C3AED),
   });
 
   @override
@@ -25,19 +24,18 @@ class QuickActionButton extends StatefulWidget {
 class _QuickActionButtonState extends State<QuickActionButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+  late Animation<double> _scaleAnim;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 150),
       vsync: this,
+      duration: const Duration(milliseconds: 120),
     );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.92,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.93).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -56,71 +54,49 @@ class _QuickActionButtonState extends State<QuickActionButton>
       },
       onTapCancel: () => _controller.reverse(),
       child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Glassmorphic Container
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    widget.gradientStart.withValues(alpha:0.2),
-                    widget.gradientEnd.withValues(alpha:0.2),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+        scale: _scaleAnim,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: widget.iconColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.gradientStart.withValues(alpha:0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                child: Icon(widget.icon, size: 22, color: widget.iconColor),
               ),
-              child: ClipOval(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.white.withValues(alpha:0.15),
-                          Colors.white.withValues(alpha:0.05),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha:0.2),
-                        width: 1.5,
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(widget.icon, size: 32, color: Colors.white),
-                  ),
+              const SizedBox(height: 8),
+              Text(
+                widget.label,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF111827),
+                  height: 1.3,
                 ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            const SizedBox(height: 8),
-            // Label
-            Text(
-              widget.label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-                fontFamily: 'Poppins',
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

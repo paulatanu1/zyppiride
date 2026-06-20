@@ -44,6 +44,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
           // Navigate based on user role
           final role = await authService.getUserRole(result.user!.uid);
+          if (!mounted) return;
           if (role == 'Driver' || role == 'Vehicle Owner') {
             context.goNamed(RoutesName.mainDashboard);
           } else if (role == 'User') {
@@ -92,6 +93,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         } else {
           // Existing user - check their role and navigate accordingly
           final role = await authService.getUserRole(result.user!.uid);
+          if (!mounted) return;
           if (role == 'Driver' || role == 'Vehicle Owner') {
             context.goNamed(RoutesName.mainDashboard);
           } else if (role == 'User') {

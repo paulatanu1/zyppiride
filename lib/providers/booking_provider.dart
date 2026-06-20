@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/booking_model.dart';
 import '../models/available_vehicle_model.dart';
 import '../services/booking_service.dart';
 import '../services/live_location_service.dart';
+import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
 
 // ============================================
@@ -136,13 +138,43 @@ class BookingNotifier extends StateNotifier<BookingState> {
     state = state.copyWith(isCreating: true, clearError: true);
 
     try {
-      // Get user details
+      // Get user details — Firebase Auth does not set displayName for phone-auth
+      // users, so fetch the stored fullName and mobile from Firestore as primary source.
       final user = FirebaseAuth.instance.currentUser;
+      String userName = user?.displayName ?? '';
+      String userPhone = user?.phoneNumber ?? '';
+
+      if (userName.isEmpty || userPhone.isEmpty) {
+        try {
+          final userDoc = await FirebaseFirestore.instance
+              .collection(TestMode.usersCollection)
+              .doc(_userId!)
+              .get();
+          final data = userDoc.data() ?? {};
+          if (userName.isEmpty) {
+            userName = (data['fullName'] as String? ?? '').trim();
+          }
+          if (userPhone.isEmpty) {
+            userPhone = (data['mobile'] as String? ?? '').trim();
+          }
+        } catch (_) {}
+      }
+      if (userName.isEmpty) userName = 'User';
+
+      // Block booking if we still have no phone number — driver needs to
+      // contact the passenger and the booking record requires it.
+      if (userPhone.isEmpty) {
+        state = state.copyWith(
+          isCreating: false,
+          error: 'Please add a phone number to your profile before booking.',
+        );
+        return null;
+      }
 
       final request = CreateBookingRequest(
         userId: _userId!,
-        userPhone: user?.phoneNumber ?? '',
-        userName: user?.displayName ?? 'User',
+        userPhone: userPhone,
+        userName: userName,
         bookingType: bookingType,
         pickupLocation: pickupLocation,
         dropLocation: dropLocation,
@@ -483,10 +515,20 @@ class DriverBookingNotifier extends StateNotifier<DriverBookingState> {
         state = state.copyWith(isLoading: false);
 
         // Start location tracking when trip starts
-        _locationService.startTracking(
+        final trackingStarted = await _locationService.startTracking(
           bookingId: bookingId,
           driverId: _driverId!,
         );
+        if (!trackingStarted) {
+          AppLogger.warning(
+            'Location tracking failed to start — no permission or GPS unavailable',
+            tag: 'DriverBooking',
+          );
+          state = state.copyWith(
+            error: 'Trip started, but live location is unavailable. '
+                'Check location permissions.',
+          );
+        }
         AppLogger.info('Started location tracking for trip', tag: 'DriverBooking');
 
         return true;

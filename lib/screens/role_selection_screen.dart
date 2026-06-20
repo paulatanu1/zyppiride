@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../router/routes_name.dart';
@@ -92,6 +94,17 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           'dob': _dob,
         });
 
+        // Subscribe to FCM topics based on role
+        final fcm = FirebaseMessaging.instance;
+        await fcm.subscribeToTopic('all_users');
+        if (_role == 'User') {
+          await fcm.subscribeToTopic('users');
+          await fcm.subscribeToTopic('user_${widget.userId}');
+        } else {
+          await fcm.subscribeToTopic('drivers');
+          await fcm.subscribeToTopic('driver_${widget.userId}');
+        }
+
         if (mounted) {
           if (_role == 'User') {
             context.goNamed(RoutesName.userDashboard);
@@ -121,7 +134,40 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        // Pressing back mid-setup leaves the user logged-in but role-less,
+        // causing a redirect loop. Offer sign-out instead.
+        final signOut = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Cancel setup?', style: TextStyle(fontFamily: 'Poppins')),
+            content: const Text(
+              'You must complete your profile to use the app. '
+              'Pressing "Sign out" will return you to the login screen.',
+              style: TextStyle(fontFamily: 'Poppins'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Continue setup', style: TextStyle(fontFamily: 'Poppins')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Sign out', style: TextStyle(fontFamily: 'Poppins')),
+              ),
+            ],
+          ),
+        );
+        if (signOut == true && context.mounted) {
+          await FirebaseAuth.instance.signOut();
+          if (context.mounted) context.goNamed(RoutesName.auth);
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text('Select Role', style: TextStyle(fontFamily: 'Poppins')),
         backgroundColor: Colors.deepPurple,
@@ -341,6 +387,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           ),
         ),
       ),
-    );
+    ), // Scaffold
+    ); // PopScope
   }
 }

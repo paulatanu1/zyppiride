@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../models/offer_model.dart';
+import '../../providers/user_dashboard_provider.dart';
 
 class OffersRewardsScreen extends ConsumerStatefulWidget {
   const OffersRewardsScreen({super.key});
@@ -16,48 +18,24 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
   late Animation<double> _fadeAnimation;
   late TabController _tabController;
 
-  final List<Map<String, dynamic>> _offers = [
-    {
-      'title': 'First Ride Bonus',
-      'discount': '50% OFF',
-      'description': 'Get 50% off on your first ride with us. Maximum discount ₹100.',
-      'code': 'FIRST50',
-      'validTill': 'Valid till 31 Jan 2026',
-      'color': Colors.purple,
-      'minOrder': '₹150',
-      'used': false,
-    },
-    {
-      'title': 'Weekend Special',
-      'discount': '30% OFF',
-      'description': 'Book any ride this weekend and save big on your travel.',
-      'code': 'WEEKEND30',
-      'validTill': 'Valid on weekends',
-      'color': Colors.blue,
-      'minOrder': '₹200',
-      'used': false,
-    },
-    {
-      'title': 'Refer & Earn',
-      'discount': 'Up to ₹500',
-      'description': 'Invite friends and earn ₹100 for each successful referral.',
-      'code': 'REFER100',
-      'validTill': 'No expiry',
-      'color': Colors.green,
-      'minOrder': 'No minimum',
-      'used': false,
-    },
-    {
-      'title': 'Airport Transfer',
-      'discount': '20% OFF',
-      'description': 'Special discount on all airport rides. Travel hassle-free!',
-      'code': 'AIRPORT20',
-      'validTill': 'Valid till 28 Feb 2026',
-      'color': Colors.orange,
-      'minOrder': '₹300',
-      'used': false,
-    },
+  // Offers are loaded live from Firestore via offersProvider — no hardcoded list.
+  static const List<Color> _offerPalette = [
+    Colors.purple, Colors.blue, Colors.green,
+    Colors.orange, Colors.red, Colors.teal,
   ];
+
+  Map<String, dynamic> _offerToMap(OfferData offer, int index) {
+    return {
+      'title':       offer.title,
+      'discount':    offer.discount.isNotEmpty ? offer.discount : 'Special Offer',
+      'description': offer.description,
+      'code':        offer.code,
+      'minOrder':    offer.minOrder.isNotEmpty ? offer.minOrder : 'No minimum',
+      'validTill':   offer.validTill.isNotEmpty ? offer.validTill : 'Limited time',
+      'color':       _offerPalette[index % _offerPalette.length],
+      'used':        offer.isUsed,
+    };
+  }
 
   final List<Map<String, dynamic>> _rewards = [
     {'icon': Icons.star, 'label': 'Points', 'value': '1,250', 'color': Colors.amber},
@@ -299,11 +277,56 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
   }
 
   Widget _buildOffersTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _offers.length,
-      itemBuilder: (context, index) {
-        return _buildOfferCard(_offers[index]);
+    final offersAsync = ref.watch(offersProvider);
+
+    return offersAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.grey, size: 48),
+            const SizedBox(height: 12),
+            Text(
+              'Unable to load offers',
+              style: TextStyle(fontFamily: 'Poppins', color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+      ),
+      data: (offers) {
+        if (offers.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.local_offer_outlined, color: Colors.grey.shade300, size: 72),
+                const SizedBox(height: 16),
+                Text(
+                  'No offers available',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Check back soon for new deals',
+                  style: TextStyle(fontFamily: 'Poppins', color: Colors.grey.shade400, fontSize: 13),
+                ),
+              ],
+            ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: offers.length,
+          itemBuilder: (context, index) {
+            return _buildOfferCard(_offerToMap(offers[index], index));
+          },
+        );
       },
     );
   }
@@ -395,7 +418,9 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
               children: [
                 Text(
                   offer['description'],
-                  style: TextStyle(fontFamily: 'Poppins', 
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontFamily: 'Poppins',
                     fontSize: 13,
                     color: Colors.grey.shade700,
                   ),

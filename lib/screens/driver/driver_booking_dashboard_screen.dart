@@ -1,14 +1,19 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/booking_model.dart';
 import '../../services/booking_service.dart';
 import '../../providers/booking_provider.dart';
+import '../../router/routes_name.dart';
 import '../../widgets/booking/pending_booking_card.dart';
 import '../../widgets/booking/active_ride_card.dart';
 import '../../widgets/booking/driver_stats_card.dart';
 import '../../widgets/driver/driver_online_toggle.dart';
 import '../../core/utils/app_logger.dart';
+import '../../providers/notification_provider.dart';
 
 /// Main dashboard screen for drivers to manage bookings
 class DriverBookingDashboardScreen extends ConsumerStatefulWidget {
@@ -24,12 +29,27 @@ class _DriverBookingDashboardScreenState
   String _otpInput = '';
   bool _isProcessing = false;
 
+  // OTP brute-force protection: track failed attempts per booking
+  final Map<String, int> _otpFailedAttempts = {};
+  final Map<String, DateTime> _otpLockedUntil = {};
+  static const int _maxOtpAttempts = 3;
+  static const int _lockoutMinutes = 5;
+
+  // Agreement cache: vehicleId → signed (true) or not (false).
+  // Avoids a Firestore read on every accept tap during the same session.
+  final Map<String, bool> _agreementCache = {};
+
   @override
   void initState() {
     super.initState();
     // Refresh driver data on screen load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(driverBookingProvider.notifier).loadActiveRide();
+
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        ref.read(notificationProvider.notifier).subscribeAsDriver(uid);
+      }
     });
   }
 
@@ -38,6 +58,7 @@ class _DriverBookingDashboardScreenState
     final driverState = ref.watch(driverBookingProvider);
     final pendingRequestsAsync = ref.watch(driverPendingRequestsProvider);
     final statsAsync = ref.watch(driverBookingStatsProvider);
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -65,7 +86,7 @@ class _DriverBookingDashboardScreenState
               child: Container(
                 color: Colors.deepPurple,
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                child: const DriverOnlineStatusCard(userId: ''),
+                child: DriverOnlineStatusCard(userId: uid),
               ),
             ),
 
@@ -316,10 +337,93 @@ class _DriverBookingDashboardScreenState
     await ref.read(driverBookingProvider.notifier).loadActiveRide();
   }
 
+  /// Returns true if the signed-in driver has a signed agreement for [vehicleId].
+  /// Result is cached in [_agreementCache] for the lifetime of this widget.
+  Future<bool> _hasSignedAgreement(String vehicleId) async {
+    if (_agreementCache.containsKey(vehicleId)) {
+      return _agreementCache[vehicleId]!;
+    }
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return false;
+      final doc = await FirebaseFirestore.instance
+          .collection('agreements')
+          .doc('${uid}_$vehicleId')
+          .get();
+      final signed = doc.exists;
+      _agreementCache[vehicleId] = signed;
+      return signed;
+    } catch (e) {
+      AppLogger.error('Agreement check failed', tag: 'DriverDashboard', error: e);
+      // Fail open on network error — don't silently block the driver.
+      return true;
+    }
+  }
+
   Future<void> _handleAccept(Booking booking) async {
+    final vehicleId = booking.vehicle.vehicleId;
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+
+    // ── Agreement gate ──────────────────────────────────────────────────────
+    final signed = await _hasSignedAgreement(vehicleId);
+    if (!mounted) return;
+
+    if (!signed) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.description_outlined, color: Colors.orange.shade700),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Agreement Required',
+                  style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'You must sign the Vehicle Owner Agreement for this vehicle before '
+            'you can accept bookings.\n\nIt only takes a minute.',
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 14, height: 1.5),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Not now', style: TextStyle(fontFamily: 'Poppins')),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.draw_outlined, size: 18),
+              label: const Text('Sign Agreement', style: TextStyle(fontFamily: 'Poppins')),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.shade700,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () {
+                Navigator.pop(ctx);
+                // Clear cache so the check re-runs after returning
+                _agreementCache.remove(vehicleId);
+                context.pushNamed(
+                  RoutesName.agreementSigning,
+                  queryParameters: {'userId': uid, 'vehicleId': vehicleId},
+                );
+              },
+            ),
+          ],
+        ),
+      );
+      return; // Do not proceed to accept
+    }
+    // ── End agreement gate ─────────────────────────────────────────────────
+
     final confirmed = await _showConfirmDialog(
       title: 'Accept Booking',
-      message: 'Accept ride from ${booking.userName} for ₹${booking.fareDetails.totalFare.toStringAsFixed(0)}?',
+      message:
+          'Accept ride from ${booking.userName} for ₹${booking.fareDetails.totalFare.toStringAsFixed(0)}?',
       confirmText: 'Accept',
       confirmColor: Colors.green,
     );
@@ -382,8 +486,21 @@ class _DriverBookingDashboardScreenState
   }
 
   Future<void> _handleStartTrip(Booking booking) async {
-    if (_otpInput.length != 4) {
-      _showSnackBar('Please enter the 4-digit OTP', Colors.orange);
+    final bookingId = booking.bookingId;
+
+    // Check lockout
+    final lockedUntil = _otpLockedUntil[bookingId];
+    if (lockedUntil != null && DateTime.now().isBefore(lockedUntil)) {
+      final remaining = lockedUntil.difference(DateTime.now()).inSeconds;
+      _showSnackBar(
+        'Too many wrong attempts. Try again in ${remaining}s.',
+        Colors.red,
+      );
+      return;
+    }
+
+    if (_otpInput.length != 6) {
+      _showSnackBar('Please enter the 6-digit OTP', Colors.orange);
       return;
     }
 
@@ -392,20 +509,36 @@ class _DriverBookingDashboardScreenState
     try {
       final success = await ref
           .read(driverBookingProvider.notifier)
-          .startTrip(booking.bookingId, _otpInput);
+          .startTrip(bookingId, _otpInput);
 
       if (mounted) {
         if (success) {
+          _otpFailedAttempts.remove(bookingId);
+          _otpLockedUntil.remove(bookingId);
           setState(() => _otpInput = '');
           _showSnackBar('Trip started! Navigate to drop location.', Colors.green);
         } else {
-          _showSnackBar('Invalid OTP. Please try again.', Colors.red);
+          final attempts = (_otpFailedAttempts[bookingId] ?? 0) + 1;
+          _otpFailedAttempts[bookingId] = attempts;
+          final remaining = _maxOtpAttempts - attempts;
+          if (remaining <= 0) {
+            _otpLockedUntil[bookingId] =
+                DateTime.now().add(Duration(minutes: _lockoutMinutes));
+            _otpFailedAttempts.remove(bookingId);
+            _showSnackBar(
+              'OTP locked for $_lockoutMinutes minutes after too many failed attempts.',
+              Colors.red,
+            );
+          } else {
+            _showSnackBar(
+              'Invalid OTP. $remaining attempt${remaining == 1 ? '' : 's'} remaining.',
+              Colors.red,
+            );
+          }
         }
       }
     } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:signature/signature.dart';
 import 'dart:async';
 import '../core/utils/app_logger.dart';
+import '../main.dart' show scaffoldMessengerKey;
 
 class AgreementSigningScreen extends StatefulWidget {
   final String userId;
@@ -117,9 +119,31 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
       return;
     }
 
+    // Guard: Firestore rules check request.auth.uid against userId fields
+    final authUid = FirebaseAuth.instance.currentUser?.uid;
+    if (authUid == null || authUid != widget.userId) {
+      _showSnackBar('Session error — please log out and log in again.', Colors.red);
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
+      final agreementRef = FirebaseFirestore.instance
+          .collection('agreements')
+          .doc('${widget.userId}_$vehicleId');
+
+      // Bypass local cache — if a previous attempt already wrote the document,
+      // a cached read would return "not found" and the subsequent set() would be
+      // evaluated as an UPDATE by Firestore rules (allow update = false → denied).
+      final existingAgreement =
+          await agreementRef.get(const GetOptions(source: Source.server));
+      if (existingAgreement.exists) {
+        if (mounted) setState(() { _hasAgreement = true; _isSubmitting = false; });
+        _showSnackBar('Agreement already signed!', Colors.green);
+        return;
+      }
+
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.userId)
@@ -131,33 +155,21 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
           vehicleData['vehicleDetails'] as Map<String, dynamic>? ?? {};
       final signatureBase64 = base64Encode(signatureBytes);
 
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
-        final agreementRef = FirebaseFirestore.instance
-            .collection('agreements')
-            .doc('${widget.userId}_$vehicleId');
-        final vehicleRef =
-        FirebaseFirestore.instance.collection('vehicles').doc(vehicleId);
-
-        transaction.set(agreementRef, {
-          'userId': widget.userId,
-          'vehicleId': vehicleId,
-          'ownerName': ownerName,
-          'vehicleRegistrationNumber':
-          vehicleDetails['registrationNumber'] ?? 'N/A',
-          'vehicleBrand': vehicleDetails['brand'] ?? '',
-          'vehicleModel': vehicleDetails['model'] ?? '',
-          'vehicleCategory': vehicleDetails['category'] ?? 'private',
-          'signatureData': signatureBase64,
-          'agreedToTerms': true,
-          'signedAt': FieldValue.serverTimestamp(),
-          'ipAddress': 'N/A',
-          'deviceInfo': 'Flutter App',
-        });
-
-        transaction.update(vehicleRef, {
-          'agreementSigned': true,
-          'agreementSignedAt': FieldValue.serverTimestamp(),
-        });
+      // Create the agreement document (rules: allow create if isOwner() && isValidAgreement())
+      await agreementRef.set({
+        'userId': widget.userId,
+        'vehicleId': vehicleId,
+        'ownerName': ownerName,
+        'vehicleRegistrationNumber':
+            vehicleDetails['registrationNumber'] ?? 'N/A',
+        'vehicleBrand': vehicleDetails['brand'] ?? '',
+        'vehicleModel': vehicleDetails['model'] ?? '',
+        'vehicleCategory': vehicleDetails['category'] ?? 'private',
+        'signatureData': signatureBase64,
+        'agreedToTerms': true,
+        'signedAt': FieldValue.serverTimestamp(),
+        'ipAddress': 'N/A',
+        'deviceInfo': 'Flutter App',
       });
 
       await _analytics.logEvent(
@@ -175,7 +187,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
       context.go('/dashboard?userId=${widget.userId}');
     } catch (e) {
       AppLogger.error('Error submitting agreement', tag: 'Agreement', error: e);
-      _showSnackBar('Failed to submit agreement', Colors.red);
+      _showSnackBar('Failed to submit agreement: ${e.runtimeType}', Colors.red);
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -184,13 +196,15 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
   }
 
   void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(fontFamily: 'Poppins')),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    scaffoldMessengerKey.currentState
+      ?..removeCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message, style: const TextStyle(fontFamily: 'Poppins')),
+          backgroundColor: color,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   String _formatDateTime(Timestamp timestamp) {

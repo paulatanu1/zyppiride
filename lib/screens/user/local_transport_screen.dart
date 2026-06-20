@@ -632,8 +632,9 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
   Widget _buildCounterButton(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
+      // 14+20+14 = 48 px — meets Material minimum tap-target size
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),

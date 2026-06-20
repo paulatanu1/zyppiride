@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -9,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import '../core/utils/app_logger.dart';
+import '../main.dart' show scaffoldMessengerKey;
 
 class DocumentUploadScreen extends StatefulWidget {
   final String userId;
@@ -84,7 +86,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       final vehiclesSnapshot = await FirebaseFirestore.instance
           .collection('vehicles')
           .where('userId', isEqualTo: widget.userId)
-          .get();
+          .get(const GetOptions(source: Source.server));
 
       if (!mounted) return;
 
@@ -623,15 +625,22 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                 scrollDirection: Axis.horizontal,
                 itemCount: images.length,
                 itemBuilder: (context, index) {
-                  return Container(
-                    width: 100,
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
-                      image: DecorationImage(
-                        image: NetworkImage(images[index]),
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      width: 100,
+                      margin: const EdgeInsets.only(right: 8),
+                      color: Colors.grey[100],
+                      child: Image.network(
+                        images[index],
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stack) => const Center(
+                          child: Icon(Icons.broken_image, color: Colors.grey),
+                        ),
+                        loadingBuilder: (context, child, progress) => progress == null
+                            ? child
+                            : const Center(
+                                child: CircularProgressIndicator(strokeWidth: 2)),
                       ),
                     ),
                   );
@@ -785,15 +794,22 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                 itemBuilder: (context, index) {
                   return Stack(
                     children: [
-                      Container(
-                        width: 100,
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey[300]!),
-                          image: DecorationImage(
-                            image: NetworkImage(images[index]),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          width: 100,
+                          margin: const EdgeInsets.only(right: 8),
+                          color: Colors.grey[100],
+                          child: Image.network(
+                            images[index],
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stack) => const Center(
+                              child: Icon(Icons.broken_image, color: Colors.grey),
+                            ),
+                            loadingBuilder: (context, child, progress) => progress == null
+                                ? child
+                                : const Center(
+                                    child: CircularProgressIndicator(strokeWidth: 2)),
                           ),
                         ),
                       ),
@@ -908,6 +924,30 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       return;
     }
 
+    // Guard: the Firestore rule checks request.auth.uid == resource.data.userId.
+    // widget.userId comes from the route param and must match the live auth UID.
+    final authUid = FirebaseAuth.instance.currentUser?.uid;
+    if (authUid == null || authUid != widget.userId) {
+      _showSnackBar('Session error — please log out and log in again.', isError: true);
+      return;
+    }
+
+    // Validate vehicle ownership: the selected vehicle's stored userId must match
+    // the live auth UID. Firestore cache can serve stale vehicle data from a
+    // previous session, causing PERMISSION_DENIED on the vehicle update.
+    final vehicleUserId = selectedVehicleData?['userId'] as String?;
+    if (vehicleUserId == null || vehicleUserId != authUid) {
+      _showSnackBar(
+        'Vehicle ownership mismatch — please re-select your vehicle.',
+        isError: true,
+      );
+      setState(() {
+        selectedVehicleId = null;
+        selectedVehicleData = null;
+      });
+      return;
+    }
+
     final confirmed = await _showConfirmationDialog();
     if (!confirmed) return;
 
@@ -948,20 +988,38 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
         'upload_time_ms': uploadTime,
       });
 
-      if (mounted) {
-        _showSnackBar('Documents uploaded successfully!', isSuccess: true);
+      // Re-fetch the vehicle from server so the screen immediately shows
+      // the submitted documents and "Under Review" banner without requiring
+      // the user to re-select the vehicle.
+      final vehicleId = selectedVehicleId!;
+      DocumentSnapshot<Map<String, dynamic>>? updatedVehicle;
+      try {
+        updatedVehicle = await FirebaseFirestore.instance
+            .collection('vehicles')
+            .doc(vehicleId)
+            .get(const GetOptions(source: Source.server));
+      } catch (_) {
+        // Non-fatal — UI will still update via the cleared groups
+      }
 
+      if (mounted) {
         setState(() {
-          selectedVehicleId = null;
-          selectedVehicleData = null;
+          if (updatedVehicle != null && updatedVehicle.exists) {
+            selectedVehicleData = updatedVehicle.data();
+          } else {
+            // Fallback: manually reflect the submitted status in local state
+            selectedVehicleData = {
+              ...?selectedVehicleData,
+              'documentStatus': 'submitted',
+            };
+          }
           _documentGroups.forEach((key, value) => value.clear());
         });
 
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            context.go('/dashboard?userId=${widget.userId}');
-          }
-        });
+        _showSnackBar(
+          'Documents submitted! Pending admin review.',
+          isSuccess: true,
+        );
       }
     } catch (e) {
       _showSnackBar('Failed to upload documents: $e', isError: true);
@@ -1153,20 +1211,21 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
   }
 
   void _showSnackBar(String message, {bool isError = false, bool isSuccess = false}) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(fontFamily: 'Poppins'),
+    scaffoldMessengerKey.currentState
+      ?..removeCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            style: const TextStyle(fontFamily: 'Poppins'),
+          ),
+          backgroundColor: isError
+              ? Colors.red
+              : (isSuccess ? Colors.green : Colors.grey[800]),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: isSuccess ? 2 : 3),
         ),
-        backgroundColor: isError
-            ? Colors.red
-            : (isSuccess ? Colors.green : Colors.grey[800]),
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: isSuccess ? 2 : 3),
-      ),
-    );
+      );
   }
 
   @override

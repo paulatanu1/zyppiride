@@ -142,7 +142,9 @@ class ActiveRideCard extends StatelessWidget {
                         children: [
                           Text(
                             booking.userName,
-                            style: TextStyle(fontFamily: 'Poppins', 
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontFamily: 'Poppins',
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
                             ),
@@ -151,11 +153,15 @@ class ActiveRideCard extends StatelessWidget {
                             children: [
                               const Icon(Icons.phone, size: 14, color: Colors.grey),
                               const SizedBox(width: 4),
-                              Text(
-                                booking.userPhone,
-                                style: TextStyle(fontFamily: 'Poppins', 
-                                  fontSize: 13,
-                                  color: Colors.grey.shade600,
+                              Flexible(
+                                child: Text(
+                                  booking.userPhone,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontFamily: 'Poppins',
+                                    fontSize: 13,
+                                    color: Colors.grey.shade600,
+                                  ),
                                 ),
                               ),
                             ],

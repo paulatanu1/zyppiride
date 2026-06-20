@@ -236,15 +236,22 @@ class _OutstationScreenState extends ConsumerState<OutstationScreen>
           Row(
             children: [
               const Expanded(child: Divider(color: Colors.white24)),
-              GestureDetector(
-                onTap: _swapCities,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
+              // SizedBox enforces 48×48 tap target without changing the visual circle size
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: GestureDetector(
+                  onTap: _swapCities,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.swap_vert, color: Colors.white, size: 20),
+                    ),
                   ),
-                  child: const Icon(Icons.swap_vert, color: Colors.white, size: 20),
                 ),
               ),
               const Expanded(child: Divider(color: Colors.white24)),

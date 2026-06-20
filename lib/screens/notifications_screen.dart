@@ -2,6 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../models/notification_model.dart';
+import '../providers/notification_provider.dart';
+
+// ── Theme constants (mirrors user dashboard palette) ─────────────────────────
+const Color _kBrand   = Color(0xFF4F46E5);
+const Color _kBgLight = Color(0xFFF4F6FA);
+const Color _kSurface = Colors.white;
+const Color _kTextPri = Color(0xFF111827);
+const Color _kTextSec = Color(0xFF6B7280);
+const Color _kError   = Color(0xFFEF4444);
+// ─────────────────────────────────────────────────────────────────────────────
+
 class NotificationsScreen extends ConsumerStatefulWidget {
   final String userId;
 
@@ -11,213 +23,113 @@ class NotificationsScreen extends ConsumerStatefulWidget {
   ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   String _selectedFilter = 'All';
   final List<String> _filters = ['All', 'Rides', 'Offers', 'System'];
 
-  final List<Map<String, dynamic>> _notifications = [
-    {
-      'id': '1',
-      'type': 'ride',
-      'title': 'Ride Completed',
-      'message': 'Your ride to Electronic City has been completed. Rate your driver!',
-      'time': '2 min ago',
-      'isRead': false,
-      'icon': Icons.directions_car,
-      'color': Colors.green,
-    },
-    {
-      'id': '2',
-      'type': 'offer',
-      'title': '50% Off on Next Ride!',
-      'message': 'Use code RIDE50 to get 50% off on your next ride. Valid till midnight.',
-      'time': '1 hour ago',
-      'isRead': false,
-      'icon': Icons.local_offer,
-      'color': Colors.orange,
-    },
-    {
-      'id': '3',
-      'type': 'system',
-      'title': 'Payment Successful',
-      'message': '₹245 has been deducted from your wallet for ride #RD78542.',
-      'time': '2 hours ago',
-      'isRead': true,
-      'icon': Icons.payment,
-      'color': Colors.blue,
-    },
-    {
-      'id': '4',
-      'type': 'ride',
-      'title': 'Driver Assigned',
-      'message': 'Ramesh K is on the way to pick you up. ETA: 5 mins.',
-      'time': '3 hours ago',
-      'isRead': true,
-      'icon': Icons.person,
-      'color': Colors.deepPurple,
-    },
-    {
-      'id': '5',
-      'type': 'offer',
-      'title': 'Weekend Special',
-      'message': 'Earn 2x reward points on all rides this weekend!',
-      'time': '1 day ago',
-      'isRead': true,
-      'icon': Icons.star,
-      'color': Colors.amber,
-    },
-    {
-      'id': '6',
-      'type': 'system',
-      'title': 'Profile Updated',
-      'message': 'Your profile information has been successfully updated.',
-      'time': '2 days ago',
-      'isRead': true,
-      'icon': Icons.account_circle,
-      'color': Colors.teal,
-    },
-    {
-      'id': '7',
-      'type': 'ride',
-      'title': 'Ride Cancelled',
-      'message': 'Your scheduled ride for tomorrow has been cancelled. Refund initiated.',
-      'time': '3 days ago',
-      'isRead': true,
-      'icon': Icons.cancel,
-      'color': Colors.red,
-    },
-    {
-      'id': '8',
-      'type': 'system',
-      'title': 'App Update Available',
-      'message': 'A new version of Zyppi Ride is available. Update now for new features!',
-      'time': '5 days ago',
-      'isRead': true,
-      'icon': Icons.system_update,
-      'color': Colors.indigo,
-    },
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    );
-    _animationController.forward();
+  List<NotificationItem> _applyFilter(List<NotificationItem> items) {
+    if (_selectedFilter == 'All') return items;
+    final type = _selectedFilter == 'Rides'
+        ? 'ride'
+        : _selectedFilter == 'Offers'
+            ? 'offer'
+            : 'system';
+    return items.where((n) => n.type == type).toList();
   }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  List<Map<String, dynamic>> get _filteredNotifications {
-    if (_selectedFilter == 'All') return _notifications;
-    final filterType = _selectedFilter.toLowerCase();
-    if (filterType == 'rides') {
-      return _notifications.where((n) => n['type'] == 'ride').toList();
-    } else if (filterType == 'offers') {
-      return _notifications.where((n) => n['type'] == 'offer').toList();
-    } else {
-      return _notifications.where((n) => n['type'] == 'system').toList();
-    }
-  }
-
-  int get _unreadCount => _notifications.where((n) => n['isRead'] == false).length;
 
   @override
   Widget build(BuildContext context) {
+    final notifAsync = ref.watch(userNotificationsProvider(widget.userId));
+
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.deepPurple.shade800,
-              Colors.deepPurple.shade600,
-              Colors.deepPurple.shade400,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Column(
-              children: [
-                _buildAppBar(),
-                _buildUnreadBanner(),
-                _buildFilterChips(),
-                Expanded(
-                  child: _buildNotificationsList(),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppBar() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
+      backgroundColor: _kBrand,
+      body: Column(
         children: [
-          GestureDetector(
-            onTap: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/user-dashboard');
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+          // ── Purple header ────────────────────────────────────────────────
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.canPop() ? context.pop() : context.go('/user-dashboard'),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Text(
+                      'Notifications',
+                      style: TextStyle(
+                        fontFamily: 'Poppins', fontSize: 20,
+                        fontWeight: FontWeight.bold, color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  notifAsync.when(
+                    data: (items) {
+                      final unread = items.where((n) => !n.isRead).toList();
+                      if (unread.isEmpty) return const SizedBox.shrink();
+                      return GestureDetector(
+                        onTap: () => markAllNotificationsRead(widget.userId, unread),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Mark all read',
+                            style: TextStyle(
+                              fontFamily: 'Poppins', fontSize: 12,
+                              color: Colors.white, fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
             ),
           ),
-          const SizedBox(width: 16),
+
+          // ── White body ───────────────────────────────────────────────────
           Expanded(
-            child: Text(
-              'Notifications',
-              style: TextStyle(fontFamily: 'Poppins', 
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: _markAllAsRead,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
+              decoration: const BoxDecoration(
+                color: _kBgLight,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               ),
-              child: Text(
-                'Mark all read',
-                style: TextStyle(fontFamily: 'Poppins', 
-                  fontSize: 12,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
+              child: Column(
+                children: [
+                  // Filter tabs
+                  _buildFilterTabs(),
+
+                  // Notification list
+                  Expanded(
+                    child: notifAsync.when(
+                      data: (items) {
+                        final filtered = _applyFilter(items);
+                        if (filtered.isEmpty) return _buildEmptyState();
+                        return _buildList(filtered);
+                      },
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(color: _kBrand),
+                      ),
+                      error: (e, _) => _buildErrorState(e.toString()),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -226,62 +138,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     );
   }
 
-  Widget _buildUnreadBanner() {
-    if (_unreadCount == 0) return const SizedBox.shrink();
+  Widget _buildFilterTabs() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.amber.shade600,
-            Colors.orange.shade600,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.notifications_active, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$_unreadCount Unread Notifications',
-                  style: TextStyle(fontFamily: 'Poppins', 
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Tap to view and take action',
-                  style: TextStyle(fontFamily: 'Poppins', 
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChips() {
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(vertical: 16),
+      height: 52,
+      padding: const EdgeInsets.only(top: 16),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -291,19 +151,27 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           final isSelected = _selectedFilter == filter;
           return GestureDetector(
             onTap: () => setState(() => _selectedFilter = filter),
-            child: Container(
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(25),
+                color: isSelected ? _kBrand : _kSurface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected ? _kBrand : const Color(0xFFE5E7EB),
+                ),
+                boxShadow: isSelected
+                    ? [BoxShadow(color: _kBrand.withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 2))]
+                    : [],
               ),
               child: Text(
                 filter,
-                style: TextStyle(fontFamily: 'Poppins', 
-                  color: isSelected ? Colors.deepPurple : Colors.white,
-                  fontWeight: FontWeight.w600,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
                   fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? Colors.white : _kTextSec,
                 ),
               ),
             ),
@@ -313,215 +181,188 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     );
   }
 
-  Widget _buildNotificationsList() {
-    final notifications = _filteredNotifications;
-    if (notifications.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.notifications_off_outlined,
-              size: 80,
-              color: Colors.white.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No notifications',
-              style: TextStyle(fontFamily: 'Poppins', 
-                color: Colors.white70,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
+  Widget _buildList(List<NotificationItem> items) {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: notifications.length,
-      itemBuilder: (context, index) {
-        final notification = notifications[index];
-        return _buildNotificationCard(notification, index);
-      },
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+      itemCount: items.length,
+      itemBuilder: (context, index) => _buildCard(items[index], index),
     );
   }
 
-  Widget _buildNotificationCard(Map<String, dynamic> notification, int index) {
-    final isUnread = notification['isRead'] == false;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: Duration(milliseconds: 300 + (index * 50)),
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
-        );
-      },
-      child: Dismissible(
-        key: Key(notification['id']),
-        direction: DismissDirection.endToStart,
-        background: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.red.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          child: const Icon(Icons.delete, color: Colors.white),
+  Widget _buildCard(NotificationItem item, int index) {
+    final typeInfo = _typeInfo(item.type);
+    final color = typeInfo['color'] as Color;
+    final icon  = typeInfo['icon'] as IconData;
+
+    return Dismissible(
+      key: Key(item.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: _kError,
+          borderRadius: BorderRadius.circular(16),
         ),
-        onDismissed: (direction) {
-          setState(() {
-            _notifications.removeWhere((n) => n['id'] == notification['id']);
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Notification deleted',
-                style: TextStyle(fontFamily: 'Poppins'),
-              ),
-              behavior: SnackBarBehavior.floating,
-              action: SnackBarAction(
-                label: 'Undo',
-                onPressed: () {
-                  setState(() {
-                    _notifications.insert(index, notification);
-                  });
-                },
-              ),
-            ),
-          );
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete_outline, color: Colors.white, size: 22),
+      ),
+      onDismissed: (_) => deleteNotification(widget.userId, item.id),
+      child: GestureDetector(
+        onTap: () async {
+          if (!item.isRead) {
+            await markNotificationRead(widget.userId, item.id);
+          }
+          if (item.actionRoute != null && mounted) {
+            context.push(item.actionRoute!);
+          }
         },
-        child: GestureDetector(
-          onTap: () => _onNotificationTap(notification),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isUnread
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16),
-              border: isUnread
-                  ? Border.all(color: notification['color'] as Color, width: 1)
-                  : null,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: (notification['color'] as Color).withValues(alpha: isUnread ? 0.15 : 0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    notification['icon'] as IconData,
-                    color: isUnread ? notification['color'] as Color : Colors.white,
-                    size: 20,
-                  ),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _kSurface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+            border: !item.isRead
+                ? Border(left: BorderSide(color: color, width: 4))
+                : Border.all(color: const Color(0xFFF3F4F6)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              notification['title'],
-                              style: TextStyle(fontFamily: 'Poppins', 
-                                color: isUnread ? Colors.black87 : Colors.white,
-                                fontSize: 14,
-                                fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
-                              ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              fontWeight: item.isRead ? FontWeight.w500 : FontWeight.bold,
+                              color: _kTextPri,
                             ),
                           ),
-                          if (isUnread)
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: notification['color'] as Color,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        notification['message'],
-                        style: TextStyle(fontFamily: 'Poppins', 
-                          color: isUnread ? Colors.black54 : Colors.white70,
-                          fontSize: 12,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        if (!item.isRead)
+                          Container(
+                            width: 8, height: 8,
+                            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.message,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins', fontSize: 12, color: _kTextSec,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        notification['time'],
-                        style: TextStyle(fontFamily: 'Poppins', 
-                          color: isUnread ? Colors.grey : Colors.white54,
-                          fontSize: 11,
-                        ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _formatTime(item.createdAt),
+                      style: const TextStyle(
+                        fontFamily: 'Poppins', fontSize: 11, color: Color(0xFF9CA3AF),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _kBrand.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.notifications_outlined, size: 48, color: _kBrand),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'No notifications yet',
+            style: TextStyle(
+              fontFamily: 'Poppins', fontSize: 17,
+              fontWeight: FontWeight.bold, color: _kTextPri,
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  void _markAllAsRead() {
-    setState(() {
-      for (var notification in _notifications) {
-        notification['isRead'] = true;
-      }
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'All notifications marked as read',
-          style: TextStyle(fontFamily: 'Poppins'),
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _onNotificationTap(Map<String, dynamic> notification) {
-    setState(() {
-      notification['isRead'] = true;
-    });
-
-    // Handle notification action based on type
-    final type = notification['type'];
-    if (type == 'ride') {
-      // Navigate to ride details or history
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Opening ride details...',
-            style: TextStyle(fontFamily: 'Poppins'),
+          const SizedBox(height: 8),
+          const Text(
+            'You\'re all caught up!',
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 13, color: _kTextSec),
           ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } else if (type == 'offer') {
-      // Navigate to offers screen
-      context.push('/offers-rewards');
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: _kError),
+          const SizedBox(height: 12),
+          const Text(
+            'Unable to load notifications',
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 15, color: _kTextPri),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Map<String, dynamic> _typeInfo(String type) {
+    switch (type) {
+      case 'ride':
+        return {'icon': Icons.directions_car_outlined, 'color': _kBrand};
+      case 'offer':
+        return {'icon': Icons.local_offer_outlined, 'color': const Color(0xFFF59E0B)};
+      default:
+        return {'icon': Icons.info_outline, 'color': _kTextSec};
     }
+  }
+
+  String _formatTime(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${dt.day}/${dt.month}/${dt.year}';
   }
 }

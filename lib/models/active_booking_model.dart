@@ -28,34 +28,49 @@ class ActiveBooking {
   });
 
   factory ActiveBooking.fromJson(Map<String, dynamic> json) {
+    // Booking documents store data in nested maps (vehicle, driver, fareDetails,
+    // pickupLocation, dropLocation). Support both the nested format written by
+    // BookingService and any legacy flat format.
+    final vehicle     = json['vehicle']     as Map<String, dynamic>?;
+    final driver      = json['driver']      as Map<String, dynamic>?;
+    final fareDetails = json['fareDetails'] as Map<String, dynamic>?;
+    final pickup      = json['pickupLocation'];
+    final drop        = json['dropLocation'];
+
     return ActiveBooking(
-      bookingId: json['bookingId'] ?? '',
-      userId: json['userId'] ?? '',
-      vehicleType: json['vehicleType'] ?? 'Unknown',
-      status: json['status'] ?? 'pending',
-      driverName: json['driverName'] ?? 'Driver',
-      driverId: json['driverId'] ?? '',
-      eta: json['eta'] ?? '10 mins',
-      pickupLocation: json['pickupLocation'] ?? '',
-      dropLocation: json['dropLocation'] ?? '',
-      fare: (json['fare'] ?? 0).toDouble(),
-      bookingTime: _parseDateTime(json['createdAt'] ?? json['bookingTime']),
+      bookingId:      json['bookingId'] ?? json['id'] ?? '',
+      userId:         json['userId'] ?? '',
+      vehicleType:    vehicle?['type']     ?? json['vehicleType'] ?? 'Unknown',
+      status:         json['status'] ?? 'pending',
+      driverName:     driver?['name']      ?? json['driverName']  ?? 'Driver',
+      driverId:       driver?['driverId']  ?? json['driverId']    ?? '',
+      eta:            json['estimatedArrival'] ?? json['eta']     ?? '10 mins',
+      // pickupLocation / dropLocation may be a nested Map or a plain String
+      pickupLocation: pickup is Map
+          ? (pickup['address'] ?? pickup['name'] ?? '').toString()
+          : (pickup as String? ?? ''),
+      dropLocation:   drop is Map
+          ? (drop['address'] ?? drop['name'] ?? '').toString()
+          : (drop as String? ?? ''),
+      // Fare is stored inside the fareDetails map as totalFare
+      fare:           (fareDetails?['totalFare'] ?? json['fare'] ?? 0).toDouble(),
+      bookingTime:    _parseDateTime(json['createdAt'] ?? json['bookingTime']),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'bookingId': bookingId,
-      'userId': userId,
-      'vehicleType': vehicleType,
-      'status': status,
-      'driverName': driverName,
-      'driverId': driverId,
-      'eta': eta,
+      'bookingId':      bookingId,
+      'userId':         userId,
+      'vehicleType':    vehicleType,
+      'status':         status,
+      'driverName':     driverName,
+      'driverId':       driverId,
+      'eta':            eta,
       'pickupLocation': pickupLocation,
-      'dropLocation': dropLocation,
-      'fare': fare,
-      'bookingTime': bookingTime.toIso8601String(),
+      'dropLocation':   dropLocation,
+      'fare':           fare,
+      'createdAt':      bookingTime.toIso8601String(), // field Firestore queries use
     };
   }
 

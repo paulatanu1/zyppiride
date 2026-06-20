@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../router/routes_name.dart';
-import 'role_selection_screen.dart';
 
 class EmailVerificationScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -55,11 +54,9 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
       );
 
       // Navigate to role selection
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => RoleSelectionScreen(userId: widget.userId),
-        ),
+      context.goNamed(
+        RoutesName.roleSelection,
+        queryParameters: {'userId': widget.userId},
       );
     }
   }
@@ -127,11 +124,9 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
           ),
         );
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => RoleSelectionScreen(userId: widget.userId),
-          ),
+        context.goNamed(
+          RoutesName.roleSelection,
+          queryParameters: {'userId': widget.userId},
         );
       } else {
         setState(() {
@@ -141,12 +136,32 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
     }
   }
 
-  void _signOutAndReturn() async {
+  Future<void> _signOutAndReturn() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign out?', style: TextStyle(fontFamily: 'Poppins')),
+        content: const Text(
+          'You will need to sign in again and verify your email.',
+          style: TextStyle(fontFamily: 'Poppins'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Stay', style: TextStyle(fontFamily: 'Poppins')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Sign out', style: TextStyle(fontFamily: 'Poppins')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     final authService = ref.read(authServiceProvider);
     await authService.signOut();
-    if (mounted) {
-      context.goNamed(RoutesName.login);
-    }
+    if (mounted) context.goNamed(RoutesName.login);
   }
 
   @override

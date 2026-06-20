@@ -174,9 +174,10 @@ class NotificationService {
   Map<String, dynamic> _decodePayload(String payload) {
     final map = <String, dynamic>{};
     for (final part in payload.split('&')) {
-      final kv = part.split('=');
-      if (kv.length == 2) {
-        map[kv[0]] = kv[1];
+      // Use indexOf so values containing '=' (URLs, base64, etc.) are preserved.
+      final eqIndex = part.indexOf('=');
+      if (eqIndex > 0) {
+        map[part.substring(0, eqIndex)] = part.substring(eqIndex + 1);
       }
     }
     return map;
@@ -282,6 +283,7 @@ class NotificationService {
 
   /// Subscribe to driver-specific topics
   Future<void> subscribeAsDriver(String userId) async {
+    await subscribeToTopic('all_users');
     await subscribeToTopic('drivers');
     await subscribeToTopic('driver_$userId');
     AppLogger.success('Subscribed to driver topics', tag: 'NotificationService');
@@ -289,6 +291,7 @@ class NotificationService {
 
   /// Unsubscribe from driver topics
   Future<void> unsubscribeAsDriver(String userId) async {
+    await unsubscribeFromTopic('all_users');
     await unsubscribeFromTopic('drivers');
     await unsubscribeFromTopic('driver_$userId');
     AppLogger.info('Unsubscribed from driver topics', tag: 'NotificationService');
@@ -296,6 +299,7 @@ class NotificationService {
 
   /// Subscribe to user-specific topics
   Future<void> subscribeAsUser(String userId) async {
+    await subscribeToTopic('all_users');
     await subscribeToTopic('users');
     await subscribeToTopic('user_$userId');
     AppLogger.success('Subscribed to user topics', tag: 'NotificationService');
@@ -303,6 +307,7 @@ class NotificationService {
 
   /// Unsubscribe from user topics
   Future<void> unsubscribeAsUser(String userId) async {
+    await unsubscribeFromTopic('all_users');
     await unsubscribeFromTopic('users');
     await unsubscribeFromTopic('user_$userId');
     AppLogger.info('Unsubscribed from user topics', tag: 'NotificationService');

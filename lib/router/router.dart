@@ -349,7 +349,8 @@ class AppRouter {
         name: RoutesName.agreementSigning,
         builder: (context, state) {
           final userId = _getUserId(state);
-          return AgreementSigningScreen(userId: userId);
+          final vehicleId = state.uri.queryParameters['vehicleId'];
+          return AgreementSigningScreen(userId: userId, vehicleId: vehicleId);
         },
       ),
 
@@ -409,6 +410,15 @@ class AppRouter {
       GoRoute(
         path: '/emergency',
         name: RoutesName.emergency,
+        builder: (context, state) {
+          final userId = _getUserId(state);
+          return EmergencyScreen(userId: userId);
+        },
+      ),
+
+      GoRoute(
+        path: '/emergency-vehicle',
+        name: RoutesName.emergencyVehicle,
         builder: (context, state) {
           final userId = _getUserId(state);
           return EmergencyScreen(userId: userId);

@@ -374,7 +374,11 @@ class DriverOnlineStatusCard extends ConsumerWidget {
       context.push('/vehicle-registration?userId=$effectiveId');
     } else if (eligibility.missingItems.contains('vehicle_documents') ||
         eligibility.missingItems.contains('verification_rejected')) {
+      // No approved/submitted docs yet — go to upload screen
       context.push('/document-upload?userId=$effectiveId');
+    } else if (eligibility.missingItems.contains('verification_under_review')) {
+      // Docs submitted, waiting for admin — show profile/status, not upload
+      context.push('/driver-profile?userId=$effectiveId');
     } else {
       context.push('/driver-profile?userId=$effectiveId');
     }

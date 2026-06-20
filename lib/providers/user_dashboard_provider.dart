@@ -125,16 +125,19 @@ final activeBookingProvider = StreamProvider<ActiveBooking?>((ref) {
     return Stream.value(null);
   }
 
-  // Query active bookings for current user
+  // Query active bookings for current user — orderBy is required so that
+  // the most recent booking is returned and the composite index is used.
   return firestore
       .collection('bookings')
       .where('userId', isEqualTo: authUser.uid)
       .where('status', whereIn: ['pending', 'confirmed', 'driverArriving', 'arrived', 'inProgress'])
+      .orderBy('createdAt', descending: true)
       .limit(1)
       .snapshots()
       .map((snapshot) {
     if (snapshot.docs.isEmpty) return null;
-    return ActiveBooking.fromJson(snapshot.docs.first.data());
+    final data = snapshot.docs.first.data();
+    return ActiveBooking.fromJson({...data, 'bookingId': snapshot.docs.first.id});
   });
 });
 
@@ -147,11 +150,7 @@ final bannerDataProvider = StreamProvider<List<BannerData>>((ref) {
   final firestore = ref.watch(firestoreProvider);
   final authUser = ref.watch(currentUserProvider).value;
 
-  // Return mock data if user is not authenticated to avoid permission errors
-  if (authUser == null) {
-    AppLogger.debug('User not authenticated, using mock banners');
-    return Stream.value(_getMockBanners());
-  }
+  if (authUser == null) return Stream.value([]);
 
   AppLogger.firestore('STREAM', 'banners');
 
@@ -162,35 +161,13 @@ final bannerDataProvider = StreamProvider<List<BannerData>>((ref) {
       .limit(_bannerPageSize)
       .snapshots()
       .map((snapshot) {
-    if (snapshot.docs.isEmpty) {
-      AppLogger.debug('No banners found, using mock data');
-      return _getMockBanners();
-    }
     AppLogger.debug('Loaded ${snapshot.docs.length} banners');
     return snapshot.docs.map((doc) => BannerData.fromJson(doc.data())).toList();
   }).handleError((error, stackTrace) {
     AppLogger.error('Error loading banners', error: error, stackTrace: stackTrace);
-    return _getMockBanners();
+    return <BannerData>[];
   });
 });
-
-// Mock banners for testing
-List<BannerData> _getMockBanners() {
-  return [
-    BannerData(
-      imageUrl: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800',
-      title: 'Book Your Ride',
-      subtitle: 'Safe & comfortable travel',
-      actionRoute: 'reserveVehicle',
-    ),
-    BannerData(
-      imageUrl: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800',
-      title: 'Premium Vehicles',
-      subtitle: 'Travel in style',
-      actionRoute: 'reserveVehicle',
-    ),
-  ];
-}
 
 // ============================================
 // OFFERS PROVIDER (with pagination)
@@ -201,11 +178,7 @@ final offersProvider = StreamProvider<List<OfferData>>((ref) {
   final firestore = ref.watch(firestoreProvider);
   final authUser = ref.watch(currentUserProvider).value;
 
-  // Return mock data if user is not authenticated to avoid permission errors
-  if (authUser == null) {
-    AppLogger.debug('User not authenticated, using mock offers');
-    return Stream.value(_getMockOffers());
-  }
+  if (authUser == null) return Stream.value([]);
 
   AppLogger.firestore('STREAM', 'offers');
 
@@ -217,41 +190,13 @@ final offersProvider = StreamProvider<List<OfferData>>((ref) {
       .limit(_offersPageSize)
       .snapshots()
       .map((snapshot) {
-    if (snapshot.docs.isEmpty) {
-      AppLogger.debug('No offers found, using mock data');
-      return _getMockOffers();
-    }
     AppLogger.debug('Loaded ${snapshot.docs.length} offers');
     return snapshot.docs.map((doc) => OfferData.fromJson(doc.data())).toList();
   }).handleError((error, stackTrace) {
     AppLogger.error('Error loading offers', error: error, stackTrace: stackTrace);
-    return _getMockOffers();
+    return <OfferData>[];
   });
 });
-
-// Mock offers for testing
-List<OfferData> _getMockOffers() {
-  return [
-    OfferData(
-      discount: '50% OFF',
-      title: 'First Ride Free',
-      description: 'Get 50% off on your first ride',
-      code: 'FIRST50',
-    ),
-    OfferData(
-      discount: '20% OFF',
-      title: 'Weekend Special',
-      description: 'Book rides on weekends',
-      code: 'WEEKEND20',
-    ),
-    OfferData(
-      discount: '30% OFF',
-      title: 'Refer & Earn',
-      description: 'Get 30% off when you refer a friend',
-      code: 'REFER30',
-    ),
-  ];
-}
 
 // ============================================
 // OFFER BANNERS PROVIDER (with pagination)
@@ -262,11 +207,7 @@ final offerBannersProvider = StreamProvider<List<OfferBannerData>>((ref) {
   final firestore = ref.watch(firestoreProvider);
   final authUser = ref.watch(currentUserProvider).value;
 
-  // Return mock data if user is not authenticated to avoid permission errors
-  if (authUser == null) {
-    AppLogger.debug('User not authenticated, using mock offer banners');
-    return Stream.value(_getMockOfferBanners());
-  }
+  if (authUser == null) return Stream.value([]);
 
   AppLogger.firestore('STREAM', 'offer_banners');
 
@@ -277,10 +218,6 @@ final offerBannersProvider = StreamProvider<List<OfferBannerData>>((ref) {
       .limit(_offerBannersPageSize)
       .snapshots()
       .map((snapshot) {
-    if (snapshot.docs.isEmpty) {
-      AppLogger.debug('No offer banners found, using mock data');
-      return _getMockOfferBanners();
-    }
     final banners = snapshot.docs
         .map((doc) => OfferBannerData.fromJson(doc.data(), docId: doc.id))
         .where((banner) =>
@@ -291,42 +228,9 @@ final offerBannersProvider = StreamProvider<List<OfferBannerData>>((ref) {
     return banners;
   }).handleError((error, stackTrace) {
     AppLogger.error('Error loading offer banners', error: error, stackTrace: stackTrace);
-    return _getMockOfferBanners();
+    return <OfferBannerData>[];
   });
 });
-
-// Mock offer banners for testing
-List<OfferBannerData> _getMockOfferBanners() {
-  return [
-    OfferBannerData(
-      id: '1',
-      imageUrl: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800',
-      title: 'First Ride Bonus',
-      subtitle: 'Get amazing discount on your first ride with us',
-      discount: '50% OFF',
-      promoCode: 'FIRST50',
-      priority: 3,
-    ),
-    OfferBannerData(
-      id: '2',
-      imageUrl: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800',
-      title: 'Weekend Special',
-      subtitle: 'Book any ride this weekend and save big',
-      discount: '30% OFF',
-      promoCode: 'WEEKEND30',
-      priority: 2,
-    ),
-    OfferBannerData(
-      id: '3',
-      imageUrl: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800',
-      title: 'Refer & Earn',
-      subtitle: 'Invite friends and earn rewards on every referral',
-      discount: 'Up to ₹500',
-      promoCode: 'REFER500',
-      priority: 1,
-    ),
-  ];
-}
 
 // ============================================
 // PAGINATED BOOKING HISTORY PROVIDER

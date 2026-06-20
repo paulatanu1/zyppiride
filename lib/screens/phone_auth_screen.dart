@@ -171,6 +171,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
         // Existing user - check their role and navigate accordingly
         final authService = ref.read(authServiceProvider);
         final role = await authService.getUserRole(result.user!.uid);
+        if (!mounted) return;
         if (role == 'Driver' || role == 'Vehicle Owner') {
           context.goNamed(RoutesName.mainDashboard);
         } else if (role == 'User') {
@@ -494,8 +495,9 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
             keyboardType: TextInputType.number,
             autofillHints: const [AutofillHints.oneTimeCode],
             onCompleted: (pin) {
-              // Auto-verify when all digits are entered
-              _verifyOtp();
+              // Auto-verify only when not already loading (prevents double-fire
+              // if user taps the manual verify button while onCompleted fires)
+              if (!phoneAuthState.isLoading) _verifyOtp();
             },
             onChanged: (value) {
               // Clear error when user types
