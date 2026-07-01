@@ -1,5 +1,5 @@
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
-const {onRequest} = require("firebase-functions/v2/https");
+const {onRequest, onCall, HttpsError} = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 admin.initializeApp();
@@ -89,6 +89,115 @@ async function _sendOtpFcm(userId, otp, vehicleType, bookingId) {
     },
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RIDE OTP VERIFICATION
+//
+// Drivers verify the rider's pickup OTP through this callable rather than
+// writing the booking status directly. Comparing OTPs server-side lets us
+// enforce per-booking attempt counters and lockouts that a modified driver
+// client cannot bypass (V-04).
+// ─────────────────────────────────────────────────────────────────────────────
+const OTP_MAX_ATTEMPTS = 3;
+const OTP_LOCKOUT_MS = 5 * 60 * 1000;
+
+exports.verifyRideOtp = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Sign in required.");
+  }
+  const driverUid = request.auth.uid;
+  const {bookingId, otp} = request.data || {};
+  if (typeof bookingId !== "string" || typeof otp !== "string") {
+    throw new HttpsError("invalid-argument", "bookingId and otp required.");
+  }
+
+  const db = admin.firestore();
+  const ref = db.collection("bookings").doc(bookingId);
+
+  // The transaction returns a discriminated result rather than throwing.
+  // Throwing inside runTransaction aborts the tx and rolls back tx.update(),
+  // which would silently discard the failed-attempts counter and lockout.
+  // We commit the write via the transaction, then translate the result to
+  // an HttpsError outside.
+  const result = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return {kind: "not-found"};
+
+    const b = snap.data();
+    if (b.driver?.driverId !== driverUid) return {kind: "permission-denied"};
+    if (b.status !== "arrived") {
+      return {kind: "wrong-status", status: b.status};
+    }
+
+    const now = Date.now();
+    const lockedUntil = b.otpLockedUntil?.toMillis?.() || 0;
+    if (now < lockedUntil) {
+      return {
+        kind: "locked",
+        lockedUntil,
+        remainingSec: Math.ceil((lockedUntil - now) / 1000),
+      };
+    }
+
+    if (b.rideOtp !== otp) {
+      const attempts = (b.otpFailedAttempts || 0) + 1;
+      const update = {
+        otpFailedAttempts: attempts,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+      let locked = false;
+      if (attempts >= OTP_MAX_ATTEMPTS) {
+        update.otpLockedUntil = admin.firestore.Timestamp.fromMillis(
+            now + OTP_LOCKOUT_MS,
+        );
+        update.otpFailedAttempts = 0;
+        locked = true;
+      }
+      tx.update(ref, update);
+      return {
+        kind: "invalid-otp",
+        attempts: locked ? OTP_MAX_ATTEMPTS : attempts,
+        remaining: locked ? 0 : OTP_MAX_ATTEMPTS - attempts,
+        locked,
+      };
+    }
+
+    tx.update(ref, {
+      status: "inProgress",
+      startedAt: admin.firestore.FieldValue.serverTimestamp(),
+      otpFailedAttempts: 0,
+      otpLockedUntil: null,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return {kind: "ok"};
+  });
+
+  switch (result.kind) {
+    case "ok":
+      return {success: true};
+    case "not-found":
+      throw new HttpsError("not-found", "Booking not found.");
+    case "permission-denied":
+      throw new HttpsError("permission-denied", "Not your booking.");
+    case "wrong-status":
+      throw new HttpsError(
+          "failed-precondition",
+          `Cannot start trip from status ${result.status}.`,
+      );
+    case "locked":
+      throw new HttpsError(
+          "resource-exhausted",
+          `OTP locked. Retry in ${result.remainingSec}s.`,
+          {lockedUntil: result.lockedUntil, remainingSec: result.remainingSec},
+      );
+    case "invalid-otp":
+      throw new HttpsError("invalid-argument", "Invalid OTP.", {
+        attempts: result.attempts,
+        remaining: result.remaining,
+        locked: result.locked,
+      });
+  }
+});
 
 exports.seedVehicleCatalog = onRequest(async (req, res) => {
   // Restrict to POST from authorized admin calls only
