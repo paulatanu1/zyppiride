@@ -5,28 +5,13 @@ admin.initializeApp();
 const db = admin.firestore();
 
 exports.createComplaint = functions.https.onCall(async (data, context) => {
-  // Add logging
-  console.log("=== createComplaint called ===");
-  console.log("context.auth:", context.auth ? "EXISTS" : "NULL");
-  console.log("context.auth.uid:", context.auth ? context.auth.uid : "N/A");
-  console.log("data.userId:", data.userId);
-  console.log("=============================");
-
-  // Get userId from auth if available, otherwise from data
-  let userId;
-  if (context.auth) {
-    userId = context.auth.uid;
-    console.log("Using auth userId:", userId);
-  } else if (data.userId) {
-    userId = data.userId;
-    console.log("Using data userId:", userId);
-  } else {
-    console.log("ERROR: No userId available!");
+  if (!context.auth) {
     throw new functions.https.HttpsError(
         "unauthenticated",
-        "User must be authenticated or provide userId to create a complaint",
+        "User must be authenticated to create a complaint",
     );
   }
+  const userId = context.auth.uid;
 
   const subject = data.subject || "General";
   const description = data.description || "";
@@ -38,8 +23,6 @@ exports.createComplaint = functions.https.onCall(async (data, context) => {
   const dateStr = now.toISOString().split("T")[0].replace(/-/g, "");
   const seq = Math.floor(Math.random() * 900) + 100;
   const ticketId = `ZY-${dateStr}-${String(seq)}`;
-
-  console.log("Generated ticketId:", ticketId);
 
   // Save to Firestore
   const complaintRef = db.collection("complaints").doc();
@@ -54,23 +37,17 @@ exports.createComplaint = functions.https.onCall(async (data, context) => {
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
-  console.log("Complaint saved successfully");
   return {ticketId, success: true};
 });
 
 exports.createFeedback = functions.https.onCall(async (data, context) => {
-  // Get userId from auth if available, otherwise from data
-  let userId;
-  if (context.auth) {
-    userId = context.auth.uid;
-  } else if (data.userId) {
-    userId = data.userId;
-  } else {
+  if (!context.auth) {
     throw new functions.https.HttpsError(
         "unauthenticated",
-        "User must be authenticated or provide userId to submit feedback",
+        "User must be authenticated to submit feedback",
     );
   }
+  const userId = context.auth.uid;
 
   const rating = data.rating || 0;
   const message = data.message || "";

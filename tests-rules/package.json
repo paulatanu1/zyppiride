@@ -1,0 +1,14 @@
+{
+  "name": "zyppi-ride-rules-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Firestore security-rules unit tests for Zyppi Ride.",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project=zyppiride-test 'mocha --reporter spec --timeout 10000'"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase-admin": "^12.7.0",
+    "mocha": "^10.7.3"
+  }
+}

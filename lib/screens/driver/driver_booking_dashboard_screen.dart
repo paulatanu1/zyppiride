@@ -29,10 +29,11 @@ class _DriverBookingDashboardScreenState
   String _otpInput = '';
   bool _isProcessing = false;
 
-  // OTP brute-force protection: track failed attempts per booking
+  // OTP brute-force protection lives in the verifyRideOtp Cloud Function;
+  // these client-side maps mirror the server lockout so the UI can render a
+  // countdown without round-tripping.
   final Map<String, int> _otpFailedAttempts = {};
   final Map<String, DateTime> _otpLockedUntil = {};
-  static const int _maxOtpAttempts = 3;
   static const int _lockoutMinutes = 5;
 
   // Agreement cache: vehicleId → signed (true) or not (false).
@@ -488,7 +489,8 @@ class _DriverBookingDashboardScreenState
   Future<void> _handleStartTrip(Booking booking) async {
     final bookingId = booking.bookingId;
 
-    // Check lockout
+    // Optimistic client-side lockout for snappy UX. The authoritative lockout
+    // lives in the verifyRideOtp Cloud Function (V-04).
     final lockedUntil = _otpLockedUntil[bookingId];
     if (lockedUntil != null && DateTime.now().isBefore(lockedUntil)) {
       final remaining = lockedUntil.difference(DateTime.now()).inSeconds;
@@ -507,36 +509,56 @@ class _DriverBookingDashboardScreenState
     setState(() => _isProcessing = true);
 
     try {
-      final success = await ref
+      final result = await ref
           .read(driverBookingProvider.notifier)
           .startTrip(bookingId, _otpInput);
 
-      if (mounted) {
-        if (success) {
-          _otpFailedAttempts.remove(bookingId);
-          _otpLockedUntil.remove(bookingId);
-          setState(() => _otpInput = '');
-          _showSnackBar('Trip started! Navigate to drop location.', Colors.green);
-        } else {
-          final attempts = (_otpFailedAttempts[bookingId] ?? 0) + 1;
-          _otpFailedAttempts[bookingId] = attempts;
-          final remaining = _maxOtpAttempts - attempts;
-          if (remaining <= 0) {
-            _otpLockedUntil[bookingId] =
-                DateTime.now().add(Duration(minutes: _lockoutMinutes));
-            _otpFailedAttempts.remove(bookingId);
-            _showSnackBar(
-              'OTP locked for $_lockoutMinutes minutes after too many failed attempts.',
-              Colors.red,
-            );
-          } else {
-            _showSnackBar(
-              'Invalid OTP. $remaining attempt${remaining == 1 ? '' : 's'} remaining.',
-              Colors.red,
-            );
-          }
-        }
+      if (!mounted) return;
+
+      if (result.success) {
+        _otpFailedAttempts.remove(bookingId);
+        _otpLockedUntil.remove(bookingId);
+        setState(() => _otpInput = '');
+        _showSnackBar('Trip started! Navigate to drop location.', Colors.green);
+        return;
       }
+
+      if (result.locked && result.lockedRemainingSeconds != null) {
+        _otpLockedUntil[bookingId] = DateTime.now()
+            .add(Duration(seconds: result.lockedRemainingSeconds!));
+        _otpFailedAttempts.remove(bookingId);
+        _showSnackBar(
+          'OTP locked. Try again in ${result.lockedRemainingSeconds}s.',
+          Colors.red,
+        );
+        return;
+      }
+
+      if (result.invalidOtp) {
+        if (result.locked) {
+          _otpLockedUntil[bookingId] =
+              DateTime.now().add(Duration(minutes: _lockoutMinutes));
+          _otpFailedAttempts.remove(bookingId);
+          _showSnackBar(
+            'OTP locked for $_lockoutMinutes minutes after too many failed attempts.',
+            Colors.red,
+          );
+        } else {
+          final remaining = result.attemptsRemaining;
+          _showSnackBar(
+            remaining != null
+                ? 'Invalid OTP. $remaining attempt${remaining == 1 ? '' : 's'} remaining.'
+                : 'Invalid OTP. Please try again.',
+            Colors.red,
+          );
+        }
+        return;
+      }
+
+      _showSnackBar(
+        result.errorMessage ?? 'Could not verify OTP. Try again.',
+        Colors.red,
+      );
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }

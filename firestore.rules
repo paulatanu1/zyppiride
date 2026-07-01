@@ -41,11 +41,23 @@ service cloud.firestore {
                      !('isAdmin' in request.resource.data) &&
                      request.resource.data.get('verificationStatus', 'pending') == 'pending';
 
-      // User can update their own document but cannot escalate privileges.
+      // User can update their own document but only fields on the whitelist.
+      // Fields deliberately excluded (admin-only): isAdmin, verificationApprovedAt,
+      // verificationNotes, rating, totalRides, totalSpent, walletBalance.
       // verificationStatus: user may only advance to 'submitted' from pending/rejected;
       // all other verificationStatus changes are admin-only.
       allow update: if request.auth != null && request.auth.uid == userId &&
-                     !('isAdmin' in request.resource.data.diff(resource.data).affectedKeys()) &&
+                     request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly([
+                         'fullName', 'displayName', 'profileImageUrl',
+                         'mobile', 'phoneNumber', 'email', 'dob',
+                         'authMethod', 'role',
+                         'fcmToken', 'fcmTokenUpdatedAt',
+                         'lastLoginAt', 'lastOnlineAt', 'isOnline',
+                         'verificationStatus', 'verificationSubmittedAt',
+                         'drivingLicenseNumber', 'drivingLicenseValidUpto',
+                         'updatedAt'
+                       ]) &&
                      (!('verificationStatus' in request.resource.data.diff(resource.data).affectedKeys()) ||
                       (request.resource.data.verificationStatus == 'submitted' &&
                        resource.data.verificationStatus in ['pending', 'rejected']));
@@ -163,10 +175,14 @@ service cloud.firestore {
       // Driver can only update status and ride-lifecycle fields.
       // fareDetails and paymentStatus are locked once the trip is completed —
       // only admin can adjust fare or mark payment after that point.
+      // The transition arrived → inProgress (status + startedAt) is reserved
+      // for the verifyRideOtp Cloud Function (V-04), so drivers may not write
+      // status=='inProgress' or startedAt directly from the client.
       allow update: if request.auth != null && isBookingDriver() &&
                      resource.data.status != 'completed' &&
+                     request.resource.data.status != 'inProgress' &&
                      request.resource.data.diff(resource.data).affectedKeys()
-                       .hasOnly(['status', 'confirmedAt', 'startedAt', 'completedAt',
+                       .hasOnly(['status', 'confirmedAt', 'completedAt',
                                  'cancelledAt', 'cancellationReason', 'cancelledBy',
                                  'fareDetails', 'estimatedDistance',
                                  'estimatedDuration', 'driverRating', 'driverReview',

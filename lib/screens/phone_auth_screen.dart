@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,11 +25,29 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
 
   String _selectedCountryCode = '+91';
   String? _appSignature;
+  Timer? _cooldownTicker;
+  int _cooldownRemaining = 0;
 
   @override
   void initState() {
     super.initState();
     _initSmsListener();
+  }
+
+  void _startCooldownTicker(DateTime until) {
+    _cooldownTicker?.cancel();
+    void tick() {
+      final remaining = until.difference(DateTime.now()).inSeconds;
+      if (!mounted) return;
+      if (remaining <= 0) {
+        setState(() => _cooldownRemaining = 0);
+        _cooldownTicker?.cancel();
+      } else {
+        setState(() => _cooldownRemaining = remaining);
+      }
+    }
+    tick();
+    _cooldownTicker = Timer.periodic(const Duration(seconds: 1), (_) => tick());
   }
 
   Future<void> _initSmsListener() async {
@@ -69,6 +89,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
     _phoneController.dispose();
     _otpController.dispose();
     _pinputFocusNode.dispose();
+    _cooldownTicker?.cancel();
     cancel(); // Cancel SMS listener
     SmsAutoFill().unregisterListener();
     super.dispose();
@@ -125,8 +146,14 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
 
       await ref.read(phoneAuthNotifierProvider.notifier).sendOtp(phoneNumber);
 
-      // Focus on OTP input after code is sent
       final phoneAuthState = ref.read(phoneAuthNotifierProvider);
+      // Start the resend cooldown ticker if the notifier scheduled one.
+      final until = phoneAuthState.cooldownUntil;
+      if (until != null && until.isAfter(DateTime.now())) {
+        _startCooldownTicker(until);
+      }
+
+      // Focus on OTP input after code is sent
       if (phoneAuthState.status == PhoneAuthStatus.codeSent) {
         Future.delayed(const Duration(milliseconds: 300), () {
           if (mounted) {
@@ -188,6 +215,7 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
   }
 
   void _resendOtp() {
+    if (_cooldownRemaining > 0) return;
     _otpController.clear();
     _sendOtp();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -367,7 +395,10 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: phoneAuthState.isLoading ? null : _sendOtp,
+                onPressed:
+                    (phoneAuthState.isLoading || _cooldownRemaining > 0)
+                        ? null
+                        : _sendOtp,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Colors.deepPurple,
@@ -386,8 +417,10 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
                         ),
                       )
                     : Text(
-                        'Send OTP',
-                        style: TextStyle(fontFamily: 'Poppins', 
+                        _cooldownRemaining > 0
+                            ? 'Try again in ${_cooldownRemaining}s'
+                            : 'Send OTP',
+                        style: TextStyle(fontFamily: 'Poppins',
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -540,11 +573,18 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
               label: 'Resend OTP button',
               button: true,
               child: TextButton(
-                onPressed: phoneAuthState.isLoading ? null : _resendOtp,
+                onPressed: (phoneAuthState.isLoading || _cooldownRemaining > 0)
+                    ? null
+                    : _resendOtp,
                 child: Text(
-                  'Resend',
-                  style: TextStyle(fontFamily: 'Poppins', 
-                    color: Colors.deepPurple,
+                  _cooldownRemaining > 0
+                      ? 'Resend in ${_cooldownRemaining}s'
+                      : 'Resend',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: _cooldownRemaining > 0
+                        ? Colors.grey
+                        : Colors.deepPurple,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

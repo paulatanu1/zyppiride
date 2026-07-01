@@ -521,51 +521,46 @@ class DriverBookingNotifier extends StateNotifier<DriverBookingState> {
     }
   }
 
-  /// Start the trip with OTP verification
-  Future<bool> startTrip(String bookingId, String otp) async {
-    if (_driverId == null) return false;
+  /// Start the trip with OTP verification.
+  /// Returns the server-authoritative result so the UI can render the
+  /// attempts-remaining / lockout state — see [StartTripResult].
+  Future<StartTripResult> startTrip(String bookingId, String otp) async {
+    if (_driverId == null) {
+      return StartTripResult.error('No driver session.');
+    }
 
     state = state.copyWith(isLoading: true, clearError: true);
 
-    try {
-      final success = await _bookingService.startTrip(bookingId, _driverId!, otp);
+    final result =
+        await _bookingService.startTrip(bookingId, _driverId!, otp);
 
-      if (success) {
-        await loadActiveRide();
-        state = state.copyWith(isLoading: false);
+    if (result.success) {
+      await loadActiveRide();
+      state = state.copyWith(isLoading: false);
 
-        // Start location tracking when trip starts
-        final trackingStarted = await _locationService.startTracking(
-          bookingId: bookingId,
-          driverId: _driverId!,
+      // Start location tracking when trip starts
+      final trackingStarted = await _locationService.startTracking(
+        bookingId: bookingId,
+        driverId: _driverId!,
+      );
+      if (!trackingStarted) {
+        AppLogger.warning(
+          'Location tracking failed to start — no permission or GPS unavailable',
+          tag: 'DriverBooking',
         );
-        if (!trackingStarted) {
-          AppLogger.warning(
-            'Location tracking failed to start — no permission or GPS unavailable',
-            tag: 'DriverBooking',
-          );
-          state = state.copyWith(
-            error: 'Trip started, but live location is unavailable. '
-                'Check location permissions.',
-          );
-        }
-        AppLogger.info('Started location tracking for trip', tag: 'DriverBooking');
-
-        return true;
-      } else {
         state = state.copyWith(
-          isLoading: false,
-          error: 'Invalid OTP. Please try again.',
+          error: 'Trip started, but live location is unavailable. '
+              'Check location permissions.',
         );
-        return false;
       }
-    } catch (e) {
+      AppLogger.info('Started location tracking for trip', tag: 'DriverBooking');
+    } else {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to start trip',
+        error: result.errorMessage ?? 'OTP verification failed.',
       );
-      return false;
     }
+    return result;
   }
 
   /// Complete the trip

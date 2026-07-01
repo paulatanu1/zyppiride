@@ -32,6 +32,7 @@ class PhoneAuthState {
   final int? resendToken;
   final String? errorMessage;
   final bool isLoading;
+  final DateTime? cooldownUntil;
 
   const PhoneAuthState({
     this.status = PhoneAuthStatus.initial,
@@ -39,6 +40,7 @@ class PhoneAuthState {
     this.resendToken,
     this.errorMessage,
     this.isLoading = false,
+    this.cooldownUntil,
   });
 
   PhoneAuthState copyWith({
@@ -47,6 +49,7 @@ class PhoneAuthState {
     int? resendToken,
     String? errorMessage,
     bool? isLoading,
+    DateTime? cooldownUntil,
   }) {
     return PhoneAuthState(
       status: status ?? this.status,
@@ -54,6 +57,7 @@ class PhoneAuthState {
       resendToken: resendToken ?? this.resendToken,
       errorMessage: errorMessage,
       isLoading: isLoading ?? this.isLoading,
+      cooldownUntil: cooldownUntil ?? this.cooldownUntil,
     );
   }
 }
@@ -66,11 +70,29 @@ class PhoneAuthNotifier extends StateNotifier<PhoneAuthState> {
 
   PhoneAuthNotifier(this._authService) : super(const PhoneAuthState());
 
+  /// Minimum seconds between successive OTP send attempts.
+  /// Mitigates SMS-bombing abuse (V-03). Server-side App Check is a
+  /// complementary control configured in the Firebase Console.
+  static const int _resendCooldownSeconds = 30;
+
   Future<void> sendOtp(String phoneNumber) async {
+    final now = DateTime.now();
+    final cooldownUntil = state.cooldownUntil;
+    if (cooldownUntil != null && now.isBefore(cooldownUntil)) {
+      final remaining = cooldownUntil.difference(now).inSeconds;
+      state = state.copyWith(
+        status: PhoneAuthStatus.error,
+        errorMessage: 'Please wait ${remaining}s before requesting another OTP.',
+        isLoading: false,
+      );
+      return;
+    }
+
     state = state.copyWith(
       status: PhoneAuthStatus.initial,
       isLoading: true,
       errorMessage: null,
+      cooldownUntil: now.add(const Duration(seconds: _resendCooldownSeconds)),
     );
 
     try {

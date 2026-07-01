@@ -1,11 +1,49 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart' hide Result;
 import '../models/booking_model.dart';
 import '../models/available_vehicle_model.dart';
 import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
 import '../core/errors/errors.dart';
 import '../core/utils/pagination.dart';
+
+/// Outcome of a server-side OTP verification call.
+/// Returned by [BookingService.startTrip] so the caller can surface the
+/// server-authoritative lockout / attempts-remaining to the driver UI.
+class StartTripResult {
+  final bool success;
+  final bool invalidOtp;
+  final bool locked;
+  final int? attemptsRemaining;
+  final int? lockedRemainingSeconds;
+  final String? errorMessage;
+
+  const StartTripResult._({
+    required this.success,
+    this.invalidOtp = false,
+    this.locked = false,
+    this.attemptsRemaining,
+    this.lockedRemainingSeconds,
+    this.errorMessage,
+  });
+
+  factory StartTripResult.ok() => const StartTripResult._(success: true);
+  factory StartTripResult.invalid(int? remaining, bool locked) =>
+      StartTripResult._(
+        success: false,
+        invalidOtp: true,
+        locked: locked,
+        attemptsRemaining: remaining,
+      );
+  factory StartTripResult.lockedOut(int? seconds) => StartTripResult._(
+        success: false,
+        locked: true,
+        lockedRemainingSeconds: seconds,
+      );
+  factory StartTripResult.error(String message) =>
+      StartTripResult._(success: false, errorMessage: message);
+}
 
 /// Service for managing bookings in Firestore
 class BookingService {
@@ -492,30 +530,59 @@ class BookingService {
     }
   }
 
-  /// Start the trip (after OTP verification)
-  Future<bool> startTrip(String bookingId, String driverId, String otp) async {
+  /// Start the trip after OTP verification.
+  ///
+  /// Verification runs in the [verifyRideOtp] Cloud Function so that the OTP
+  /// comparison, attempt counter, and lockout cannot be bypassed by a modified
+  /// driver client (V-04). The function flips status → inProgress on success;
+  /// the [driverId] parameter is no longer needed because the function reads
+  /// it from `auth.uid`, but kept for source-compatibility with callers.
+  Future<StartTripResult> startTrip(
+    String bookingId,
+    String driverId,
+    String otp,
+  ) async {
     try {
-      final booking = await getBooking(bookingId);
-      if (booking == null || booking.driver.driverId != driverId) {
-        return false;
+      final callable =
+          FirebaseFunctions.instance.httpsCallable('verifyRideOtp');
+      await callable.call<Map<String, dynamic>>({
+        'bookingId': bookingId,
+        'otp': otp,
+      });
+      return StartTripResult.ok();
+    } on FirebaseFunctionsException catch (e) {
+      AppLogger.warning(
+        'verifyRideOtp failed: ${e.code} ${e.message}',
+        tag: 'BookingService',
+      );
+      switch (e.code) {
+        case 'invalid-argument':
+          final details = e.details;
+          if (details is Map) {
+            final locked = details['locked'] == true;
+            final remaining = (details['remaining'] as num?)?.toInt();
+            return StartTripResult.invalid(remaining, locked);
+          }
+          return StartTripResult.invalid(null, false);
+        case 'resource-exhausted':
+          final details = e.details;
+          int? remainingSec;
+          if (details is Map) {
+            remainingSec = (details['remainingSec'] as num?)?.toInt();
+          }
+          return StartTripResult.lockedOut(remainingSec);
+        case 'failed-precondition':
+        case 'permission-denied':
+        case 'not-found':
+        case 'unauthenticated':
+          return StartTripResult.error(e.message ?? e.code);
+        default:
+          return StartTripResult.error(e.message ?? 'Could not verify OTP.');
       }
-
-      if (booking.status != BookingStatus.arrived) {
-        return false;
-      }
-
-      // Verify OTP
-      if (booking.rideOtp != otp) {
-        AppLogger.warning('Invalid OTP for booking $bookingId',
-            tag: 'BookingService');
-        return false;
-      }
-
-      return await updateStatus(bookingId, BookingStatus.inProgress);
     } catch (e, stack) {
       AppLogger.error('Failed to start trip',
           error: e, stackTrace: stack, tag: 'BookingService');
-      return false;
+      return StartTripResult.error('Could not start trip. Try again.');
     }
   }
 
@@ -867,8 +934,12 @@ class BookingService {
   // ============================================
 
   /// Generate 6-digit OTP (900,000 combinations — significantly harder to brute-force)
+  // Cryptographically-secure RNG (V-09). The OS-backed Random.secure() avoids
+  // the predictability of the default seedable Random.
+  static final Random _otpRng = Random.secure();
+
   String _generateOtp() {
-    return (100000 + Random().nextInt(900000)).toString();
+    return (100000 + _otpRng.nextInt(900000)).toString();
   }
 
   /// Calculate ETA string
