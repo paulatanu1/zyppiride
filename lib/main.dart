@@ -1,6 +1,10 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,6 +26,19 @@ void main() async {
     runApp(_FirebaseErrorApp(error: e.toString()));
     return;
   }
+
+  // Crashlytics: only in release. Debug crashes belong in the console.
+  if (kReleaseMode) {
+    FlutterError.onError =
+        FirebaseCrashlytics.instance.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  }
+
+  // Analytics: enable collection so events flow to the Firebase console.
+  await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
 
   // Initialize Firebase App Check with Play Integrity (Android) / Device Check (iOS).
   // Use debug provider for debug AND profile builds; Play Integrity only for release.

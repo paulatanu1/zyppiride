@@ -24,6 +24,15 @@
 # Firebase App Check
 -keep class com.google.firebase.appcheck.** { *; }
 
+# Firebase Cloud Functions — verifyRideOtp callable uses reflection
+# in the serialization path. Redundant with the com.google.firebase.**
+# keep above, but called out so future rule pruning doesn't break OTP.
+-keep class com.google.firebase.functions.** { *; }
+
+# Firebase Crashlytics — reporting path uses reflection to read stack
+# frames and modelling annotations.
+-keep class com.google.firebase.crashlytics.** { *; }
+
 # Play Integrity
 -keep class com.google.android.play.core.integrity.** { *; }
 

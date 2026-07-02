@@ -8,6 +8,7 @@ plugins {
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 // Load signing credentials from key.properties (never committed to git)
@@ -78,10 +79,17 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias     = keyProperties.getProperty("keyAlias")     ?: ""
-            keyPassword  = keyProperties.getProperty("keyPassword")  ?: ""
-            storeFile    = keyProperties.getProperty("storeFile")?.let { file(it) }
-            storePassword = keyProperties.getProperty("storePassword") ?: ""
+            // CI reads secrets from env vars; local dev falls back to key.properties.
+            // Names match the release-android.yml workflow's secrets.
+            keyAlias     = System.getenv("ZYPPI_KEY_ALIAS")
+                ?: keyProperties.getProperty("keyAlias")     ?: ""
+            keyPassword  = System.getenv("ZYPPI_KEY_PASSWORD")
+                ?: keyProperties.getProperty("keyPassword")  ?: ""
+            storePassword = System.getenv("ZYPPI_STORE_PASSWORD")
+                ?: keyProperties.getProperty("storePassword") ?: ""
+            storeFile = (System.getenv("ZYPPI_STORE_FILE")
+                ?: keyProperties.getProperty("storeFile"))
+                ?.let { file(it) }
         }
     }
 
