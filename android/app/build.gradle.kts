@@ -1,5 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
@@ -22,8 +23,8 @@ val localProperties = Properties().apply {
 }
 
 dependencies {
-  // Import the Firebase BoM (latest stable as of Oct 2025)
-  implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+  // Import the Firebase BoM (latest stable as of Jun 2026)
+  implementation(platform("com.google.firebase:firebase-bom:34.15.0"))
 
   // Firebase products
   implementation("com.google.firebase:firebase-analytics")
@@ -52,9 +53,11 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
-    kotlinOptions {
-        // Java 17
-        jvmTarget = "17"
+    // Kotlin 2.3+ replaced kotlinOptions{} with the compilerOptions DSL.
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
     }
 
     defaultConfig {
