@@ -6,9 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 import 'package:sms_autofill/sms_autofill.dart';
-import '../services/auth_service.dart';
-import '../router/routes_name.dart';
+
 import '../core/utils/app_logger.dart';
+import '../router/routes_name.dart';
+import '../services/auth_service.dart';
 
 class PhoneAuthScreen extends ConsumerStatefulWidget {
   const PhoneAuthScreen({super.key});
@@ -178,8 +179,8 @@ class _PhoneAuthScreenState extends ConsumerState<PhoneAuthScreen> with CodeAuto
 
     if (result.isSuccess && mounted) {
       // Cancel SMS listener on success
-      cancel();
-      SmsAutoFill().unregisterListener();
+      unawaited(cancel());
+      unawaited(SmsAutoFill().unregisterListener());
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

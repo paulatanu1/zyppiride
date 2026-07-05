@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
-import 'package:geocoding/geocoding.dart';
+
 import '../../models/saved_address_model.dart';
 import '../../providers/saved_address_provider.dart';
 
@@ -21,7 +22,7 @@ class AddAddressModal extends ConsumerStatefulWidget {
 
 class _AddAddressModalState extends ConsumerState<AddAddressModal> {
   // Same API key as vehicle registration screen
-  static const String googleApiKey = "AIzaSyABUF7GCEM6h1n3isugLj2qOEySpTtxd1I";
+  static const String googleApiKey = 'AIzaSyABUF7GCEM6h1n3isugLj2qOEySpTtxd1I';
 
   final _formKey = GlobalKey<FormState>();
   final _addressController = TextEditingController();
@@ -154,7 +155,7 @@ class _AddAddressModalState extends ConsumerState<AddAddressModal> {
     }
   }
 
-  void _onPlaceSelected(Prediction prediction) async {
+  Future<void> _onPlaceSelected(Prediction prediction) async {
     final description = prediction.description ?? '';
 
     // Avoid duplicate processing
@@ -425,7 +426,7 @@ class _AddAddressModalState extends ConsumerState<AddAddressModal> {
                           ),
                         ),
                         debounceTime: 600,
-                        countries: const ["in"],
+                        countries: const ['in'],
                         isLatLngRequired: false,
                         getPlaceDetailWithLatLng: (Prediction prediction) {
                           _onPlaceSelected(prediction);

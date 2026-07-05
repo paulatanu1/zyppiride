@@ -47,7 +47,7 @@ class ModernDrawer extends ConsumerWidget {
                       _ItemData(Icons.card_giftcard_outlined, 'Offers & Rewards', const Color(0xFFF59E0B), () {
                         onClose();
                         context.pushNamed(RoutesName.offersRewards, queryParameters: {'userId': user.userId});
-                      }, badge: '3'),
+                      }),
                       _ItemData(Icons.notifications_outlined, 'Notifications', const Color(0xFFEF4444), () {
                         onClose();
                         context.pushNamed(RoutesName.notifications, queryParameters: {'userId': user.userId});
@@ -60,7 +60,10 @@ class ModernDrawer extends ConsumerWidget {
                         onClose();
                         context.pushNamed(RoutesName.supportCenter, queryParameters: {'userId': user.userId});
                       }),
-                      _ItemData(Icons.privacy_tip_outlined, 'Privacy Policy', const Color(0xFF6B7280), () { onClose(); }),
+                      _ItemData(Icons.privacy_tip_outlined, 'Privacy Policy', const Color(0xFF6B7280), () {
+                        onClose();
+                        context.pushNamed(RoutesName.privacyPolicy);
+                      }),
                     ]),
                     const Divider(height: 1, indent: 20, endIndent: 20),
                     _buildLogoutItem(context, ref),
@@ -161,9 +164,17 @@ class ModernDrawer extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                _buildStat('${user.totalRides ?? 0}', 'Rides'),
+                _buildStat(
+                  user.totalRides == null ? '—' : '${user.totalRides}',
+                  'Rides',
+                ),
                 Container(width: 1, height: 28, color: Colors.white.withValues(alpha: 0.25)),
-                _buildStat('${(user.rating ?? 5.0).toStringAsFixed(1)}', 'Rating'),
+                _buildStat(
+                  user.rating == null
+                      ? '—'
+                      : (user.rating as double).toStringAsFixed(1),
+                  'Rating',
+                ),
                 Container(width: 1, height: 28, color: Colors.white.withValues(alpha: 0.25)),
                 _buildStat(_getMemberSince(user.createdAt), 'Member'),
               ],
@@ -325,7 +336,7 @@ class ModernDrawer extends ConsumerWidget {
   }
 
   String _getMemberSince(dynamic createdAt) {
-    if (createdAt == null) return 'New';
+    if (createdAt == null) return '—';
     try {
       final DateTime date = createdAt is DateTime ? createdAt : createdAt.toDate();
       final months = DateTime.now().difference(date).inDays ~/ 30;
@@ -333,7 +344,7 @@ class ModernDrawer extends ConsumerWidget {
       if (months < 12) return '${months}m';
       return '${months ~/ 12}y';
     } catch (_) {
-      return 'New';
+      return '—';
     }
   }
 

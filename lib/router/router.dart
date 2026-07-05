@@ -1,46 +1,48 @@
 // lib/router/router.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zyppi_ride/screens/emergency_screen.dart';
-import 'package:zyppi_ride/screens/login_screen.dart';
-import 'package:zyppi_ride/screens/register_screen.dart';
-import 'package:zyppi_ride/screens/phone_auth_screen.dart';
-import 'package:zyppi_ride/screens/forgot_password_screen.dart';
+import 'package:zyppi_ride/screens/driver/driver_booking_dashboard_screen.dart';
+import 'package:zyppi_ride/screens/driver/driver_profile_screen.dart';
 import 'package:zyppi_ride/screens/email_verification_screen.dart';
+import 'package:zyppi_ride/screens/emergency_screen.dart';
+import 'package:zyppi_ride/screens/forgot_password_screen.dart';
+import 'package:zyppi_ride/screens/login_screen.dart';
+import 'package:zyppi_ride/screens/phone_auth_screen.dart';
+import 'package:zyppi_ride/screens/register_screen.dart';
 import 'package:zyppi_ride/screens/role_selection_screen.dart';
-import '../screens/splash_screen.dart';
+import 'package:zyppi_ride/screens/user/book_goods_carrier_screen.dart';
+import 'package:zyppi_ride/screens/user/local_transport_screen.dart';
+import 'package:zyppi_ride/screens/user/offers_rewards_screen.dart';
+import 'package:zyppi_ride/screens/user/outstation_screen.dart';
+import 'package:zyppi_ride/screens/user/privacy_policy_screen.dart';
+import 'package:zyppi_ride/screens/user/reserve_vehicle_screen.dart';
+import 'package:zyppi_ride/screens/user/ride_history_screen.dart' as user_ride_history;
+import 'package:zyppi_ride/screens/user/saved_addresses_screen.dart';
+import 'package:zyppi_ride/screens/user/track_booking_screen.dart';
+import 'package:zyppi_ride/screens/user/user_dashboard.dart';
+import 'package:zyppi_ride/screens/user/user_profile_screen.dart';
+import 'package:zyppi_ride/screens/user/vehicle_details_screen.dart';
+
+import '../screens/active_vehicles_screen.dart';
+import '../screens/agreement_signing_screen.dart';
 import '../screens/auth_screen.dart';
+import '../screens/availability_screen.dart';
+import '../screens/delivery_requests_screen.dart';
+import '../screens/document_upload_screen.dart';
+import '../screens/driver_availability_screen.dart';
 import '../screens/main_dashboard.dart';
+import '../screens/notifications_screen.dart';
 import '../screens/profile_screen.dart';
+import '../screens/promotions_screen.dart';
+import '../screens/ride_history_screen.dart';
+import '../screens/splash_screen.dart';
+import '../screens/support_center_screen.dart';
+import '../screens/vehicle_edit_screen.dart';
 import '../screens/vehicle_list_screen.dart';
 import '../screens/vehicle_registration_screen.dart';
 import '../screens/vehicle_view_screen.dart';
-import '../screens/vehicle_edit_screen.dart';
-import '../screens/document_upload_screen.dart';
-import '../screens/agreement_signing_screen.dart';
-import '../screens/ride_history_screen.dart';
-import '../screens/notifications_screen.dart';
-import '../screens/active_vehicles_screen.dart';
-import '../screens/delivery_requests_screen.dart';
-import '../screens/support_center_screen.dart';
-import '../screens/availability_screen.dart';
-import '../screens/promotions_screen.dart';
 import '../screens/weekly_schedule_screen.dart';
-import '../screens/driver_availability_screen.dart';
-import 'package:zyppi_ride/screens/user/user_dashboard.dart';
-import 'package:zyppi_ride/screens/user/user_profile_screen.dart';
-import 'package:zyppi_ride/screens/user/reserve_vehicle_screen.dart';
-import 'package:zyppi_ride/screens/user/vehicle_details_screen.dart';
-import 'package:zyppi_ride/screens/driver/driver_profile_screen.dart';
-import 'package:zyppi_ride/screens/user/book_goods_carrier_screen.dart';
-import 'package:zyppi_ride/screens/user/track_booking_screen.dart';
-import 'package:zyppi_ride/screens/user/ride_history_screen.dart' as user_ride_history;
-import 'package:zyppi_ride/screens/user/offers_rewards_screen.dart';
-import 'package:zyppi_ride/screens/user/local_transport_screen.dart';
-import 'package:zyppi_ride/screens/user/outstation_screen.dart';
-import 'package:zyppi_ride/screens/user/saved_addresses_screen.dart';
-import 'package:zyppi_ride/screens/driver/driver_booking_dashboard_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'routes_name.dart';
 
 class AppRouter {
@@ -235,6 +237,12 @@ class AppRouter {
         path: '/offers-rewards',
         name: RoutesName.offersRewards,
         builder: (context, state) => const OffersRewardsScreen(),
+      ),
+
+      GoRoute(
+        path: '/privacy-policy',
+        name: RoutesName.privacyPolicy,
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
 
       GoRoute(

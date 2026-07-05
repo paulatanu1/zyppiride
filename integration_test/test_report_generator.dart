@@ -616,6 +616,6 @@ class TestRunner {
       String outputDir) async {
     _finishCurrentSuite();
     _reportGenerator.printSummary();
-    return await _reportGenerator.saveReports(outputDir);
+    return _reportGenerator.saveReports(outputDir);
   }
 }

@@ -1,11 +1,16 @@
+import 'dart:async';
 import 'dart:io';
-import 'package:flutter/material.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../core/constants/test_mode.dart';
+import '../core/theme/brand_colors.dart';
 
 class SupportCenterScreen extends StatefulWidget {
   final String? userId;
@@ -111,7 +116,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
       if (_complaintImage != null) {
         imageUrl = await _uploadFile(
           _complaintImage!,
-          'support/complaints/${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          'support/${user.uid}/complaints/${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
       }
 
@@ -120,7 +125,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
       final seq = (1000 + (DateTime.now().millisecondsSinceEpoch % 9000)).toString();
       final ticketId = 'ZY-$dateStr-$seq';
 
-      await FirebaseFirestore.instance.collection('complaints').add({
+      await FirebaseFirestore.instance.collection(TestMode.complaintsCollection).add({
         'ticketId': ticketId,
         'userId': user.uid,
         'subject': _subject,
@@ -133,7 +138,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
 
       if (!mounted) return;
 
-      showDialog(
+      unawaited(showDialog(
         context: context,
         builder: (_) => AlertDialog(
           title: const Text('✅ Complaint Submitted'),
@@ -159,7 +164,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
             )
           ],
         ),
-      );
+      ));
 
       _descriptionController.clear();
       setState(() {
@@ -207,7 +212,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
       if (_feedbackImage != null) {
         imageUrl = await _uploadFile(
           _feedbackImage!,
-          'support/feedbacks/${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          'support/${user.uid}/feedbacks/${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
       }
 
@@ -216,7 +221,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
       final seq = (1000 + (DateTime.now().millisecondsSinceEpoch % 9000)).toString();
       final feedbackId = 'FB-$dateStr-$seq';
 
-      await FirebaseFirestore.instance.collection('feedbacks').add({
+      await FirebaseFirestore.instance.collection(TestMode.feedbacksCollection).add({
         'feedbackId': feedbackId,
         'userId': user.uid,
         'rating': _rating,
@@ -227,7 +232,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
 
       if (!mounted) return;
 
-      showDialog(
+      unawaited(showDialog(
         context: context,
         builder: (_) => AlertDialog(
           title: const Text('✅ Feedback Submitted'),
@@ -253,7 +258,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
             )
           ],
         ),
-      );
+      ));
 
       _feedbackController.clear();
       setState(() {
@@ -493,7 +498,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
       );
     }
 
-    final complaintsColl = FirebaseFirestore.instance.collection('complaints');
+    final complaintsColl = FirebaseFirestore.instance.collection(TestMode.complaintsCollection);
 
     return StreamBuilder<QuerySnapshot>(
       stream: complaintsColl
@@ -560,7 +565,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
                     builder: (_) => ComplaintDetailScreen(ticketDocId: doc.id),
                   ),
                 ),
-                leading: const Icon(Icons.support_agent, color: Colors.cyan),
+                leading: const Icon(Icons.support_agent, color: BrandColors.brand),
                 title: Text(
                   ticketId,
                   style: const TextStyle(fontWeight: FontWeight.bold),
@@ -616,7 +621,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
       );
     }
 
-    final feedbackColl = FirebaseFirestore.instance.collection('feedbacks');
+    final feedbackColl = FirebaseFirestore.instance.collection(TestMode.feedbacksCollection);
 
     return StreamBuilder<QuerySnapshot>(
       stream: feedbackColl
@@ -665,7 +670,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
               margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
               elevation: 2,
               child: ListTile(
-                leading: const Icon(Icons.feedback, color: Colors.cyan),
+                leading: const Icon(Icons.feedback, color: BrandColors.brand),
                 title: Text(
                   feedbackId,
                   style: const TextStyle(fontWeight: FontWeight.bold),
@@ -714,103 +719,188 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
     return PopScope(
       canPop: true,
       child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
+        backgroundColor: BrandColors.brand,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              _buildBrandHeader(context),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(28)),
+                  child: Container(
+                    color: BrandColors.bgLight,
+                    child: Column(
+                      children: [
+                        _buildTabBar(),
+                        Expanded(
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    _buildComplaintForm(),
+                                    const SizedBox(height: 8),
+                                    const Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.history,
+                                              color: BrandColors.brand),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Your Complaints',
+                                            style: TextStyle(
+                                              fontFamily: 'Poppins',
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    _buildComplaintsList(),
+                                    const SizedBox(height: 16),
+                                  ],
+                                ),
+                              ),
+                              SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    _buildFeedbackForm(),
+                                    const SizedBox(height: 8),
+                                    const Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.history,
+                                              color: BrandColors.brand),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Your Feedback',
+                                            style: TextStyle(
+                                              fontFamily: 'Poppins',
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    _buildFeedbackList(),
+                                    const SizedBox(height: 16),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBrandHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () {
               if (context.canPop()) {
                 context.pop();
               } else {
                 context.go('/user-dashboard');
               }
             },
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.arrow_back_ios_new,
+                  color: Colors.white, size: 18),
+            ),
           ),
-          title: const Text('Support Center'),
-          backgroundColor: Colors.cyan,
-          elevation: 0,
-        ),
-        body: Column(
-          children: [
-            Material(
+          const SizedBox(width: 14),
+          const Text(
+            'Support Center',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
               color: Colors.white,
-              elevation: 4,
-              child: TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(
-                    icon: Icon(Icons.report_problem),
-                    text: 'Complaints',
-                  ),
-                  Tab(
-                    icon: Icon(Icons.feedback),
-                    text: 'Feedback',
-                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: TabBar(
+          controller: _tabController,
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicatorPadding: EdgeInsets.zero,
+          dividerColor: Colors.transparent,
+          indicator: BoxDecoration(
+            color: BrandColors.brand,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          labelColor: Colors.white,
+          unselectedLabelColor: const Color(0xFF6B7280),
+          labelStyle: const TextStyle(
+              fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+          unselectedLabelStyle: const TextStyle(
+              fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+          tabs: const [
+            Tab(
+              height: 44,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.report_problem, size: 18),
+                  SizedBox(width: 6),
+                  Text('Complaints'),
                 ],
-                labelColor: Colors.cyan,
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: Colors.cyan,
-                indicatorWeight: 3,
               ),
             ),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
+            Tab(
+              height: 44,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _buildComplaintForm(),
-                        const Divider(thickness: 2),
-                        const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.history, color: Colors.cyan),
-                              SizedBox(width: 8),
-                              Text(
-                                'Your Complaints',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _buildComplaintsList(),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _buildFeedbackForm(),
-                        const Divider(thickness: 2),
-                        const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.history, color: Colors.cyan),
-                              SizedBox(width: 8),
-                              Text(
-                                'Your Feedback',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _buildFeedbackList(),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
+                  Icon(Icons.feedback, size: 18),
+                  SizedBox(width: 6),
+                  Text('Feedback'),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -825,14 +915,70 @@ class ComplaintDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final docRef = FirebaseFirestore.instance.collection('complaints').doc(ticketDocId);
+    final docRef = FirebaseFirestore.instance.collection(TestMode.complaintsCollection).doc(ticketDocId);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Complaint Details'),
-        backgroundColor: Colors.cyan,
+      backgroundColor: BrandColors.brand,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/support-center');
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          color: Colors.white, size: 18),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  const Text(
+                    'Complaint Details',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28)),
+                child: Container(
+                  color: BrandColors.bgLight,
+                  child: _buildDetailContent(context, docRef),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-      body: FutureBuilder<DocumentSnapshot>(
+    );
+  }
+
+  Widget _buildDetailContent(
+    BuildContext context,
+    DocumentReference<Map<String, dynamic>> docRef,
+  ) {
+    return FutureBuilder<DocumentSnapshot>(
         future: docRef.get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -895,7 +1041,7 @@ class ComplaintDetailScreen extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.cyan,
+                            color: BrandColors.brand,
                           ),
                         ),
                       ],
@@ -1044,8 +1190,7 @@ class ComplaintDetailScreen extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
+      );
   }
 
   Widget _buildDetailRow(String label, String value) {

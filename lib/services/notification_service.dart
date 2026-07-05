@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../core/constants/test_mode.dart';
 import '../core/errors/errors.dart';
 import '../core/utils/app_logger.dart';
 
@@ -220,7 +222,7 @@ class NotificationService {
   Future<Result<void>> saveFcmToken(String userId, String token) async {
     try {
       // Use set with merge to create document if it doesn't exist
-      await _firestore.collection('users').doc(userId).set({
+      await _firestore.collection(TestMode.usersCollection).doc(userId).set({
         'fcmToken': token,
         'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -238,7 +240,7 @@ class NotificationService {
   Future<Result<void>> removeFcmToken(String userId) async {
     try {
       // Check if document exists before trying to update
-      final docRef = _firestore.collection('users').doc(userId);
+      final docRef = _firestore.collection(TestMode.usersCollection).doc(userId);
       final doc = await docRef.get();
 
       if (doc.exists) {
@@ -266,7 +268,7 @@ class NotificationService {
 
   /// Get current FCM token
   Future<String?> getToken() async {
-    return await _messaging.getToken();
+    return _messaging.getToken();
   }
 
   /// Subscribe to topic

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
-import 'package:geocoding/geocoding.dart';
 
 import '../../providers/location_provider.dart';
 import '../../services/location_service.dart';
@@ -137,7 +137,7 @@ class _LocationSelectionSheet extends ConsumerStatefulWidget {
 
 class _LocationSelectionSheetState
     extends ConsumerState<_LocationSelectionSheet> {
-  static const String googleApiKey = "AIzaSyABUF7GCEM6h1n3isugLj2qOEySpTtxd1I";
+  static const String googleApiKey = 'AIzaSyABUF7GCEM6h1n3isugLj2qOEySpTtxd1I';
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   bool _showSearch = false;
@@ -468,7 +468,7 @@ class _LocationSelectionSheetState
           color: Colors.black87,
         ),
         debounceTime: 400,
-        countries: const ["in"],
+        countries: const ['in'],
         isLatLngRequired: true,
         getPlaceDetailWithLatLng: (Prediction prediction) async {
           await _onPlaceSelected(prediction);

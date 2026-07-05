@@ -1,6 +1,7 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:carousel_slider/carousel_slider.dart';
+
 import '../main.dart' show scaffoldMessengerKey;
 import '../models/offer_banner_model.dart';
 

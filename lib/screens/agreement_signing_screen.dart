@@ -1,12 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:typed_data';
-import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:signature/signature.dart';
-import 'dart:async';
+
+import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
 import '../main.dart' show scaffoldMessengerKey;
 
@@ -51,7 +54,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
   Future<void> _fetchVehicleData() async {
     try {
       final vehicleDoc = await FirebaseFirestore.instance
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .doc(_selectedVehicleId)
           .get();
       if (mounted && vehicleDoc.exists) {
@@ -67,7 +70,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
   Future<void> _checkAgreement() async {
     try {
       final agreementDoc = await FirebaseFirestore.instance
-          .collection('agreements')
+          .collection(TestMode.agreementsCollection)
           .doc('${widget.userId}_$_selectedVehicleId')
           .get();
       if (mounted) {
@@ -130,7 +133,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
 
     try {
       final agreementRef = FirebaseFirestore.instance
-          .collection('agreements')
+          .collection(TestMode.agreementsCollection)
           .doc('${widget.userId}_$vehicleId');
 
       // Bypass local cache — if a previous attempt already wrote the document,
@@ -145,7 +148,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
       }
 
       final userDoc = await FirebaseFirestore.instance
-          .collection('users')
+          .collection(TestMode.usersCollection)
           .doc(widget.userId)
           .get();
       final userData = userDoc.data() ?? {};
@@ -238,7 +241,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
   Widget _buildVehicleSelector() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('userId', isEqualTo: widget.userId)
           .snapshots(),
       builder: (context, snapshot) {
@@ -314,7 +317,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
 
                   return FutureBuilder<DocumentSnapshot>(
                     future: FirebaseFirestore.instance
-                        .collection('agreements')
+                        .collection(TestMode.agreementsCollection)
                         .doc('${widget.userId}_${doc.id}')
                         .get(),
                     builder: (context, agreementSnap) {
@@ -667,7 +670,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
     if (_hasAgreement!) {
       return FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance
-            .collection('agreements')
+            .collection(TestMode.agreementsCollection)
             .doc('${widget.userId}_$_selectedVehicleId')
             .get(),
         builder: (context, snapshot) {
@@ -1112,7 +1115,7 @@ class _AgreementSigningScreenState extends State<AgreementSigningScreen> {
                 final signatureBytes =
                 await SignatureSection.signatureController?.toPngBytes();
                 if (signatureBytes != null) {
-                  _submitAgreement(vehicleData, vehicleId, signatureBytes);
+                  unawaited(_submitAgreement(vehicleData, vehicleId, signatureBytes));
                 } else {
                   _showSnackBar('Failed to capture signature', Colors.red);
                 }

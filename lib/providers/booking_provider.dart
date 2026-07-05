@@ -1,14 +1,16 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/booking_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/constants/test_mode.dart';
+import '../core/errors/errors.dart';
+import '../core/utils/app_logger.dart';
 import '../models/available_vehicle_model.dart';
+import '../models/booking_model.dart';
 import '../services/booking_service.dart';
 import '../services/live_location_service.dart';
-import '../core/constants/test_mode.dart';
-import '../core/utils/app_logger.dart';
-import '../core/errors/errors.dart';
 
 // ============================================
 // SERVICE PROVIDER
@@ -338,19 +340,19 @@ class BookingNotifier extends StateNotifier<BookingState> {
 
   /// Get a specific booking by ID
   Future<Booking?> getBooking(String bookingId) async {
-    return await _bookingService.getBooking(bookingId);
+    return _bookingService.getBooking(bookingId);
   }
 
   /// Get user statistics
   Future<BookingStats> getUserStats() async {
     if (_userId == null) return BookingStats.empty();
-    return await _bookingService.getUserStats(_userId!);
+    return _bookingService.getUserStats(_userId!);
   }
 
   /// Check if user can create a new booking
   Future<bool> canCreateBooking() async {
     if (_userId == null) return false;
-    return await _bookingService.canCreateBooking(_userId!);
+    return _bookingService.canCreateBooking(_userId!);
   }
 
   /// Clear error
@@ -622,7 +624,7 @@ class DriverBookingNotifier extends StateNotifier<DriverBookingState> {
   Future<bool> rateUser(String bookingId, double rating, {String? review}) async {
     if (_driverId == null) return false;
 
-    return await _bookingService.addDriverRating(
+    return _bookingService.addDriverRating(
       bookingId,
       _driverId!,
       rating,
@@ -661,7 +663,7 @@ class DriverBookingNotifier extends StateNotifier<DriverBookingState> {
   /// Get driver statistics
   Future<BookingStats> getDriverStats() async {
     if (_driverId == null) return BookingStats.empty();
-    return await _bookingService.getDriverStats(_driverId!);
+    return _bookingService.getDriverStats(_driverId!);
   }
 
   /// Clear error
@@ -715,7 +717,7 @@ final activeBookingStreamProvider = StreamProvider<Booking?>((ref) {
 final bookingDetailProvider =
     FutureProvider.family<Booking?, String>((ref, bookingId) async {
   final bookingService = ref.watch(bookingServiceProvider);
-  return await bookingService.getBooking(bookingId);
+  return bookingService.getBooking(bookingId);
 });
 
 /// Booking stream provider (for real-time updates on specific booking)
@@ -731,7 +733,7 @@ final userBookingStatsProvider = FutureProvider<BookingStats>((ref) async {
   if (user == null) return BookingStats.empty();
 
   final bookingService = ref.watch(bookingServiceProvider);
-  return await bookingService.getUserStats(user.uid);
+  return bookingService.getUserStats(user.uid);
 });
 
 /// Driver booking stats provider
@@ -740,7 +742,7 @@ final driverBookingStatsProvider = FutureProvider<BookingStats>((ref) async {
   if (user == null) return BookingStats.empty();
 
   final bookingService = ref.watch(bookingServiceProvider);
-  return await bookingService.getDriverStats(user.uid);
+  return bookingService.getDriverStats(user.uid);
 });
 
 /// Driver pending requests stream
@@ -758,5 +760,5 @@ final canCreateBookingProvider = FutureProvider<bool>((ref) async {
   if (user == null) return false;
 
   final bookingService = ref.watch(bookingServiceProvider);
-  return await bookingService.canCreateBooking(user.uid);
+  return bookingService.canCreateBooking(user.uid);
 });

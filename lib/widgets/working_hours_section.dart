@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/utils/app_logger.dart';
 import '../models/driver_availability.dart';
 import '../providers/availability_provider.dart';
-import '../core/utils/app_logger.dart';
 
 class WorkingHoursSection extends ConsumerStatefulWidget {
   final String vehicleId;

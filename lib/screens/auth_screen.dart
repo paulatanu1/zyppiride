@@ -30,7 +30,7 @@ class AuthScreen extends StatelessWidget {
               const SizedBox(height: 40),
               ElevatedButton(
                 onPressed: () {
-                  context.pushNamed("login");
+                  context.pushNamed('login');
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
@@ -51,7 +51,7 @@ class AuthScreen extends StatelessWidget {
               const SizedBox(height: 20),
               OutlinedButton(
                 onPressed: () {
-                 context.pushNamed("registration");
+                 context.pushNamed('registration');
                 },
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),

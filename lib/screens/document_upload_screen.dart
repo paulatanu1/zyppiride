@@ -1,14 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
+import 'dart:async';
 import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
-import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:path_provider/path_provider.dart';
+
+import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
 import '../main.dart' show scaffoldMessengerKey;
 
@@ -84,7 +88,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
 
     try {
       final vehiclesSnapshot = await FirebaseFirestore.instance
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('userId', isEqualTo: widget.userId)
           .get(const GetOptions(source: Source.server));
 
@@ -388,7 +392,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       return;
     }
 
-    showModalBottomSheet(
+    unawaited(showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
@@ -459,7 +463,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Future<void> _getImage(ImageSource source, String documentType) async {
@@ -880,7 +884,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       type == 'insurance' ? 'insuranceImages' : 'pucImages';
 
       await FirebaseFirestore.instance
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .doc(selectedVehicleId)
           .update({
         'documents.$fieldName': FieldValue.arrayRemove([imageUrl]),
@@ -967,7 +971,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       List<String> pucUrls = await _uploadImageList(_documentGroups['puc']!, 'puc');
 
       await FirebaseFirestore.instance
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .doc(selectedVehicleId)
           .update({
         'documents.rcImages': FieldValue.arrayUnion(rcUrls),
@@ -995,7 +999,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       DocumentSnapshot<Map<String, dynamic>>? updatedVehicle;
       try {
         updatedVehicle = await FirebaseFirestore.instance
-            .collection('vehicles')
+            .collection(TestMode.vehiclesCollection)
             .doc(vehicleId)
             .get(const GetOptions(source: Source.server));
       } catch (_) {

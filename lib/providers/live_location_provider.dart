@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/utils/app_logger.dart';
 import '../models/driver_location_model.dart';
 import '../services/live_location_service.dart';
-import '../core/utils/app_logger.dart';
 
 // ============================================
 // SERVICE PROVIDER
@@ -130,7 +131,7 @@ class LocationTrackingNotifier extends StateNotifier<LocationTrackingState> {
 
   /// Check location permission status
   Future<bool> checkPermission() async {
-    return await _service.checkLocationPermission();
+    return _service.checkLocationPermission();
   }
 
   /// Clear error
@@ -169,11 +170,11 @@ final driverLocationStreamProvider =
 final driverLocationProvider =
     FutureProvider.family<DriverLocationData?, String>((ref, driverId) async {
   final service = ref.watch(liveLocationServiceProvider);
-  return await service.getDriverLocation(driverId);
+  return service.getDriverLocation(driverId);
 });
 
 /// Provider to check if location permission is granted
 final locationPermissionProvider = FutureProvider<bool>((ref) async {
   final service = ref.watch(liveLocationServiceProvider);
-  return await service.checkLocationPermission();
+  return service.checkLocationPermission();
 });

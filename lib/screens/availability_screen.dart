@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
 
 class AvailabilityScreen extends StatefulWidget {
@@ -35,7 +37,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
 
     try {
       final vehiclesSnapshot = await FirebaseFirestore.instance
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('userId', isEqualTo: widget.userId)
           .where('documentStatus', isEqualTo: 'approved')  // ✅ FIXED: Changed from 'status' to 'documentStatus'
           .get();
@@ -80,7 +82,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
     try {
       final now = DateTime.now();
       final bookingsSnapshot = await FirebaseFirestore.instance
-          .collection('bookings')
+          .collection(TestMode.bookingsCollection)
           .where('vehicleId', isEqualTo: selectedVehicleId)
           .where('status', whereIn: ['pending', 'confirmed', 'inProgress'])
           .where('bookingDate', isGreaterThanOrEqualTo: Timestamp.fromDate(now))

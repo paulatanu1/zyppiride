@@ -4,16 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../core/constants/test_mode.dart';
+import '../../core/utils/app_logger.dart';
 import '../../models/booking_model.dart';
-import '../../services/booking_service.dart';
 import '../../providers/booking_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../router/routes_name.dart';
-import '../../widgets/booking/pending_booking_card.dart';
+import '../../services/booking_service.dart';
 import '../../widgets/booking/active_ride_card.dart';
 import '../../widgets/booking/driver_stats_card.dart';
+import '../../widgets/booking/pending_booking_card.dart';
 import '../../widgets/driver/driver_online_toggle.dart';
-import '../../core/utils/app_logger.dart';
-import '../../providers/notification_provider.dart';
 
 /// Main dashboard screen for drivers to manage bookings
 class DriverBookingDashboardScreen extends ConsumerStatefulWidget {
@@ -348,7 +350,7 @@ class _DriverBookingDashboardScreenState
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return false;
       final doc = await FirebaseFirestore.instance
-          .collection('agreements')
+          .collection(TestMode.agreementsCollection)
           .doc('${uid}_$vehicleId')
           .get();
       final signed = doc.exists;

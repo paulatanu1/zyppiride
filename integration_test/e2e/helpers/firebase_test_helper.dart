@@ -47,7 +47,7 @@ class FirebaseTestHelper {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
         // User exists, try to login instead
-        return await loginUser(testUser);
+        return loginUser(testUser);
       }
       return E2EAuthResult.failure('Auth error: ${e.message}');
     } catch (e) {

@@ -1,15 +1,19 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+
+import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
 
 class VehicleEditScreen extends StatefulWidget {
@@ -109,7 +113,7 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
           .get();
 
       final vehicleDoc = await FirebaseFirestore.instance
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .doc(widget.vehicleId)
           .get();
 
@@ -233,7 +237,7 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
     if (pickedFiles.isEmpty) return;
 
     if (!mounted) return;
-    showDialog(
+    unawaited(showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(
@@ -251,7 +255,7 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
           ),
         ),
       ),
-    );
+    ));
 
     final compressedImages = <File>[];
     for (var pickedFile in pickedFiles) {
@@ -350,7 +354,7 @@ class _VehicleEditScreenState extends State<VehicleEditScreen> {
       }
 
       await FirebaseFirestore.instance
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .doc(widget.vehicleId)
           .update({
         'vehicleDetails': {

@@ -1,15 +1,19 @@
+import 'dart:async';
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:path_provider/path_provider.dart';
+
+import '../../core/constants/test_mode.dart';
 import '../../widgets/driver/driver_online_toggle.dart';
 import '../../widgets/driver/verification_status_badge.dart';
 
@@ -71,13 +75,13 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
     try {
       // Load user data
       final userSnapshot = await FirebaseFirestore.instance
-          .collection('users')
+          .collection(TestMode.usersCollection)
           .doc(_effectiveUserId)
           .get();
 
       // Load vehicles
       final vehicleSnapshot = await FirebaseFirestore.instance
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .where('userId', isEqualTo: _effectiveUserId)
           .get();
 
@@ -89,7 +93,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
               .toList();
           _isLoading = false;
         });
-        _animationController.forward();
+        unawaited(_animationController.forward());
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
@@ -139,7 +143,7 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
       final downloadUrl = await ref.getDownloadURL();
 
       await FirebaseFirestore.instance
-          .collection('users')
+          .collection(TestMode.usersCollection)
           .doc(_effectiveUserId)
           .update({'profileImageUrl': downloadUrl});
 
@@ -978,13 +982,13 @@ class _DriverProfileScreenState extends ConsumerState<DriverProfileScreen>
                 child: ElevatedButton(
                   onPressed: () async {
                     await FirebaseFirestore.instance
-                        .collection('users')
+                        .collection(TestMode.usersCollection)
                         .doc(_effectiveUserId)
                         .update({
                       'fullName': nameController.text.trim(),
                     });
                     if (context.mounted) Navigator.pop(context);
-                    _loadData();
+                    unawaited(_loadData());
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

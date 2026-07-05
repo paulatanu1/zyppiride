@@ -199,6 +199,34 @@ exports.verifyRideOtp = onCall(async (request) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// MOBILE AVAILABILITY CHECK
+//
+// Called by the client during email registration to check whether a mobile
+// number is already in use. Client is unauthenticated at call time, so this
+// runs with admin credentials. Returns { available: bool } only — never
+// leaks the owning user's identity.
+// ─────────────────────────────────────────────────────────────────────────────
+exports.checkMobileAvailable = onCall(async (request) => {
+  const raw = request.data?.mobile;
+  if (typeof raw !== "string") {
+    throw new HttpsError("invalid-argument", "mobile is required.");
+  }
+  const mobile = raw.trim();
+  if (mobile.length < 6 || mobile.length > 20) {
+    throw new HttpsError("invalid-argument", "mobile has invalid length.");
+  }
+
+  const db = admin.firestore();
+  const snap = await db
+      .collection("users")
+      .where("mobile", "==", mobile)
+      .limit(1)
+      .get();
+
+  return {available: snap.empty};
+});
+
 exports.seedVehicleCatalog = onRequest(async (req, res) => {
   // Restrict to POST from authorized admin calls only
   if (req.method !== "POST") {

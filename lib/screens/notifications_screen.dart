@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -214,7 +215,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             await markNotificationRead(widget.userId, item.id);
           }
           if (item.actionRoute != null && mounted) {
-            context.push(item.actionRoute!);
+            unawaited(context.push(item.actionRoute!));
           }
         },
         child: Container(

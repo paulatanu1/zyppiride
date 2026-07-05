@@ -2,8 +2,9 @@
 // E2E Tests for Firebase Database Interactions
 
 import 'package:flutter_test/flutter_test.dart';
-import '../test_report_generator.dart';
+
 import '../mocks/mock_firebase_service.dart';
+import '../test_report_generator.dart';
 
 /// Database Interaction E2E Tests
 class DatabaseTests {

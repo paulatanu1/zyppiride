@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'package:table_calendar/table_calendar.dart';
+
 import '../models/driver_availability.dart';
 import '../providers/availability_provider.dart';
 import '../utils/bengali_calendar.dart';

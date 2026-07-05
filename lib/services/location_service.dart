@@ -1,5 +1,6 @@
-import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+
 import '../core/errors/errors.dart';
 import '../core/utils/app_logger.dart';
 
@@ -240,12 +241,12 @@ class LocationService {
 
   // Open location settings
   Future<bool> openLocationSettings() async {
-    return await Geolocator.openLocationSettings();
+    return Geolocator.openLocationSettings();
   }
 
   // Open app settings (for permission)
   Future<bool> openAppSettings() async {
-    return await Geolocator.openAppSettings();
+    return Geolocator.openAppSettings();
   }
 
   String _formatAddress(Placemark place) {

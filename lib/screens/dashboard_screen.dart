@@ -1,11 +1,15 @@
+import 'dart:async';
+import 'dart:developer';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
+
+import '../core/constants/test_mode.dart';
 import '../widgets/dashboard_tiles.dart';
 import '../widgets/driver/driver_online_toggle.dart';
-import 'dart:developer';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -32,7 +36,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     try {
       final snapshot = await FirebaseFirestore.instance
-          .collection('users')
+          .collection(TestMode.usersCollection)
           .doc(widget.userId)
           .get();
       if (snapshot.exists && mounted) {
@@ -112,7 +116,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             }
           } else {
             // Otherwise exit app
-            SystemNavigator.pop();
+            unawaited(SystemNavigator.pop());
           }
         }
       },
@@ -122,7 +126,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ? _buildDashboardContent(_userData!)
               : FutureBuilder<DocumentSnapshot>(
             future: FirebaseFirestore.instance
-                .collection('users')
+                .collection(TestMode.usersCollection)
                 .doc(widget.userId)
                 .get(),
             builder: (context, snapshot) {

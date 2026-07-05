@@ -1,15 +1,19 @@
+import 'dart:async';
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:path_provider/path_provider.dart';
+
+import '../../core/constants/test_mode.dart';
 import '../../core/utils/app_logger.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
@@ -58,7 +62,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
 
     try {
       final snapshot = await FirebaseFirestore.instance
-          .collection('users')
+          .collection(TestMode.usersCollection)
           .doc(_userId)
           .get();
 
@@ -67,7 +71,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           _userData = snapshot.data();
           _isLoading = false;
         });
-        _animationController.forward();
+        unawaited(_animationController.forward());
       } else {
         setState(() => _isLoading = false);
       }
@@ -150,7 +154,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       }
 
       // Verify file exists
-      if (!await fileToUpload.exists()) {
+      if (!fileToUpload.existsSync()) {
         throw Exception('Image file not found');
       }
 
@@ -193,7 +197,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
 
       // Update Firestore
       await FirebaseFirestore.instance
-          .collection('users')
+          .collection(TestMode.usersCollection)
           .doc(_userId)
           .update({'profileImageUrl': downloadUrl});
 
@@ -957,14 +961,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   child: ElevatedButton(
                     onPressed: () async {
                       await FirebaseFirestore.instance
-                          .collection('users')
+                          .collection(TestMode.usersCollection)
                           .doc(_userId)
                           .update({
                         'fullName': nameController.text.trim(),
                         if (dob != null) 'dob': Timestamp.fromDate(dob!),
                       });
                       if (context.mounted) Navigator.pop(context);
-                      _loadUserData();
+                      unawaited(_loadUserData());
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(

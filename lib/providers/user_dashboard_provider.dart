@@ -1,14 +1,18 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/user_model.dart';
-import '../models/active_booking_model.dart';
-import '../models/banner_model.dart';
-import '../models/offer_model.dart';
-import '../models/offer_banner_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/constants/test_mode.dart';
 import '../core/errors/errors.dart';
 import '../core/utils/app_logger.dart';
 import '../core/utils/pagination.dart';
+import '../models/active_booking_model.dart';
+import '../models/banner_model.dart';
+import '../models/offer_banner_model.dart';
+import '../models/offer_model.dart';
+import '../models/points_entry.dart';
+import '../models/reward.dart';
+import '../models/user_model.dart';
 
 // ============================================
 // FIREBASE INSTANCES
@@ -49,7 +53,7 @@ final userDashboardProvider = StreamProvider<UserModel>((ref) {
 
   // Fetch user data from Firestore 'users' collection
   return firestore
-      .collection('users')
+      .collection(TestMode.usersCollection)
       .doc(authUser.uid)
       .snapshots()
       .map((snapshot) {
@@ -94,7 +98,7 @@ class UserDashboardNotifier extends StateNotifier<AsyncValue<UserModel>> {
     if (authUser == null) return;
 
     try {
-      final doc = await firestore.collection('users').doc(authUser.uid).get();
+      final doc = await firestore.collection(TestMode.usersCollection).doc(authUser.uid).get();
       if (doc.exists) {
         state = AsyncValue.data(
           UserModel.fromJson({
@@ -128,7 +132,7 @@ final activeBookingProvider = StreamProvider<ActiveBooking?>((ref) {
   // Query active bookings for current user — orderBy is required so that
   // the most recent booking is returned and the composite index is used.
   return firestore
-      .collection('bookings')
+      .collection(TestMode.bookingsCollection)
       .where('userId', isEqualTo: authUser.uid)
       .where('status', whereIn: ['pending', 'confirmed', 'driverArriving', 'arrived', 'inProgress'])
       .orderBy('createdAt', descending: true)
@@ -233,6 +237,94 @@ final offerBannersProvider = StreamProvider<List<OfferBannerData>>((ref) {
 });
 
 // ============================================
+// REWARDS PROVIDERS
+// ============================================
+
+/// Snapshot of the current user's rewards fields (points, tier, coupon count).
+///
+/// Sources everything off [userDashboardProvider] — no extra Firestore reads.
+class UserRewardsSnapshot {
+  final int? totalPoints;
+  final int? availableCoupons;
+  final String? tier;
+  final int? ridesToNextTier;
+  final String? nextTier;
+
+  const UserRewardsSnapshot({
+    this.totalPoints,
+    this.availableCoupons,
+    this.tier,
+    this.ridesToNextTier,
+    this.nextTier,
+  });
+
+  bool get hasTierProgress =>
+      ridesToNextTier != null && ridesToNextTier! > 0 && nextTier != null;
+}
+
+final userRewardsProvider = Provider<UserRewardsSnapshot>((ref) {
+  final userAsync = ref.watch(userDashboardProvider);
+  return userAsync.maybeWhen(
+    data: (user) => UserRewardsSnapshot(
+      totalPoints: user.totalPoints,
+      availableCoupons: user.availableCoupons,
+      tier: user.tier,
+      ridesToNextTier: user.ridesToNextTier,
+      nextTier: user.nextTier,
+    ),
+    orElse: () => const UserRewardsSnapshot(),
+  );
+});
+
+const int _pointsHistoryPageSize = 20;
+
+final pointsHistoryProvider =
+    StreamProvider.autoDispose<List<PointsEntry>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  final authUser = ref.watch(currentUserProvider).value;
+
+  if (authUser == null) return Stream.value(const []);
+
+  return firestore
+      .collection(TestMode.usersCollection)
+      .doc(authUser.uid)
+      .collection('pointsHistory')
+      .orderBy('createdAt', descending: true)
+      .limit(_pointsHistoryPageSize)
+      .snapshots()
+      .map((snapshot) => snapshot.docs
+          .map((doc) => PointsEntry.fromJson(doc.data(), id: doc.id))
+          .toList())
+      .handleError((error, stackTrace) {
+    AppLogger.error('Error loading pointsHistory',
+        error: error, stackTrace: stackTrace);
+    return <PointsEntry>[];
+  });
+});
+
+final redeemableRewardsProvider =
+    StreamProvider.autoDispose<List<Reward>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+
+  return firestore
+      .collection('rewards')
+      .where('isActive', isEqualTo: true)
+      .orderBy('pointsCost')
+      .limit(20)
+      .snapshots()
+      .map((snapshot) => snapshot.docs
+          .map((doc) => Reward.fromJson(doc.data(), id: doc.id))
+          .where((r) =>
+              r.expiryDate == null || r.expiryDate!.isAfter(DateTime.now()))
+          .toList())
+      .handleError((error, stackTrace) {
+    AppLogger.error('Error loading rewards',
+        error: error, stackTrace: stackTrace);
+    return <Reward>[];
+  });
+});
+
+// ============================================
 // PAGINATED BOOKING HISTORY PROVIDER
 // ============================================
 
@@ -258,7 +350,7 @@ class BookingHistoryNotifier extends PaginatedNotifier<ActiveBooking> {
   Query<Map<String, dynamic>> buildQuery(FirebaseFirestore firestore) {
     AppLogger.firestore('QUERY', 'bookings', docId: 'user: $userId');
     return firestore
-        .collection('bookings')
+        .collection(TestMode.bookingsCollection)
         .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true);
   }
@@ -286,7 +378,7 @@ final safeUserDashboardProvider = FutureProvider<Result<UserModel>>((ref) async 
   return runCatching(() async {
     AppLogger.firestore('GET', 'users', docId: authUser.uid);
 
-    final doc = await firestore.collection('users').doc(authUser.uid).get();
+    final doc = await firestore.collection(TestMode.usersCollection).doc(authUser.uid).get();
 
     if (doc.exists) {
       return UserModel.fromJson({

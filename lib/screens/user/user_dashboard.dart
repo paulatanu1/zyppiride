@@ -1,20 +1,21 @@
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../main.dart' show scaffoldMessengerKey;
 import '../../models/active_booking_model.dart';
 import '../../models/offer_model.dart';
 import '../../models/user_model.dart';
+import '../../providers/notification_provider.dart';
 import '../../providers/user_dashboard_provider.dart';
 import '../../router/routes_name.dart';
-import '../../widgets/quick_action_button.dart';
 import '../../widgets/offer_banner_slider.dart';
-import '../../widgets/user-dashboard/modern_drawer.dart';
+import '../../widgets/quick_action_button.dart';
 import '../../widgets/user-dashboard/location_bar.dart';
-import '../../main.dart' show scaffoldMessengerKey;
-import '../../providers/notification_provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../../widgets/user-dashboard/modern_drawer.dart';
 
 // ── Brand palette (no gradients) ──────────────────────────────────────────────
 const Color _kBrand     = Color(0xFF4F46E5);
@@ -140,7 +141,7 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         final shouldPop = await _onWillPop();
-        if (shouldPop && context.mounted) SystemNavigator.pop();
+        if (shouldPop && context.mounted) unawaited(SystemNavigator.pop());
       },
       child: Scaffold(
         backgroundColor: _kBrandDark,

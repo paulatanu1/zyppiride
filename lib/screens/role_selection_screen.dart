@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
+import '../core/constants/test_mode.dart';
 import '../router/routes_name.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
@@ -88,7 +90,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         _errorMessage = null;
       });
       try {
-        await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+        await FirebaseFirestore.instance.collection(TestMode.usersCollection).doc(widget.userId).update({
           'role': _role,
           'fullName': _fullNameController.text.trim(),
           'dob': _dob,

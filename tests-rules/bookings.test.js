@@ -116,6 +116,28 @@ describe("bookings/{id} — driver cannot write status=inProgress (PR 5 / V-04)"
     );
   });
 
+  it("denies rider writing status=completed (only cancelled allowed)", async () => {
+    await seedBooking("confirmed");
+    const db = await asUser(RIDER);
+    await assertFails(
+        db.doc(`bookings/${BOOKING}`).update({
+          status: "completed",
+          updatedAt: new Date(),
+        }),
+    );
+  });
+
+  it("denies rider writing status=confirmed", async () => {
+    await seedBooking("pending");
+    const db = await asUser(RIDER);
+    await assertFails(
+        db.doc(`bookings/${BOOKING}`).update({
+          status: "confirmed",
+          updatedAt: new Date(),
+        }),
+    );
+  });
+
   it("denies a different driver from updating someone else's booking", async () => {
     await seedBooking("arrived");
     const db = await asUser("other-driver-999");

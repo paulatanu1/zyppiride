@@ -1,8 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/driver_availability.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/constants/test_mode.dart';
 import '../core/errors/errors.dart';
 import '../core/utils/app_logger.dart';
+import '../models/driver_availability.dart';
 
 final availabilityProvider = StateNotifierProvider.family<AvailabilityNotifier, AsyncValue<DriverAvailability>, String>(
       (ref, vehicleId) => AvailabilityNotifier(vehicleId),
@@ -23,7 +25,7 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
 
     try {
       final doc = await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .doc(vehicleId)
           .collection('settings')
           .doc('availability')
@@ -37,7 +39,7 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
         AppLogger.info('No availability found, creating initial settings');
         final initial = DriverAvailability.initial();
         await _firestore
-            .collection('vehicles')
+            .collection(TestMode.vehiclesCollection)
             .doc(vehicleId)
             .collection('settings')
             .doc('availability')
@@ -311,7 +313,7 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
       }
 
       await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .doc(vehicleId)
           .collection('settings')
           .doc('availability')
@@ -337,7 +339,7 @@ class AvailabilityNotifier extends StateNotifier<AsyncValue<DriverAvailability>>
       if (availability == null) return;
 
       await _firestore
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .doc(vehicleId)
           .collection('settings')
           .doc('availability')

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
-import 'app_exceptions.dart';
+
 import '../utils/app_logger.dart';
+import 'app_exceptions.dart';
 
 /// Centralized error handler that converts various exceptions to AppExceptions
 class ErrorHandler {

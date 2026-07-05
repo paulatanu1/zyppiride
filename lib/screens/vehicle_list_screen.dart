@@ -1,9 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:intl/intl.dart';
+
+import '../core/constants/test_mode.dart';
 
 class VehicleListScreen extends StatefulWidget {
   final String userId;
@@ -88,7 +90,7 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('vehicles')
+            .collection(TestMode.vehiclesCollection)
             .where('userId', isEqualTo: widget.userId)
             .orderBy('createdAt', descending: true)
             .snapshots(),
@@ -155,7 +157,7 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
       // FIXED: Show FAB only when there are vehicles (>= 1)
       floatingActionButton: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('vehicles')
+            .collection(TestMode.vehiclesCollection)
             .where('userId', isEqualTo: widget.userId)
             .snapshots(),
         builder: (context, snapshot) {

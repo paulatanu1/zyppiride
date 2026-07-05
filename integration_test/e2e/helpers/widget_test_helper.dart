@@ -417,7 +417,7 @@ class WidgetTestHelper {
   /// Take screenshot on failure
   Future<String?> takeFailureScreenshot(String testName) async {
     final safeName = testName.replaceAll(RegExp(r'[^\w\s-]'), '_');
-    return await takeScreenshot('FAILURE_$safeName');
+    return takeScreenshot('FAILURE_$safeName');
   }
 }
 

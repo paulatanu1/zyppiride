@@ -23,6 +23,15 @@ class TestMode {
   static String get driversCollection =>
       isE2ETestMode ? '${testCollectionPrefix}drivers' : 'drivers';
 
+  static String get agreementsCollection =>
+      isE2ETestMode ? '${testCollectionPrefix}agreements' : 'agreements';
+
+  static String get complaintsCollection =>
+      isE2ETestMode ? '${testCollectionPrefix}complaints' : 'complaints';
+
+  static String get feedbacksCollection =>
+      isE2ETestMode ? '${testCollectionPrefix}feedbacks' : 'feedbacks';
+
   /// Skip OTP verification in test mode
   static bool get skipOtpVerification => isE2ETestMode;
 

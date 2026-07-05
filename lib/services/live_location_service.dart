@@ -1,9 +1,11 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
-import '../models/driver_location_model.dart';
+
 import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
+import '../models/driver_location_model.dart';
 
 /// Service for managing real-time driver location tracking during trips.
 ///

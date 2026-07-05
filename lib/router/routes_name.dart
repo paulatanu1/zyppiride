@@ -59,4 +59,7 @@ class RoutesName {
 
   // Driver Dashboard
   static const String driverBookingDashboard = 'driver-booking-dashboard';
+
+  // Legal / Info
+  static const String privacyPolicy = 'privacy-policy';
 }

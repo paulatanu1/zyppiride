@@ -7,10 +7,17 @@ class UserModel {
   final String? phoneNumber;
   final String? profileImageUrl;
   final int notificationCount;
-  final int totalRides;
-  final double rating;
+  final int? totalRides;
+  final double? rating;
   final DateTime? createdAt;
   final String? role;
+
+  // Rewards fields (nullable so UI can show '—' when unset)
+  final int? totalPoints;
+  final int? availableCoupons;
+  final String? tier;
+  final int? ridesToNextTier;
+  final String? nextTier;
 
   // Verification fields
   final String? verificationStatus; // pending, submitted, approved, rejected
@@ -29,10 +36,15 @@ class UserModel {
     this.phoneNumber,
     this.profileImageUrl,
     this.notificationCount = 0,
-    this.totalRides = 0,
-    this.rating = 5.0,
+    this.totalRides,
+    this.rating,
     this.createdAt,
     this.role,
+    this.totalPoints,
+    this.availableCoupons,
+    this.tier,
+    this.ridesToNextTier,
+    this.nextTier,
     this.verificationStatus,
     this.verificationSubmittedAt,
     this.verificationApprovedAt,
@@ -50,10 +62,15 @@ class UserModel {
       phoneNumber: json['phoneNumber'] ?? json['mobile'],
       profileImageUrl: json['profileImageUrl'],
       notificationCount: _parseIntSafe(json['notificationCount'], 0),
-      totalRides: _parseIntSafe(json['totalRides'], 0),
-      rating: _parseDoubleSafe(json['rating'], 5.0),
+      totalRides: _parseIntNullable(json['totalRides']),
+      rating: _parseDoubleNullable(json['rating']),
       createdAt: _parseDateTime(json['createdAt']),
       role: json['role'],
+      totalPoints: _parseIntNullable(json['totalPoints']),
+      availableCoupons: _parseIntNullable(json['availableCoupons']),
+      tier: json['tier'],
+      ridesToNextTier: _parseIntNullable(json['ridesToNextTier']),
+      nextTier: json['nextTier'],
       // Verification fields
       verificationStatus: json['verificationStatus'],
       verificationSubmittedAt: _parseDateTime(json['verificationSubmittedAt']),
@@ -73,12 +90,20 @@ class UserModel {
     return defaultValue;
   }
 
-  static double _parseDoubleSafe(dynamic value, double defaultValue) {
-    if (value == null) return defaultValue;
+  static int? _parseIntNullable(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static double? _parseDoubleNullable(dynamic value) {
+    if (value == null) return null;
     if (value is double) return value;
     if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? defaultValue;
-    return defaultValue;
+    if (value is String) return double.tryParse(value);
+    return null;
   }
 
   static DateTime? _parseDateTime(dynamic value) {
@@ -101,6 +126,11 @@ class UserModel {
       'rating': rating,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'role': role,
+      'totalPoints': totalPoints,
+      'availableCoupons': availableCoupons,
+      'tier': tier,
+      'ridesToNextTier': ridesToNextTier,
+      'nextTier': nextTier,
       // Verification fields
       'verificationStatus': verificationStatus,
       'verificationSubmittedAt': verificationSubmittedAt != null
@@ -135,6 +165,11 @@ class UserModel {
     String? verificationNotes,
     String? fcmToken,
     DateTime? fcmTokenUpdatedAt,
+    int? totalPoints,
+    int? availableCoupons,
+    String? tier,
+    int? ridesToNextTier,
+    String? nextTier,
   }) {
     return UserModel(
       userId: userId ?? this.userId,
@@ -155,6 +190,11 @@ class UserModel {
       verificationNotes: verificationNotes ?? this.verificationNotes,
       fcmToken: fcmToken ?? this.fcmToken,
       fcmTokenUpdatedAt: fcmTokenUpdatedAt ?? this.fcmTokenUpdatedAt,
+      totalPoints: totalPoints ?? this.totalPoints,
+      availableCoupons: availableCoupons ?? this.availableCoupons,
+      tier: tier ?? this.tier,
+      ridesToNextTier: ridesToNextTier ?? this.ridesToNextTier,
+      nextTier: nextTier ?? this.nextTier,
     );
   }
 

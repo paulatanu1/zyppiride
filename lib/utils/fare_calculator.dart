@@ -1,5 +1,5 @@
-import '../models/booking_model.dart';
 import '../models/available_vehicle_model.dart';
+import '../models/booking_model.dart';
 
 /// Utility class for calculating ride fares
 class FareCalculator {

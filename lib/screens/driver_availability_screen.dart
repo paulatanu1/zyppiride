@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../models/driver_availability.dart';
 import '../providers/availability_provider.dart';
 import '../widgets/calendar_section.dart';
-import '../widgets/working_hours_section.dart';
 import '../widgets/trip_preferences_section.dart';
 import '../widgets/vehicle_preferences_section.dart';
+import '../widgets/working_hours_section.dart';
 
 class DriverAvailabilityScreen extends ConsumerStatefulWidget {
   final String userId;

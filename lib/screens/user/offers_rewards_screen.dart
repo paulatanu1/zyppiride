@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../models/offer_model.dart';
+import '../../models/points_entry.dart';
+import '../../models/reward.dart';
 import '../../providers/user_dashboard_provider.dart';
 
 class OffersRewardsScreen extends ConsumerStatefulWidget {
@@ -37,11 +40,8 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
     };
   }
 
-  final List<Map<String, dynamic>> _rewards = [
-    {'icon': Icons.star, 'label': 'Points', 'value': '1,250', 'color': Colors.amber},
-    {'icon': Icons.local_offer, 'label': 'Coupons', 'value': '3', 'color': Colors.green},
-    {'icon': Icons.card_giftcard, 'label': 'Rewards', 'value': '2', 'color': Colors.purple},
-  ];
+  static String _fmt(int? value) =>
+      value == null ? '—' : NumberFormat.decimalPattern('en_IN').format(value);
 
   @override
   void initState() {
@@ -88,6 +88,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
                 _buildAppBar(),
                 _buildRewardsCard(),
                 _buildTabBar(),
+                const SizedBox(height: 4),
                 Expanded(
                   child: TabBarView(
                     controller: _tabController,
@@ -137,33 +138,44 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
             ),
           ),
           const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.amber,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.star, color: Colors.white, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  '1,250',
-                  style: TextStyle(fontFamily: 'Poppins', 
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+          Consumer(builder: (context, ref, _) {
+            final rewards = ref.watch(userRewardsProvider);
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.amber,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.star, color: Colors.white, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    _fmt(rewards.totalPoints),
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
   }
 
   Widget _buildRewardsCard() {
+    final rewards = ref.watch(userRewardsProvider);
+    final rewardsAsync = ref.watch(redeemableRewardsProvider);
+    final availableRewards = rewardsAsync.maybeWhen(
+      data: (list) => list.length,
+      orElse: () => null,
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
@@ -188,38 +200,51 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: _rewards.map((r) => _buildRewardItem(r)).toList(),
+              children: [
+                _buildRewardItem(
+                    Icons.star, 'Points', _fmt(rewards.totalPoints)),
+                _buildRewardItem(
+                    Icons.local_offer, 'Coupons', _fmt(rewards.availableCoupons)),
+                _buildRewardItem(
+                    Icons.card_giftcard, 'Rewards', _fmt(availableRewards)),
+              ],
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, color: Colors.white, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Complete 5 more rides to unlock Gold membership!',
-                      style: TextStyle(fontFamily: 'Poppins', 
-                        fontSize: 12,
-                        color: Colors.white,
+            if (rewards.hasTierProgress) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        color: Colors.white, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Complete ${rewards.ridesToNextTier} more '
+                        '${rewards.ridesToNextTier == 1 ? 'ride' : 'rides'} '
+                        'to unlock ${rewards.nextTier} membership!',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRewardItem(Map<String, dynamic> reward) {
+  Widget _buildRewardItem(IconData icon, String label, String value) {
     return Column(
       children: [
         Container(
@@ -228,20 +253,22 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
             color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(reward['icon'], color: Colors.white, size: 24),
+          child: Icon(icon, color: Colors.white, size: 24),
         ),
         const SizedBox(height: 8),
         Text(
-          reward['value'],
-          style: TextStyle(fontFamily: 'Poppins', 
+          value,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
         Text(
-          reward['label'],
-          style: TextStyle(fontFamily: 'Poppins', 
+          label,
+          style: TextStyle(
+            fontFamily: 'Poppins',
             fontSize: 12,
             color: Colors.white.withValues(alpha: 0.8),
           ),
@@ -254,22 +281,29 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Container(
+        padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
         ),
         child: TabBar(
           controller: _tabController,
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicatorPadding: EdgeInsets.zero,
+          dividerColor: Colors.transparent,
           indicator: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
           labelColor: Colors.deepPurple,
           unselectedLabelColor: Colors.white,
-          labelStyle: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+          labelStyle: const TextStyle(
+              fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+          unselectedLabelStyle: const TextStyle(
+              fontFamily: 'Poppins', fontWeight: FontWeight.w600),
           tabs: const [
-            Tab(text: 'Offers'),
-            Tab(text: 'My Rewards'),
+            Tab(height: 42, text: 'Offers'),
+            Tab(height: 42, text: 'My Rewards'),
           ],
         ),
       ),
@@ -513,44 +547,129 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
   }
 
   Widget _buildMyRewardsTab() {
+    final historyAsync = ref.watch(pointsHistoryProvider);
+    final rewardsAsync = ref.watch(redeemableRewardsProvider);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Points History',
-            style: TextStyle(fontFamily: 'Poppins', 
+            style: TextStyle(
+              fontFamily: 'Poppins',
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),
           const SizedBox(height: 12),
-          _buildPointsHistoryItem('+50', 'Completed ride to Airport', '2 hours ago', true),
-          _buildPointsHistoryItem('+25', 'Completed ride to Park Street', 'Yesterday', true),
-          _buildPointsHistoryItem('-100', 'Redeemed for ₹50 off', '3 days ago', false),
-          _buildPointsHistoryItem('+50', 'Completed ride to Salt Lake', '4 days ago', true),
-          _buildPointsHistoryItem('+100', 'Referral bonus - Amit joined', '1 week ago', true),
+          historyAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator(color: Colors.white)),
+            ),
+            error: (_, _) => _buildEmptyPanel(
+              icon: Icons.error_outline,
+              title: 'Couldn\'t load points history',
+              subtitle: 'Please try again in a moment.',
+            ),
+            data: (entries) => entries.isEmpty
+                ? _buildEmptyPanel(
+                    icon: Icons.history,
+                    title: 'No points activity yet',
+                    subtitle: 'Complete rides to start earning points.',
+                  )
+                : Column(
+                    children: entries
+                        .map((e) => _buildPointsHistoryItem(e))
+                        .toList(),
+                  ),
+          ),
           const SizedBox(height: 24),
-          Text(
+          const Text(
             'Redeem Points',
-            style: TextStyle(fontFamily: 'Poppins', 
+            style: TextStyle(
+              fontFamily: 'Poppins',
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),
           const SizedBox(height: 12),
-          _buildRedeemCard('500 Points', '₹25 Off', 'Next ride discount'),
-          _buildRedeemCard('1000 Points', '₹50 Off', 'Next ride discount'),
-          _buildRedeemCard('2000 Points', '₹100 Off', 'Any ride discount'),
+          rewardsAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator(color: Colors.white)),
+            ),
+            error: (_, _) => _buildEmptyPanel(
+              icon: Icons.error_outline,
+              title: 'Couldn\'t load rewards',
+              subtitle: 'Please try again in a moment.',
+            ),
+            data: (rewards) => rewards.isEmpty
+                ? _buildEmptyPanel(
+                    icon: Icons.card_giftcard_outlined,
+                    title: 'No rewards available right now',
+                    subtitle: 'Check back soon for new ways to redeem.',
+                  )
+                : Column(
+                    children: rewards.map(_buildRedeemCard).toList(),
+                  ),
+          ),
+          const SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  Widget _buildPointsHistoryItem(String points, String title, String time, bool isCredit) {
+  Widget _buildEmptyPanel({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 48, color: Colors.white.withValues(alpha: 0.7)),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.75),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPointsHistoryItem(PointsEntry entry) {
+    final isCredit = entry.isCredit;
+    final points = '${isCredit ? '+' : ''}${entry.delta}';
+    final subtitle = entry.subtitle ?? _relativeTime(entry.createdAt);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -580,26 +699,30 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: TextStyle(fontFamily: 'Poppins', 
+                  entry.title,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
                     fontSize: 14,
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                Text(
-                  time,
-                  style: TextStyle(fontFamily: 'Poppins', 
-                    fontSize: 11,
-                    color: Colors.white60,
+                if (subtitle.isNotEmpty)
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 11,
+                      color: Colors.white60,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
           Text(
             points,
-            style: TextStyle(fontFamily: 'Poppins', 
+            style: TextStyle(
+              fontFamily: 'Poppins',
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: isCredit ? Colors.green : Colors.red,
@@ -610,7 +733,7 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
     );
   }
 
-  Widget _buildRedeemCard(String points, String value, String description) {
+  Widget _buildRedeemCard(Reward reward) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -635,46 +758,55 @@ class _OffersRewardsScreenState extends ConsumerState<OffersRewardsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  value,
-                  style: TextStyle(fontFamily: 'Poppins', 
+                  reward.title,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                Text(
-                  description,
-                  style: TextStyle(fontFamily: 'Poppins', 
-                    fontSize: 12,
-                    color: Colors.white60,
+                if ((reward.description ?? '').isNotEmpty)
+                  Text(
+                    reward.description!,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      color: Colors.white60,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              // Redeem points
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.deepPurple,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              points,
-              style: TextStyle(fontFamily: 'Poppins', 
+              '${_fmt(reward.pointsCost)} pts',
+              style: const TextStyle(
+                fontFamily: 'Poppins',
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
+                color: Colors.deepPurple,
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  static String _relativeTime(DateTime? when) {
+    if (when == null) return '';
+    final diff = DateTime.now().difference(when);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} hr ago';
+    if (diff.inDays < 7) return '${diff.inDays} days ago';
+    return DateFormat('d MMM').format(when);
   }
 
   void _copyCode(String code) {

@@ -1,8 +1,11 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+
+import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
 
 // ============================================
@@ -278,7 +281,7 @@ class AuthService {
       );
 
       if (credential.user != null) {
-        await firestore.collection('users').doc(credential.user!.uid).set(
+        await firestore.collection(TestMode.usersCollection).doc(credential.user!.uid).set(
           {'lastLoginAt': FieldValue.serverTimestamp()},
           SetOptions(merge: true),
         );
@@ -301,14 +304,20 @@ class AuthService {
     required String mobile,
   }) async {
     try {
-      final existing = await firestore
-          .collection('users')
-          .where('mobile', isEqualTo: mobile.trim())
-          .limit(1)
-          .get();
-
-      if (existing.docs.isNotEmpty) {
-        return AuthResult.failure('This mobile number is already registered.');
+      try {
+        final result = await FirebaseFunctions.instance
+            .httpsCallable('checkMobileAvailable')
+            .call<Map<String, dynamic>>({'mobile': mobile.trim()});
+        final available = result.data['available'] == true;
+        if (!available) {
+          return AuthResult.failure('This mobile number is already registered.');
+        }
+      } on FirebaseFunctionsException catch (e) {
+        AppLogger.warning(
+          'checkMobileAvailable failed: ${e.code} ${e.message}',
+          tag: 'AuthService',
+        );
+        // Fall through — Cloud Function unreachable shouldn't block registration.
       }
 
       final credential = await auth.createUserWithEmailAndPassword(
@@ -548,7 +557,7 @@ class AuthService {
     String? mobile,
     required String authMethod,
   }) async {
-    await firestore.collection('users').doc(uid).set({
+    await firestore.collection(TestMode.usersCollection).doc(uid).set({
       'email': email,
       'mobile': mobile,
       'authMethod': authMethod,
@@ -567,7 +576,7 @@ class AuthService {
     required String authMethod,
     required bool isNewUser,
   }) async {
-    final userDoc = firestore.collection('users').doc(uid);
+    final userDoc = firestore.collection(TestMode.usersCollection).doc(uid);
 
     if (isNewUser) {
       // Create new user document
@@ -597,7 +606,7 @@ class AuthService {
 
   Future<bool> checkUserHasRole(String uid) async {
     try {
-      final doc = await firestore.collection('users').doc(uid).get();
+      final doc = await firestore.collection(TestMode.usersCollection).doc(uid).get();
       if (doc.exists) {
         final data = doc.data();
         return data?['role'] != null && data!['role'].toString().isNotEmpty;
@@ -613,7 +622,7 @@ class AuthService {
   /// Returns the role string ('User', 'Driver', 'Vehicle Owner') or null if not set
   Future<String?> getUserRole(String uid) async {
     try {
-      final doc = await firestore.collection('users').doc(uid).get();
+      final doc = await firestore.collection(TestMode.usersCollection).doc(uid).get();
       if (doc.exists) {
         final data = doc.data();
         final role = data?['role'];

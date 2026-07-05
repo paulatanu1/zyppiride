@@ -1,11 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
-import 'package:animations/animations.dart';
-import 'package:go_router/go_router.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 import 'dart:ui';
 
+import 'package:animations/animations.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
+import '../core/constants/test_mode.dart';
 import '../router/routes_name.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -45,7 +48,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final snapshot = await FirebaseFirestore.instance
-          .collection('users')
+          .collection(TestMode.usersCollection)
           .doc(_effectiveUserId)
           .get();
 
@@ -93,7 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  "Edit Profile",
+                  'Edit Profile',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 20,
@@ -105,7 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 TextFormField(
                   controller: fullNameController,
                   decoration: const InputDecoration(
-                    labelText: "Full Name",
+                    labelText: 'Full Name',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -114,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   readOnly: true,
                   initialValue: userData['email'] ?? '',
                   decoration: const InputDecoration(
-                    labelText: "Email (Read-only)",
+                    labelText: 'Email (Read-only)',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -167,22 +170,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (userId == null || userId.isEmpty) return;
 
                     await FirebaseFirestore.instance
-                        .collection('users')
+                        .collection(TestMode.usersCollection)
                         .doc(userId)
                         .update({
                       'fullName': fullNameController.text.trim(),
                       'dob': dob,
                     });
                     if (context.mounted) Navigator.pop(context);
-                    _loadUserData();
+                    unawaited(_loadUserData());
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Profile updated!")),
+                        const SnackBar(content: Text('Profile updated!')),
                       );
                     }
                   },
                   child: const Text(
-                    "Save Changes",
+                    'Save Changes',
                     style: TextStyle(
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.bold,
@@ -471,7 +474,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Profile Details",
+                'Profile Details',
                 style: TextStyle(fontFamily: 'Poppins', 
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -491,10 +494,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 16),
           Divider(thickness: 0.5, color: Colors.white.withValues(alpha:0.3)),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.phone_outlined, "Mobile", "+91 $mobile"),
+          _buildInfoRow(Icons.phone_outlined, 'Mobile', '+91 $mobile'),
           _buildInfoRow(
             Icons.cake_outlined,
-            "Date of Birth",
+            'Date of Birth',
             dob != null ? DateFormat('dd MMM yyyy').format(dob) : 'Not set',
           ),
           const SizedBox(height: 20),
@@ -512,7 +515,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPressed: () => _openEditModal(data),
               icon: const Icon(Icons.edit),
               label: Text(
-                "Edit Profile",
+                'Edit Profile',
                 style: TextStyle(fontFamily: 'Poppins', 
                   fontWeight: FontWeight.bold,
                 ),

@@ -1,13 +1,15 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:geocoding/geocoding.dart';
-import '../../router/routes_name.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../models/booking_model.dart';
-import '../../providers/saved_address_provider.dart';
 import '../../providers/booking_provider.dart';
-import '../../widgets/saved_addresses/saved_addresses.dart';
+import '../../providers/saved_address_provider.dart';
+import '../../router/routes_name.dart';
 import '../../widgets/booking/booking_widgets.dart';
+import '../../widgets/saved_addresses/saved_addresses.dart';
 
 class LocalTransportScreen extends ConsumerStatefulWidget {
   const LocalTransportScreen({super.key});
@@ -992,7 +994,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
         setState(() => _isSearching = false);
 
         // Show vehicle selection sheet
-        showVehicleSelectionSheet(
+        unawaited(showVehicleSelectionSheet(
           context,
           pickupAddress: _pickupController.text,
           dropAddress: _dropController.text,
@@ -1030,7 +1032,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
               },
             );
           },
-        );
+        ));
       }
     } catch (e) {
       if (mounted) {

@@ -4,17 +4,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
+import 'mocks/mock_firebase_service.dart';
 // Test configuration and utilities
 import 'test_report_generator.dart';
-import 'mocks/mock_firebase_service.dart';
-
 // Test suites
 import 'tests/auth_test.dart';
-import 'tests/vehicle_management_test.dart';
-import 'tests/user_dashboard_test.dart';
-import 'tests/driver_dashboard_test.dart';
 import 'tests/booking_flow_test.dart';
 import 'tests/database_test.dart';
+import 'tests/driver_dashboard_test.dart';
+import 'tests/user_dashboard_test.dart';
+import 'tests/vehicle_management_test.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -145,7 +144,7 @@ class ZyppiRideTestRunner {
   MockFirebaseService get mockFirebase => _mockFirebase;
 
   Future<Map<String, String>> generateReports(String outputDir) async {
-    return await _testRunner.finishAndGenerateReports(outputDir);
+    return _testRunner.finishAndGenerateReports(outputDir);
   }
 }
 

@@ -1,17 +1,18 @@
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'router/router.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'services/notification_service.dart';
+
 import 'providers/notification_provider.dart';
+import 'router/router.dart';
+import 'services/notification_service.dart';
 
 /// Global scaffold messenger key — use this for all app-wide snackbars so they
 /// survive route transitions and never hit "deactivated widget" assertion errors.

@@ -1,8 +1,10 @@
 import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/location_service.dart';
+
 import '../core/utils/app_logger.dart';
+import '../services/location_service.dart';
 
 // Location service provider
 final locationServiceProvider = Provider<LocationService>((ref) {

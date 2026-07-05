@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
+
 import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
 import '../router/routes_name.dart';
@@ -49,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       if (user != null) {
         // Get user role from Firestore
         final userDoc = await FirebaseFirestore.instance
-            .collection('users')
+            .collection(TestMode.usersCollection)
             .doc(user.uid)
             .get();
 

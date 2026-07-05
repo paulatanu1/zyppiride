@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/utils/app_logger.dart';
 import '../models/available_vehicle_model.dart';
 import '../services/vehicle_search_service.dart';
-import '../core/utils/app_logger.dart';
 
 // Service provider
 final vehicleSearchServiceProvider = Provider<VehicleSearchService>((ref) {

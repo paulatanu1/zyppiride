@@ -1,7 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/driver_status_service.dart';
+
 import '../core/utils/app_logger.dart';
+import '../services/driver_status_service.dart';
 
 // Service provider
 final driverStatusServiceProvider = Provider<DriverStatusService>((ref) {

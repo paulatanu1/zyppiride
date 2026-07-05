@@ -1,0 +1,9 @@
+{
+  "enabledPlugins": {
+    "figma@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "firebase@claude-plugins-official": true,
+    "firestore-native@claude-plugins-official": true
+  }
+}

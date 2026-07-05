@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/constants/test_mode.dart';
+import '../core/utils/app_logger.dart';
 import '../models/notification_model.dart';
 import '../services/notification_service.dart';
-import '../core/utils/app_logger.dart';
 
 // ── In-app notification history (Firestore) ───────────────────────────────────
 
@@ -12,7 +14,7 @@ import '../core/utils/app_logger.dart';
 final userNotificationsProvider =
     StreamProvider.family<List<NotificationItem>, String>((ref, userId) {
   return FirebaseFirestore.instance
-      .collection('users')
+      .collection(TestMode.usersCollection)
       .doc(userId)
       .collection('notifications')
       .orderBy('createdAt', descending: true)
@@ -24,7 +26,7 @@ final userNotificationsProvider =
 /// Marks a single notification as read in Firestore.
 Future<void> markNotificationRead(String userId, String notifId) async {
   await FirebaseFirestore.instance
-      .collection('users')
+      .collection(TestMode.usersCollection)
       .doc(userId)
       .collection('notifications')
       .doc(notifId)
@@ -38,7 +40,7 @@ Future<void> markAllNotificationsRead(
   for (final item in items.where((n) => !n.isRead)) {
     batch.update(
       FirebaseFirestore.instance
-          .collection('users')
+          .collection(TestMode.usersCollection)
           .doc(userId)
           .collection('notifications')
           .doc(item.id),
@@ -51,7 +53,7 @@ Future<void> markAllNotificationsRead(
 /// Deletes a notification document from Firestore.
 Future<void> deleteNotification(String userId, String notifId) async {
   await FirebaseFirestore.instance
-      .collection('users')
+      .collection(TestMode.usersCollection)
       .doc(userId)
       .collection('notifications')
       .doc(notifId)
@@ -218,5 +220,5 @@ final notificationProvider =
 // Provider to check if notifications are enabled
 final notificationsEnabledProvider = FutureProvider<bool>((ref) async {
   final service = ref.watch(notificationServiceProvider);
-  return await service.areNotificationsEnabled();
+  return service.areNotificationsEnabled();
 });

@@ -1,8 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
+
+import '../core/constants/test_mode.dart';
 
 class VehicleViewScreen extends StatefulWidget {
   final String userId;
@@ -40,7 +42,7 @@ class _VehicleViewScreenState extends State<VehicleViewScreen> {
   Future<void> _loadVehicleData() async {
     try {
       final doc = await FirebaseFirestore.instance
-          .collection('vehicles')
+          .collection(TestMode.vehiclesCollection)
           .doc(widget.vehicleId)
           .get();
 

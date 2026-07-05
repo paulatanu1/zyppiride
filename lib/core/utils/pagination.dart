@@ -35,7 +35,7 @@ class PaginatedState<T> {
   }
 
   /// Initial loading state
-  factory PaginatedState.initial() => const PaginatedState(isLoading: true);
+  factory PaginatedState.initial() => const PaginatedState();
 
   /// Empty state with no more items
   factory PaginatedState.empty() => const PaginatedState(hasMore: false);

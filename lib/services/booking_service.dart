@@ -1,12 +1,14 @@
 import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart' hide Result;
-import '../models/booking_model.dart';
-import '../models/available_vehicle_model.dart';
+
 import '../core/constants/test_mode.dart';
-import '../core/utils/app_logger.dart';
 import '../core/errors/errors.dart';
+import '../core/utils/app_logger.dart';
 import '../core/utils/pagination.dart';
+import '../models/available_vehicle_model.dart';
+import '../models/booking_model.dart';
 
 /// Outcome of a server-side OTP verification call.
 /// Returned by [BookingService.startTrip] so the caller can surface the
@@ -742,7 +744,7 @@ class BookingService {
       }
 
       final totalFare = booking.fareDetails.totalFare;
-      final alreadyReceived = (booking.amountReceived ?? 0.0);
+      final alreadyReceived = booking.amountReceived ?? 0.0;
       final remaining = (totalFare - alreadyReceived - amountReceived).clamp(0.0, totalFare);
       final newTotal = alreadyReceived + amountReceived;
       final isPaid = remaining <= 0;

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../models/saved_address_model.dart';
 import '../../providers/saved_address_provider.dart';
-import 'saved_address_card.dart';
 import 'add_address_modal.dart';
+import 'saved_address_card.dart';
 
 /// Full screen widget for managing saved addresses
 class SavedAddressesList extends ConsumerWidget {

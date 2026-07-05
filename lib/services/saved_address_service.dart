@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geocoding/geocoding.dart';
-import '../models/saved_address_model.dart';
+
+import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
+import '../models/saved_address_model.dart';
 
 /// Service for managing saved addresses in Firestore
 class SavedAddressService {
@@ -14,7 +16,7 @@ class SavedAddressService {
   /// Get reference to user's saved addresses collection
   CollectionReference<Map<String, dynamic>> _userAddressesRef(String userId) {
     return _firestore
-        .collection('users')
+        .collection(TestMode.usersCollection)
         .doc(userId)
         .collection(_collection);
   }

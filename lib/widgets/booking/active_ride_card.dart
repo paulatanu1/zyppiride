@@ -478,7 +478,7 @@ class ActiveRideCard extends StatelessWidget {
     }
   }
 
-  void _callUser() async {
+  Future<void> _callUser() async {
     final phone = booking.userPhone.replaceAll(RegExp(r'[^\d+]'), '');
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) {

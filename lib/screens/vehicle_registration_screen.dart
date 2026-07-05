@@ -1,20 +1,23 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import '../core/utils/app_logger.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
+
+import '../core/utils/app_logger.dart';
 import '../services/vehicle_service.dart';
 
 class VehicleRegistrationScreen extends StatefulWidget {
@@ -83,7 +86,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   Map<String, dynamic>? catalogData;
 
   // Google Places API Key
-  static const String googleApiKey = "AIzaSyABUF7GCEM6h1n3isugLj2qOEySpTtxd1I";
+  static const String googleApiKey = 'AIzaSyABUF7GCEM6h1n3isugLj2qOEySpTtxd1I';
 
   @override
   void initState() {
@@ -290,7 +293,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
     return parts.join(', ');
   }
 
-  void onPlaceSelected(Prediction prediction) async {
+  Future<void> onPlaceSelected(Prediction prediction) async {
     setState(() {
       isLoadingLocation = true;
     });
@@ -473,7 +476,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
   /// Shows a bottom sheet asking the user to choose Camera or Gallery.
   Future<void> _pickImages(String type) async {
     if (!mounted) return;
-    showModalBottomSheet(
+    unawaited(showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (sheetCtx) => Container(
@@ -546,7 +549,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   /// Captures a single photo from the camera.
@@ -658,11 +661,11 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
     if (latitude == null || longitude == null) {
       _showSnackBar('Please set your location before submitting', isError: true);
-      _scrollController.animateTo(
+      unawaited(_scrollController.animateTo(
         0,
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
-      );
+      ));
       return;
     }
 
@@ -1296,7 +1299,7 @@ try {
                               ),
                             ),
                             debounceTime: 600,
-                            countries: const ["in"],
+                            countries: const ['in'],
                             isLatLngRequired: false,
                             getPlaceDetailWithLatLng: (Prediction prediction) {
                               onPlaceSelected(prediction);

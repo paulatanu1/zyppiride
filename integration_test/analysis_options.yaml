@@ -1,0 +1,9 @@
+# Test tooling: console output and descriptive test-step identifiers are
+# intentional here; keep the rest of the root lint set.
+include: ../analysis_options.yaml
+
+linter:
+  rules:
+    avoid_print: false
+    non_constant_identifier_names: false
+    avoid_slow_async_io: false

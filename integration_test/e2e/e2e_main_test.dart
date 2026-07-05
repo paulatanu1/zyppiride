@@ -1,10 +1,10 @@
 // integration_test/e2e/e2e_main_test.dart
 // Main E2E Test Runner - Complete User Journey Tests
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:zyppi_ride/main.dart' as app;
 
 import 'config/e2e_test_config.dart';
