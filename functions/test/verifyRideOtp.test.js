@@ -37,6 +37,21 @@ async function callAsDriver(data, uid = DRIVER) {
   return wrapped({data, auth: {uid}});
 }
 
+/**
+ * Asserts fn rejects with an HttpsError carrying the given code.
+ * HttpsError puts the gRPC status in err.code — the message is only
+ * the human-readable text, so regex-matching the message won't work.
+ * @param {Function} fn async function expected to reject
+ * @param {string} code expected HttpsError code, e.g. "permission-denied"
+ * @return {Promise<void>} resolves when the assertion passes
+ */
+function rejectsWithCode(fn, code) {
+  return assert.rejects(fn, (err) => {
+    assert.strictEqual(err.code, code);
+    return true;
+  });
+}
+
 describe("verifyRideOtp", () => {
   before(() => {
     if (admin.apps.length === 0) admin.initializeApp();
@@ -58,25 +73,25 @@ describe("verifyRideOtp", () => {
 
   it("rejects when caller is not the assigned driver", async () => {
     await seedBooking();
-    await assert.rejects(
+    await rejectsWithCode(
         () => callAsDriver({bookingId: BOOKING, otp: OTP}, "other-driver"),
-        /permission-denied/,
+        "permission-denied",
     );
   });
 
   it("rejects when booking status is not 'arrived'", async () => {
     await seedBooking({status: "confirmed"});
-    await assert.rejects(
+    await rejectsWithCode(
         () => callAsDriver({bookingId: BOOKING, otp: OTP}),
-        /failed-precondition/,
+        "failed-precondition",
     );
   });
 
   it("increments otpFailedAttempts on wrong OTP", async () => {
     await seedBooking();
-    await assert.rejects(
+    await rejectsWithCode(
         () => callAsDriver({bookingId: BOOKING, otp: "000000"}),
-        /invalid-argument/,
+        "invalid-argument",
     );
     const snap = await admin.firestore().doc(`bookings/${BOOKING}`).get();
     assert.strictEqual(snap.data().otpFailedAttempts, 1);
@@ -95,32 +110,32 @@ describe("verifyRideOtp", () => {
     assert.ok(data.otpLockedUntil, "expected otpLockedUntil to be set");
 
     // Subsequent attempt — even with correct OTP — must be locked out.
-    await assert.rejects(
+    await rejectsWithCode(
         () => callAsDriver({bookingId: BOOKING, otp: OTP}),
-        /resource-exhausted/,
+        "resource-exhausted",
     );
   });
 
   it("rejects unauthenticated callers", async () => {
     await seedBooking();
     const wrapped = tester.wrap(functions.verifyRideOtp);
-    await assert.rejects(
+    await rejectsWithCode(
         () => wrapped({data: {bookingId: BOOKING, otp: OTP}}),
-        /unauthenticated/,
+        "unauthenticated",
     );
   });
 
   it("rejects malformed payloads", async () => {
-    await assert.rejects(
+    await rejectsWithCode(
         () => callAsDriver({bookingId: BOOKING}),
-        /invalid-argument/,
+        "invalid-argument",
     );
   });
 
   it("rejects unknown booking", async () => {
-    await assert.rejects(
+    await rejectsWithCode(
         () => callAsDriver({bookingId: "does-not-exist", otp: OTP}),
-        /not-found/,
+        "not-found",
     );
   });
 });

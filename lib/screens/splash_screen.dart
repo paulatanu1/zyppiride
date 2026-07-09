@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
 
 import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
@@ -143,27 +142,33 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           children: [
             ScaleTransition(
               scale: _scaleAnimation,
-              child: Lottie.asset(
-                'assets/animations/splash_animation.json',
-                width: 200,
-                height: 200,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  AppLogger.error('Lottie animation error', tag: 'Splash', error: error);
-                  return Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(100),
+              child: Container(
+                width: 160,
+                height: 160,
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(36),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
                     ),
-                    child: const Icon(
+                  ],
+                ),
+                child: Image.asset(
+                  'assets/images/zyppi_logo.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    AppLogger.error('Logo asset error', tag: 'Splash', error: error);
+                    return const Icon(
                       Icons.local_taxi,
                       size: 80,
-                      color: Colors.white,
-                    ),
-                  );
-                },
+                      color: Colors.deepPurple,
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 20),
