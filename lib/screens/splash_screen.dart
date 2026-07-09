@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../core/constants/test_mode.dart';
 import '../core/utils/app_logger.dart';
 import '../router/routes_name.dart';
+import '../widgets/mandala_painter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,8 +15,9 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
   late AnimationController _controller;
+  late AnimationController _mandalaController;
   late Animation<double> _scaleAnimation;
   bool _hasNavigated = false;
 
@@ -26,6 +28,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       vsync: this,
       duration: const Duration(seconds: 2),
     );
+    _mandalaController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 60),
+    )..repeat();
     _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
@@ -129,14 +135,39 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void dispose() {
     _controller.dispose();
+    _mandalaController.dispose();
     super.dispose();
+  }
+
+  Widget _buildMandala({required double size, required double alpha, bool reverse = false}) {
+    return RotationTransition(
+      turns: reverse
+          ? ReverseAnimation(_mandalaController)
+          : _mandalaController,
+      child: CustomPaint(
+        size: Size.square(size),
+        painter: MandalaPainter(color: Colors.white.withValues(alpha: alpha)),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.deepPurple,
-      body: Center(
+      body: Stack(
+        children: [
+          Positioned(
+            top: -120,
+            left: -120,
+            child: _buildMandala(size: 320, alpha: 0.10),
+          ),
+          Positioned(
+            bottom: -140,
+            right: -140,
+            child: _buildMandala(size: 400, alpha: 0.12, reverse: true),
+          ),
+          Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -194,6 +225,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             ),
           ],
         ),
+          ),
+        ],
       ),
     );
   }

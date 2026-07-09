@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+
+import '../widgets/vehicles_animation.dart';
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
@@ -15,7 +18,15 @@ class AuthScreen extends StatelessWidget {
             colors: [Colors.deepPurple, Colors.blue.shade300],
           ),
         ),
-        child: Center(
+        child: Stack(
+          children: [
+            const Positioned(
+              bottom: 24,
+              left: 0,
+              right: 0,
+              child: AnimatedVehicles(),
+            ),
+            Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -40,14 +51,29 @@ class AuthScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-              Text(
+              const Text(
                 'Welcome to Zyppi Ride',
-                style: TextStyle(fontFamily: 'Poppins', 
+                style: TextStyle(fontFamily: 'Poppins',
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
-              ),
+              )
+                  // Entrance: plays once.
+                  .animate()
+                  .fadeIn(duration: 600.ms, curve: Curves.easeOut)
+                  .slideY(
+                      begin: 0.35,
+                      end: 0,
+                      duration: 600.ms,
+                      curve: Curves.easeOut)
+                  // Ongoing: a soft light band sweeps across every ~3.4 s.
+                  .animate(onPlay: (controller) => controller.repeat())
+                  .shimmer(
+                    delay: 2200.ms,
+                    duration: 1200.ms,
+                    color: const Color(0xFF9FA8DA),
+                  ),
               const SizedBox(height: 40),
               ElevatedButton(
                 onPressed: () {
@@ -92,6 +118,8 @@ class AuthScreen extends StatelessWidget {
               ),
             ],
           ),
+            ),
+          ],
         ),
       ),
     );
