@@ -523,7 +523,6 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
   Widget _buildQuickActions(String userId) {
     final actions = [
       {'icon': Icons.directions_car_outlined, 'label': 'Reserve\nVehicle',    'route': RoutesName.reserveVehicle,    'color': _kBrand},
-      {'icon': Icons.local_shipping_outlined, 'label': 'Book Goods\nCarrier', 'route': RoutesName.bookGoodsCarrier,  'color': _kError},
       {'icon': Icons.location_on_outlined,    'label': 'Track\nBooking',      'route': RoutesName.trackActiveBooking,'color': const Color(0xFF0EA5E9)},
       {'icon': Icons.history,                 'label': 'Ride\nHistory',       'route': RoutesName.rideHistory,       'color': const Color(0xFF8B5CF6)},
       {'icon': Icons.support_agent,           'label': 'Support\nCenter',     'route': RoutesName.supportCenter,     'color': _kSuccess},
@@ -730,8 +729,8 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
   Widget _buildServiceGrid(String userId) {
     final services = [
       {'icon': Icons.local_taxi,           'title': 'Local Transport', 'desc': 'Quick city rides',     'route': RoutesName.localTransport,    'color': _kBrand},
-      {'icon': Icons.route,                'title': 'Outstation',      'desc': 'Long distance travel',  'route': RoutesName.outstationRental,  'color': const Color(0xFF0EA5E9)},
-      {'icon': Icons.inventory_2_outlined, 'title': 'Goods Transport', 'desc': 'Safe cargo delivery',  'route': RoutesName.goodsTransport,    'color': _kWarning},
+      // Outstation and Goods Transport are hidden until their booking flows
+      // are implemented (v2) — dead entry points fail Play review.
       {'icon': Icons.fire_truck,           'title': 'Mini Truck',      'desc': 'Heavy load moving',     'route': RoutesName.miniTruckDelivery, 'color': _kError},
       {'icon': Icons.two_wheeler,          'title': 'Bike Parcel',     'desc': 'Quick deliveries',      'route': RoutesName.bikeParcel,        'color': _kSuccess},
       {'icon': Icons.emergency,            'title': 'Emergency',       'desc': '24/7 emergency',        'route': RoutesName.emergency,         'color': _kError},

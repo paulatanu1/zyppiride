@@ -8,6 +8,7 @@ import '../../models/booking_model.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/saved_address_provider.dart';
 import '../../router/routes_name.dart';
+import '../../services/location_service.dart';
 import '../../widgets/booking/booking_widgets.dart';
 import '../../widgets/saved_addresses/saved_addresses.dart';
 
@@ -101,6 +102,29 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
     _pickupController.dispose();
     _dropController.dispose();
     super.dispose();
+  }
+
+  /// Fills the pickup field with the device's current address using the
+  /// shared LocationService (permission prompt included).
+  Future<void> _fillPickupWithCurrentLocation() async {
+    final result = await LocationService().getCurrentLocation();
+    if (!mounted) return;
+    result.when(
+      success: (location) {
+        setState(() => _pickupController.text = location.address);
+      },
+      failure: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error.message,
+              style: const TextStyle(fontFamily: 'Poppins'),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -572,9 +596,7 @@ class _LocalTransportScreenState extends ConsumerState<LocalTransportScreen>
           button: true,
           child: IconButton(
             icon: const Icon(Icons.my_location, color: Colors.white70),
-            onPressed: () {
-              // TODO: Get current location
-            },
+            onPressed: _fillPickupWithCurrentLocation,
           ),
         ),
       ],

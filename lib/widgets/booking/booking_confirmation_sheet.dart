@@ -38,14 +38,13 @@ class BookingConfirmationSheet extends ConsumerStatefulWidget {
 class _BookingConfirmationSheetState
     extends ConsumerState<BookingConfirmationSheet> {
   PaymentMethod _selectedPaymentMethod = PaymentMethod.cash;
-  String? _promoCode;
-  final _promoController = TextEditingController();
-  bool _promoApplied = false;
-  double _promoDiscount = 0;
+  // Promo entry UI is hidden until backend validation exists (v2) — the
+  // previous stub faked a 10% discount. Fields remain for fare plumbing.
+  final String? _promoCode = null;
+  final double _promoDiscount = 0;
 
   @override
   void dispose() {
-    _promoController.dispose();
     super.dispose();
   }
 
@@ -112,10 +111,6 @@ class _BookingConfirmationSheetState
 
                   // Fare breakdown
                   _buildFareBreakdown(),
-                  const SizedBox(height: 20),
-
-                  // Promo code
-                  _buildPromoSection(),
                   const SizedBox(height: 20),
 
                   // Payment method
@@ -516,106 +511,6 @@ class _BookingConfirmationSheetState
     );
   }
 
-  Widget _buildPromoSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.local_offer, color: Colors.deepPurple, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'Promo Code',
-                style: TextStyle(fontFamily: 'Poppins', 
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _promoController,
-                  enabled: !_promoApplied,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: InputDecoration(
-                    hintText: 'Enter promo code',
-                    hintStyle: TextStyle(fontFamily: 'Poppins', 
-                      color: Colors.grey.shade500,
-                      fontSize: 14,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: _promoApplied ? _removePromo : _applyPromo,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      _promoApplied ? Colors.red.shade100 : Colors.deepPurple,
-                  foregroundColor:
-                      _promoApplied ? Colors.red.shade700 : Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  _promoApplied ? 'Remove' : 'Apply',
-                  style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
-          ),
-          if (_promoApplied) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 16),
-                const SizedBox(width: 6),
-                Text(
-                  'Promo applied! You save ₹${_promoDiscount.toStringAsFixed(0)}',
-                  style: TextStyle(fontFamily: 'Poppins', 
-                    fontSize: 12,
-                    color: Colors.green.shade700,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildPaymentMethodSection() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -712,49 +607,6 @@ class _BookingConfirmationSheetState
       promoDiscount: _promoDiscount,
     );
     return FareCalculator.formatFare(fareDetails.totalFare);
-  }
-
-  void _applyPromo() {
-    final code = _promoController.text.trim().toUpperCase();
-    if (code.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please enter a promo code',
-            style: TextStyle(fontFamily: 'Poppins'),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // TODO: Validate promo code with backend
-    // For now, simulate a 10% discount
-    setState(() {
-      _promoCode = code;
-      _promoApplied = true;
-      _promoDiscount = widget.fare.averageEstimate * 0.1;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Promo code applied!',
-          style: TextStyle(fontFamily: 'Poppins'),
-        ),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _removePromo() {
-    setState(() {
-      _promoCode = null;
-      _promoApplied = false;
-      _promoDiscount = 0;
-      _promoController.clear();
-    });
   }
 
   Future<void> _confirmBooking() async {

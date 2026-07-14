@@ -227,6 +227,114 @@ exports.checkMobileAvailable = onCall(async (request) => {
   return {available: snap.empty};
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ACCOUNT DELETION (Google Play User Data policy)
+//
+// Deletes the caller's account and all associated PII. Runs with admin
+// privileges because security rules intentionally forbid clients from
+// deleting agreements and bookings. Bookings are financial records, so
+// they are anonymized rather than deleted.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Commits Firestore writes in chunks below the 500-op batch limit.
+ * @param {FirebaseFirestore.Firestore} db Firestore instance
+ * @param {Array<{ref: FirebaseFirestore.DocumentReference, data: Object}>} ops
+ *     update operations to apply
+ */
+async function _commitInChunks(db, ops) {
+  const CHUNK = 400;
+  for (let i = 0; i < ops.length; i += CHUNK) {
+    const batch = db.batch();
+    for (const {ref, data} of ops.slice(i, i + CHUNK)) {
+      batch.update(ref, data);
+    }
+    await batch.commit();
+  }
+}
+
+exports.deleteAccount = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Sign in required.");
+  }
+  const uid = request.auth.uid;
+  const db = admin.firestore();
+  logger.info("deleteAccount: starting for", uid);
+
+  // 1. Vehicles owned by the user (recursiveDelete removes the documents/,
+  //    schedules/, blocked_dates/ and settings/ subcollections too).
+  const vehicles = await db
+      .collection("vehicles").where("userId", "==", uid).get();
+  for (const doc of vehicles.docs) {
+    await db.recursiveDelete(doc.ref);
+  }
+
+  // 2. Agreements contain the owner's signature image — PII. Rules make
+  //    them immutable for clients; the admin SDK bypasses rules.
+  const agreements = await db
+      .collection("agreements").where("userId", "==", uid).get();
+  if (!agreements.empty) {
+    const batch = db.batch();
+    agreements.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+  }
+
+  // 3. Bookings are retained as financial records but stripped of PII,
+  //    both where the user was the rider and where they were the driver.
+  const riderBookings = await db
+      .collection("bookings").where("userId", "==", uid).get();
+  await _commitInChunks(db, riderBookings.docs.map((doc) => ({
+    ref: doc.ref,
+    data: {
+      userName: "Deleted user",
+      userPhone: admin.firestore.FieldValue.delete(),
+      userReview: admin.firestore.FieldValue.delete(),
+      accountDeleted: true,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+  })));
+  const driverBookings = await db
+      .collection("bookings").where("driver.driverId", "==", uid).get();
+  await _commitInChunks(db, driverBookings.docs.map((doc) => ({
+    ref: doc.ref,
+    data: {
+      "driver.name": "Deleted driver",
+      "driver.phone": admin.firestore.FieldValue.delete(),
+      "driverReview": admin.firestore.FieldValue.delete(),
+      "driverAccountDeleted": true,
+      "updatedAt": admin.firestore.FieldValue.serverTimestamp(),
+    },
+  })));
+
+  // 4. Live-location doc and the user doc (recursiveDelete removes the
+  //    notifications/ and savedAddresses/ subcollections).
+  await db.doc(`drivers/${uid}`).delete();
+  await db.recursiveDelete(db.doc(`users/${uid}`));
+
+  // 5. Storage files — best effort: a missing bucket (e.g. in the
+  //    emulator) or transient error must not strand the deletion.
+  try {
+    const bucket = admin.storage().bucket();
+    for (const prefix of [`users/${uid}/`, `vehicles/${uid}/`,
+      `support/${uid}/`]) {
+      await bucket.deleteFiles({prefix});
+    }
+  } catch (err) {
+    logger.warn("deleteAccount: storage cleanup skipped:", err.message);
+  }
+
+  // 6. Finally the Auth account itself. Admin deletion does not require
+  //    a recent client login. Tolerate the account already being gone.
+  try {
+    await admin.auth().deleteUser(uid);
+  } catch (err) {
+    if (err.code !== "auth/user-not-found") throw err;
+  }
+
+  logger.info("deleteAccount: completed for", uid);
+  return {success: true};
+});
+
 exports.seedVehicleCatalog = onRequest(async (req, res) => {
   // Restrict to POST from authorized admin calls only
   if (req.method !== "POST") {

@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../core/constants/test_mode.dart';
 import '../../core/utils/app_logger.dart';
+import '../../widgets/delete_account_dialog.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({super.key});
@@ -662,6 +663,24 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       icon: const Icon(Icons.logout),
                       label: Text(
                         'Logout',
+                        style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Account deletion (Google Play User Data policy)
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      onPressed: () => showDeleteAccountDialog(context),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red.shade700,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      icon: const Icon(Icons.delete_forever_outlined),
+                      label: const Text(
+                        'Delete Account',
                         style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
                       ),
                     ),

@@ -1,3 +1,5 @@
+import 'dart:ui' show Color;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -85,7 +87,11 @@ class NotificationService {
 
   Future<void> _initializeLocalNotifications() async {
     // Android settings
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // Small icons must be alpha-only silhouettes; the monochrome launcher
+    // asset (transparent background) renders as the Z mark, while the full
+    // ic_launcher would show as a solid blob.
+    const androidSettings =
+        AndroidInitializationSettings('@drawable/ic_launcher_monochrome');
 
     // iOS settings
     const iosSettings = DarwinInitializationSettings(
@@ -197,7 +203,8 @@ class NotificationService {
       channelDescription: 'Notifications for ride updates',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: '@drawable/ic_launcher_monochrome',
+      color: Color(0xFF673AB7),
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -328,10 +335,4 @@ class NotificationService {
     return settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional;
   }
-}
-
-// Color class for notification icon
-class Color {
-  final int value;
-  const Color(this.value);
 }

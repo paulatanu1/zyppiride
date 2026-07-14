@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -1165,7 +1167,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             if (booking.canCancel) const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
-                onPressed: () => _handleEmergency(),
+                onPressed: () => _handleEmergency(booking),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
@@ -1295,19 +1297,35 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
     }
   }
 
-  void _shareTrip(Booking booking) {
-    // TODO: Implement share functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Share feature coming soon',
-          style: TextStyle(fontFamily: 'Poppins'),
+  /// Opens the SMS composer pre-filled with the live trip details so the
+  /// rider can send them to any contact.
+  Future<void> _shareTrip(Booking booking) async {
+    final driverPhone = booking.driver.phoneNumber;
+    final text = 'I am on a Zyppi Ride trip.\n'
+        'Driver: ${booking.driver.name}'
+        '${driverPhone != null ? ' ($driverPhone)' : ''}\n'
+        'Vehicle: ${booking.vehicle.brand} ${booking.vehicle.model}, '
+        '${booking.vehicle.registrationNumber}\n'
+        'From: ${booking.pickupLocation.address}\n'
+        'To: ${booking.dropLocation.address}\n'
+        'Booking ID: ${booking.bookingId}';
+    final uri = Uri.parse('sms:?body=${Uri.encodeComponent(text)}');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'No messaging app available to share the trip',
+            style: TextStyle(fontFamily: 'Poppins'),
+          ),
+          backgroundColor: Colors.red,
         ),
-      ),
-    );
+      );
+    }
   }
 
-  void _handleEmergency() {
+  void _handleEmergency(Booking booking) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1323,7 +1341,8 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
           ],
         ),
         content: Text(
-          'This will alert emergency contacts and share your live location. Continue?',
+          'Call the emergency helpline (112), or share your trip details '
+          'with someone you trust.',
           style: TextStyle(fontFamily: 'Poppins'),
         ),
         actions: [
@@ -1334,26 +1353,30 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
               style: TextStyle(fontFamily: 'Poppins', color: Colors.grey),
             ),
           ),
-          ElevatedButton(
+          TextButton(
             onPressed: () {
               Navigator.pop(context);
-              // TODO: Trigger SOS
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Emergency contacts notified',
-                    style: TextStyle(fontFamily: 'Poppins'),
-                  ),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              unawaited(_shareTrip(booking));
+            },
+            child: Text(
+              'Share Trip',
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final uri = Uri.parse('tel:112');
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
             child: Text(
-              'Call Emergency',
+              'Call 112',
               style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
             ),
           ),

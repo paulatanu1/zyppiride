@@ -183,19 +183,6 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
             ),
           ),
           const Spacer(),
-          IconButton(
-            onPressed: () {
-              // TODO: Download history
-            },
-            icon: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.download, color: Colors.white, size: 20),
-            ),
-          ),
         ],
       ),
     );
@@ -502,55 +489,8 @@ class _UserRideHistoryScreenState extends ConsumerState<UserRideHistoryScreen>
               ],
             ),
           ),
-          // Actions
-          if (status == 'completed')
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        // TODO: View receipt
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.white38),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Text(
-                        'Receipt',
-                        style: TextStyle(fontFamily: 'Poppins', fontSize: 12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // TODO: Rebook
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.deepPurple,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Text(
-                        'Rebook',
-                        style: TextStyle(fontFamily: 'Poppins', 
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          // Receipt / Rebook actions hidden until implemented (v2) —
+          // dead buttons fail Play review.
           if (status == 'ongoing')
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),

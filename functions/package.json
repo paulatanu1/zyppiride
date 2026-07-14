@@ -8,7 +8,7 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "firebase emulators:exec --only firestore --project=zyppiride-test 'mocha test/**/*.test.js --timeout 10000 --exit'"
+    "test": "firebase emulators:exec --only firestore,auth --project=zyppiride-test 'mocha test/**/*.test.js --timeout 10000 --exit'"
   },
   "engines": {
     "node": "22"

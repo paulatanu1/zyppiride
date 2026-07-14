@@ -549,6 +549,29 @@ class AuthService {
   }
 
   // ============================================
+  // ACCOUNT DELETION (Google Play User Data policy)
+  // ============================================
+  /// Permanently deletes the signed-in user's account via the
+  /// `deleteAccount` Cloud Function (profile, vehicles, agreements, saved
+  /// addresses, live-location doc, storage files; bookings are anonymized),
+  /// then clears the local session.
+  ///
+  /// Returns `null` on success, or a user-readable error message.
+  Future<String?> deleteAccount() async {
+    try {
+      await FirebaseFunctions.instance.httpsCallable('deleteAccount').call();
+      await signOut();
+      return null;
+    } on FirebaseFunctionsException catch (e) {
+      AppLogger.error('Account deletion failed', tag: 'AuthService', error: e);
+      return e.message ?? 'Account deletion failed. Please try again.';
+    } catch (e) {
+      AppLogger.error('Account deletion failed', tag: 'AuthService', error: e);
+      return 'Account deletion failed. Please try again.';
+    }
+  }
+
+  // ============================================
   // HELPER METHODS
   // ============================================
   Future<void> _createUserDocument({
