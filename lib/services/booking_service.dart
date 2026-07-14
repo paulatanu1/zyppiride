@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart' hide Result;
@@ -100,8 +99,9 @@ class BookingService {
         promoDiscount: await _getPromoDiscount(request.promoCode),
       );
 
-      // 4. Generate OTP for ride verification
-      final rideOtp = _generateOtp();
+      // 4. Ride OTP is generated server-side by the onBookingCreated
+      //    Cloud Function and stored in bookings/{id}/private/otp so the
+      //    driver's client can never read it (W1).
 
       // 5. Create booking document
       final now = DateTime.now();
@@ -148,7 +148,6 @@ class BookingService {
         isScheduled: request.isScheduled,
         createdAt: now,
         updatedAt: now,
-        rideOtp: rideOtp,
         userNotes: request.userNotes,
       );
 
@@ -936,14 +935,6 @@ class BookingService {
   // ============================================
 
   /// Generate 6-digit OTP (900,000 combinations — significantly harder to brute-force)
-  // Cryptographically-secure RNG (V-09). The OS-backed Random.secure() avoids
-  // the predictability of the default seedable Random.
-  static final Random _otpRng = Random.secure();
-
-  String _generateOtp() {
-    return (100000 + _otpRng.nextInt(900000)).toString();
-  }
-
   /// Calculate ETA string
   String _calculateEta(int durationMinutes) {
     if (durationMinutes < 60) {

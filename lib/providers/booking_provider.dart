@@ -762,3 +762,19 @@ final canCreateBookingProvider = FutureProvider<bool>((ref) async {
   final bookingService = ref.watch(bookingServiceProvider);
   return bookingService.canCreateBooking(user.uid);
 });
+
+/// Rider-only stream of the server-generated ride OTP
+/// (bookings/{id}/private/otp, written by the onBookingCreated Cloud
+/// Function). Emits null until the OTP exists and again after
+/// verifyRideOtp consumes it. Firestore rules deny this read to the
+/// driver (W1).
+final rideOtpProvider =
+    StreamProvider.family<String?, String>((ref, bookingId) {
+  return FirebaseFirestore.instance
+      .collection(TestMode.bookingsCollection)
+      .doc(bookingId)
+      .collection('private')
+      .doc('otp')
+      .snapshots()
+      .map((snap) => snap.data()?['rideOtp'] as String?);
+});

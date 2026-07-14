@@ -1029,7 +1029,12 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
   }
 
   Widget _buildOTPCard(Booking booking) {
-    if (booking.rideOtp == null) return const SizedBox.shrink();
+    // The OTP lives in the rules-protected private/ subcollection (rider-only
+    // read); booking.rideOtp remains as a fallback for E2E-seeded bookings.
+    final rideOtp =
+        ref.watch(rideOtpProvider(booking.bookingId)).valueOrNull ??
+            booking.rideOtp;
+    if (rideOtp == null) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1059,7 +1064,7 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  booking.rideOtp!,
+                  rideOtp,
                   style: TextStyle(fontFamily: 'Poppins',
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

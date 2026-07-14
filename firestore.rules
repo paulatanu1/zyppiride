@@ -215,6 +215,16 @@ service cloud.firestore {
 
       // No direct deletes - use status updates instead
       allow delete: if false;
+
+      // Server-generated ride OTP + attempt counters (V-04 / W1).
+      // Only the rider may read it — the driver must never see the OTP,
+      // or they could self-verify pickup. Written exclusively by Cloud
+      // Functions (onBookingCreated / verifyRideOtp).
+      match /private/{docId} {
+        allow read: if request.auth != null &&
+                     get(/databases/$(database)/documents/bookings/$(bookingId)).data.userId == request.auth.uid;
+        allow write: if false;
+      }
     }
 
     // ============================================

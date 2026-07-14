@@ -149,3 +149,34 @@ describe("bookings/{id} — driver cannot write status=inProgress (PR 5 / V-04)"
     );
   });
 });
+
+describe("bookings/{id}/private — rider-only OTP subcollection (W1)", () => {
+  after(tearDown);
+  beforeEach(async () => {
+    const env = await getEnv();
+    await env.clearFirestore();
+    await seedBooking("arrived");
+    await seed(`bookings/${BOOKING}/private/otp`, {
+      rideOtp: "654321",
+      otpFailedAttempts: 0,
+      otpLockedUntil: null,
+    });
+  });
+
+  it("allows the rider to read their ride OTP", async () => {
+    const db = await asUser(RIDER);
+    await assertSucceeds(db.doc(`bookings/${BOOKING}/private/otp`).get());
+  });
+
+  it("denies the assigned driver from reading the OTP", async () => {
+    const db = await asUser(DRIVER);
+    await assertFails(db.doc(`bookings/${BOOKING}/private/otp`).get());
+  });
+
+  it("denies any client write to the OTP doc", async () => {
+    const db = await asUser(RIDER);
+    await assertFails(
+        db.doc(`bookings/${BOOKING}/private/otp`).update({rideOtp: "000000"}),
+    );
+  });
+});

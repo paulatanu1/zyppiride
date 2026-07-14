@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {onRequest, onCall, HttpsError} = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
@@ -18,13 +19,27 @@ admin.initializeApp();
 exports.onBookingCreated = onDocumentCreated("bookings/{bookingId}", async (event) => {
   const snap = event.data;
   const booking = snap.data();
-  const {userId, rideOtp} = booking;
+  const {userId} = booking;
   const vehicleType = booking.vehicle?.type ?? "vehicle";
   const bookingId = event.params.bookingId;
 
-  if (!rideOtp) {
-    logger.warn("onBookingCreated: no OTP on booking", bookingId);
-    return null;
+  // Generate the OTP server-side and keep it OFF the booking document:
+  // the assigned driver can read the booking, and a driver who can read
+  // the OTP can self-verify pickup (W1). Riders read it from the
+  // rules-protected private/ subcollection instead.
+  const rideOtp = String(crypto.randomInt(100000, 1000000));
+  await snap.ref.collection("private").doc("otp").set({
+    rideOtp,
+    otpFailedAttempts: 0,
+    otpLockedUntil: null,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Defensive: scrub any client-written OTP from the booking document.
+  if (booking.rideOtp) {
+    await snap.ref.update({
+      rideOtp: admin.firestore.FieldValue.delete(),
+    });
   }
 
   try {
@@ -119,6 +134,10 @@ exports.verifyRideOtp = onCall(async (request) => {
   // which would silently discard the failed-attempts counter and lockout.
   // We commit the write via the transaction, then translate the result to
   // an HttpsError outside.
+  // The OTP and its attempt counters live in the rules-protected
+  // private/ subcollection (written by onBookingCreated), never on the
+  // driver-readable booking document (W1).
+  const otpRef = ref.collection("private").doc("otp");
   const result = await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) return {kind: "not-found"};
@@ -129,8 +148,12 @@ exports.verifyRideOtp = onCall(async (request) => {
       return {kind: "wrong-status", status: b.status};
     }
 
+    const otpSnap = await tx.get(otpRef);
+    const o = otpSnap.exists ? otpSnap.data() : null;
+    if (!o?.rideOtp) return {kind: "no-otp"};
+
     const now = Date.now();
-    const lockedUntil = b.otpLockedUntil?.toMillis?.() || 0;
+    const lockedUntil = o.otpLockedUntil?.toMillis?.() || 0;
     if (now < lockedUntil) {
       return {
         kind: "locked",
@@ -139,8 +162,8 @@ exports.verifyRideOtp = onCall(async (request) => {
       };
     }
 
-    if (b.rideOtp !== otp) {
-      const attempts = (b.otpFailedAttempts || 0) + 1;
+    if (o.rideOtp !== otp) {
+      const attempts = (o.otpFailedAttempts || 0) + 1;
       const update = {
         otpFailedAttempts: attempts,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -153,7 +176,7 @@ exports.verifyRideOtp = onCall(async (request) => {
         update.otpFailedAttempts = 0;
         locked = true;
       }
-      tx.update(ref, update);
+      tx.update(otpRef, update);
       return {
         kind: "invalid-otp",
         attempts: locked ? OTP_MAX_ATTEMPTS : attempts,
@@ -165,10 +188,10 @@ exports.verifyRideOtp = onCall(async (request) => {
     tx.update(ref, {
       status: "inProgress",
       startedAt: admin.firestore.FieldValue.serverTimestamp(),
-      otpFailedAttempts: 0,
-      otpLockedUntil: null,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+    // The OTP is single-use: remove it once the trip has started.
+    tx.delete(otpRef);
     return {kind: "ok"};
   });
 
@@ -183,6 +206,11 @@ exports.verifyRideOtp = onCall(async (request) => {
       throw new HttpsError(
           "failed-precondition",
           `Cannot start trip from status ${result.status}.`,
+      );
+    case "no-otp":
+      throw new HttpsError(
+          "failed-precondition",
+          "Ride OTP is not ready yet. Ask the rider to check their app.",
       );
     case "locked":
       throw new HttpsError(

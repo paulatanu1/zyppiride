@@ -27,8 +27,14 @@ async function seedBooking(overrides = {}) {
     userId: RIDER,
     driver: {driverId: DRIVER},
     status: "arrived",
-    rideOtp: OTP,
     ...overrides,
+  });
+  // OTP lives in the rules-protected private/ subcollection (W1),
+  // written in production by onBookingCreated.
+  await admin.firestore().doc(`bookings/${BOOKING}/private/otp`).set({
+    rideOtp: OTP,
+    otpFailedAttempts: 0,
+    otpLockedUntil: null,
   });
 }
 
@@ -69,6 +75,10 @@ describe("verifyRideOtp", () => {
     assert.strictEqual(res.success, true);
     const snap = await admin.firestore().doc(`bookings/${BOOKING}`).get();
     assert.strictEqual(snap.data().status, "inProgress");
+    // Single-use: the OTP doc is deleted on success.
+    const otpSnap =
+        await admin.firestore().doc(`bookings/${BOOKING}/private/otp`).get();
+    assert.strictEqual(otpSnap.exists, false);
   });
 
   it("rejects when caller is not the assigned driver", async () => {
@@ -93,7 +103,8 @@ describe("verifyRideOtp", () => {
         () => callAsDriver({bookingId: BOOKING, otp: "000000"}),
         "invalid-argument",
     );
-    const snap = await admin.firestore().doc(`bookings/${BOOKING}`).get();
+    const snap =
+        await admin.firestore().doc(`bookings/${BOOKING}/private/otp`).get();
     assert.strictEqual(snap.data().otpFailedAttempts, 1);
   });
 
@@ -104,7 +115,8 @@ describe("verifyRideOtp", () => {
           () => callAsDriver({bookingId: BOOKING, otp: "000000"}),
       );
     }
-    const snap = await admin.firestore().doc(`bookings/${BOOKING}`).get();
+    const snap =
+        await admin.firestore().doc(`bookings/${BOOKING}/private/otp`).get();
     const data = snap.data();
     assert.strictEqual(data.otpFailedAttempts, 0);
     assert.ok(data.otpLockedUntil, "expected otpLockedUntil to be set");
@@ -129,6 +141,18 @@ describe("verifyRideOtp", () => {
     await rejectsWithCode(
         () => callAsDriver({bookingId: BOOKING}),
         "invalid-argument",
+    );
+  });
+
+  it("rejects when the OTP has not been generated yet", async () => {
+    await admin.firestore().doc(`bookings/${BOOKING}`).set({
+      userId: RIDER,
+      driver: {driverId: DRIVER},
+      status: "arrived",
+    });
+    await rejectsWithCode(
+        () => callAsDriver({bookingId: BOOKING, otp: OTP}),
+        "failed-precondition",
     );
   });
 
