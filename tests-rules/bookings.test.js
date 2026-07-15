@@ -150,6 +150,99 @@ describe("bookings/{id} — driver cannot write status=inProgress (PR 5 / V-04)"
   });
 });
 
+describe("bookings/{id} — driver state machine (W5)", () => {
+  after(tearDown);
+  beforeEach(async () => {
+    const env = await getEnv();
+    await env.clearFirestore();
+  });
+
+  it("allows completing from inProgress with end-of-trip fare recalculation", async () => {
+    await seedBooking("inProgress");
+    const db = await asUser(DRIVER);
+    await assertSucceeds(
+        db.doc(`bookings/${BOOKING}`).update({
+          status: "completed",
+          completedAt: new Date(),
+          fareDetails: {totalFare: 180},
+          estimatedDistance: 12.4,
+          estimatedDuration: 38,
+          updatedAt: new Date(),
+        }),
+    );
+  });
+
+  it("denies jumping straight to completed from confirmed", async () => {
+    await seedBooking("confirmed");
+    const db = await asUser(DRIVER);
+    await assertFails(
+        db.doc(`bookings/${BOOKING}`).update({
+          status: "completed",
+          completedAt: new Date(),
+          updatedAt: new Date(),
+        }),
+    );
+  });
+
+  it("denies editing fareDetails mid-ride (status transition without completion)", async () => {
+    await seedBooking("confirmed");
+    const db = await asUser(DRIVER);
+    await assertFails(
+        db.doc(`bookings/${BOOKING}`).update({
+          status: "driverArriving",
+          fareDetails: {totalFare: 999},
+          updatedAt: new Date(),
+        }),
+    );
+  });
+
+  it("denies editing fareDetails without any status change", async () => {
+    await seedBooking("arrived");
+    const db = await asUser(DRIVER);
+    await assertFails(
+        db.doc(`bookings/${BOOKING}`).update({
+          fareDetails: {totalFare: 999},
+          updatedAt: new Date(),
+        }),
+    );
+  });
+
+  it("allows the driver to rate the rider after completion", async () => {
+    await seedBooking("completed");
+    const db = await asUser(DRIVER);
+    await assertSucceeds(
+        db.doc(`bookings/${BOOKING}`).update({
+          driverRating: 5,
+          driverReview: "Great rider",
+          updatedAt: new Date(),
+        }),
+    );
+  });
+
+  it("denies rating bundled with any other field", async () => {
+    await seedBooking("completed");
+    const db = await asUser(DRIVER);
+    await assertFails(
+        db.doc(`bookings/${BOOKING}`).update({
+          driverRating: 5,
+          fareDetails: {totalFare: 999},
+          updatedAt: new Date(),
+        }),
+    );
+  });
+
+  it("denies reverting a completed booking to an earlier status", async () => {
+    await seedBooking("completed");
+    const db = await asUser(DRIVER);
+    await assertFails(
+        db.doc(`bookings/${BOOKING}`).update({
+          status: "inProgress",
+          updatedAt: new Date(),
+        }),
+    );
+  });
+});
+
 describe("bookings/{id}/private — rider-only OTP subcollection (W1)", () => {
   after(tearDown);
   beforeEach(async () => {

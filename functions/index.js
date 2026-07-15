@@ -116,7 +116,7 @@ async function _sendOtpFcm(userId, otp, vehicleType, bookingId) {
 const OTP_MAX_ATTEMPTS = 3;
 const OTP_LOCKOUT_MS = 5 * 60 * 1000;
 
-exports.verifyRideOtp = onCall(async (request) => {
+exports.verifyRideOtp = onCall({enforceAppCheck: true}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Sign in required.");
   }
@@ -234,8 +234,12 @@ exports.verifyRideOtp = onCall(async (request) => {
 // number is already in use. Client is unauthenticated at call time, so this
 // runs with admin credentials. Returns { available: bool } only — never
 // leaks the owning user's identity.
+//
+// enforceAppCheck (W3): without it this callable is an open oracle for
+// enumerating which phone numbers have accounts. App Check limits callers
+// to attested app installs (Play Integrity in release builds).
 // ─────────────────────────────────────────────────────────────────────────────
-exports.checkMobileAvailable = onCall(async (request) => {
+exports.checkMobileAvailable = onCall({enforceAppCheck: true}, async (request) => {
   const raw = request.data?.mobile;
   if (typeof raw !== "string") {
     throw new HttpsError("invalid-argument", "mobile is required.");
@@ -281,7 +285,7 @@ async function _commitInChunks(db, ops) {
   }
 }
 
-exports.deleteAccount = onCall(async (request) => {
+exports.deleteAccount = onCall({enforceAppCheck: true}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Sign in required.");
   }
@@ -361,6 +365,87 @@ exports.deleteAccount = onCall(async (request) => {
 
   logger.info("deleteAccount: completed for", uid);
   return {success: true};
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPPORT TICKETS (W4)
+//
+// Complaints and feedback are created here rather than by direct client
+// writes so ticket IDs come from a transactional counter — the previous
+// client-side scheme (timestamp % 9000) could collide under load.
+// Rules deny client creates on complaints/ and feedbacks/.
+// ─────────────────────────────────────────────────────────────────────────────
+const TICKET_KINDS = {
+  complaint: {collection: "complaints", prefix: "ZY", idField: "ticketId"},
+  feedback: {collection: "feedbacks", prefix: "FB", idField: "feedbackId"},
+};
+
+exports.createSupportTicket = onCall({enforceAppCheck: true}, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Sign in required.");
+  }
+  const uid = request.auth.uid;
+  const data = request.data || {};
+  const kind = TICKET_KINDS[data.kind];
+  if (!kind) {
+    throw new HttpsError("invalid-argument", "kind must be complaint or feedback.");
+  }
+
+  // Server-side validation mirroring the old security-rules checks.
+  const imageUrl = typeof data.imageUrl === "string" ? data.imageUrl : null;
+  let payload;
+  if (data.kind === "complaint") {
+    const {subject, description, priority} = data;
+    if (typeof subject !== "string" || subject.trim() === "" ||
+        typeof description !== "string" || description.trim() === "" ||
+        !["Low", "Medium", "High"].includes(priority)) {
+      throw new HttpsError("invalid-argument", "Invalid complaint fields.");
+    }
+    payload = {
+      userId: uid,
+      subject: subject.trim(),
+      description: description.trim(),
+      priority,
+      imageUrl,
+      status: "Pending",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+  } else {
+    const {rating, message} = data;
+    if (typeof rating !== "number" || rating < 1 || rating > 5 ||
+        typeof message !== "string" || message.trim() === "") {
+      throw new HttpsError("invalid-argument", "Invalid feedback fields.");
+    }
+    payload = {
+      userId: uid,
+      rating,
+      message: message.trim(),
+      imageUrl,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+  }
+
+  const db = admin.firestore();
+  const counterRef = db.collection("counters").doc("supportTickets");
+  const now = new Date();
+  const dateStr = now.getFullYear().toString() +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      String(now.getDate()).padStart(2, "0");
+
+  // Transactional counter → collision-free, monotonically increasing IDs.
+  const ticketId = await db.runTransaction(async (tx) => {
+    const counterSnap = await tx.get(counterRef);
+    const seq = (counterSnap.data()?.[data.kind] || 0) + 1;
+    tx.set(counterRef, {[data.kind]: seq}, {merge: true});
+
+    const id = `${kind.prefix}-${dateStr}-${String(seq).padStart(4, "0")}`;
+    const docRef = db.collection(kind.collection).doc();
+    tx.set(docRef, {...payload, [kind.idField]: id});
+    return id;
+  });
+
+  logger.info(`createSupportTicket: ${data.kind} ${ticketId} for`, uid);
+  return {ticketId};
 });
 
 exports.seedVehicleCatalog = onRequest(async (req, res) => {

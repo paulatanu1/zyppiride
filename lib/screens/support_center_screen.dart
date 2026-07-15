@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -120,21 +121,18 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
         );
       }
 
-      final now = DateTime.now();
-      final dateStr = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
-      final seq = (1000 + (DateTime.now().millisecondsSinceEpoch % 9000)).toString();
-      final ticketId = 'ZY-$dateStr-$seq';
-
-      await FirebaseFirestore.instance.collection(TestMode.complaintsCollection).add({
-        'ticketId': ticketId,
-        'userId': user.uid,
+      // Ticket IDs are allocated server-side from a transactional counter
+      // (W4) — the createSupportTicket callable also writes the document.
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('createSupportTicket')
+          .call<Map<String, dynamic>>({
+        'kind': 'complaint',
         'subject': _subject,
         'description': _descriptionController.text.trim(),
         'priority': _priority,
         'imageUrl': imageUrl,
-        'status': 'Pending',
-        'createdAt': FieldValue.serverTimestamp(),
       });
+      final ticketId = result.data['ticketId'] as String;
 
       if (!mounted) return;
 
@@ -216,19 +214,16 @@ class _SupportCenterScreenState extends State<SupportCenterScreen>
         );
       }
 
-      final now = DateTime.now();
-      final dateStr = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
-      final seq = (1000 + (DateTime.now().millisecondsSinceEpoch % 9000)).toString();
-      final feedbackId = 'FB-$dateStr-$seq';
-
-      await FirebaseFirestore.instance.collection(TestMode.feedbacksCollection).add({
-        'feedbackId': feedbackId,
-        'userId': user.uid,
+      // Reference IDs come from the same transactional counter (W4).
+      final result = await FirebaseFunctions.instance
+          .httpsCallable('createSupportTicket')
+          .call<Map<String, dynamic>>({
+        'kind': 'feedback',
         'rating': _rating,
         'message': _feedbackController.text.trim(),
         'imageUrl': imageUrl,
-        'createdAt': FieldValue.serverTimestamp(),
       });
+      final feedbackId = result.data['ticketId'] as String;
 
       if (!mounted) return;
 

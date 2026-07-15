@@ -188,21 +188,42 @@ service cloud.firestore {
                       request.resource.data.diff(resource.data).affectedKeys()
                         .hasOnly(['userRating', 'userReview', 'updatedAt']));
 
-      // Driver can only update status and ride-lifecycle fields.
-      // fareDetails and paymentStatus are locked once the trip is completed —
-      // only admin can adjust fare or mark payment after that point.
-      // The transition arrived → inProgress (status + startedAt) is reserved
-      // for the verifyRideOtp Cloud Function (V-04), so drivers may not write
-      // status=='inProgress' or startedAt directly from the client.
+      // Driver lifecycle updates follow the booking state machine (W5).
+      // arrived → inProgress is reserved for the verifyRideOtp Cloud
+      // Function (V-04), so it is deliberately absent from the list.
+      function isDriverTransitionValid() {
+        let oldS = resource.data.status;
+        let newS = request.resource.data.status;
+        return (oldS == 'pending' && newS == 'confirmed') ||
+               (oldS == 'confirmed' && newS == 'driverArriving') ||
+               (oldS in ['confirmed', 'driverArriving'] && newS == 'arrived') ||
+               (oldS == 'inProgress' && newS == 'completed') ||
+               (oldS in ['pending', 'confirmed', 'driverArriving', 'arrived'] &&
+                newS == 'cancelled');
+      }
+
+      // Driver moves the booking along the state machine. fareDetails and
+      // the actual distance/duration may only change together with the
+      // inProgress → completed transition (end-of-trip recalculation) —
+      // never mid-ride, and never without a status change.
       allow update: if request.auth != null && isBookingDriver() &&
-                     resource.data.status != 'completed' &&
-                     request.resource.data.status != 'inProgress' &&
+                     'status' in request.resource.data.diff(resource.data).affectedKeys() &&
+                     isDriverTransitionValid() &&
                      request.resource.data.diff(resource.data).affectedKeys()
                        .hasOnly(['status', 'confirmedAt', 'completedAt',
                                  'cancelledAt', 'cancellationReason', 'cancelledBy',
                                  'fareDetails', 'estimatedDistance',
-                                 'estimatedDuration', 'driverRating', 'driverReview',
-                                 'updatedAt']);
+                                 'estimatedDuration', 'updatedAt']) &&
+                     (!request.resource.data.diff(resource.data).affectedKeys()
+                        .hasAny(['fareDetails', 'estimatedDistance', 'estimatedDuration']) ||
+                      request.resource.data.status == 'completed');
+
+      // Driver rates the rider after the trip completed (rating only —
+      // fare, participants, and status stay locked).
+      allow update: if request.auth != null && isBookingDriver() &&
+                     resource.data.status == 'completed' &&
+                     request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['driverRating', 'driverReview', 'updatedAt']);
 
       // Driver records manual cash payment after trip completion.
       // Only receipt fields may change; fare, participants, and status are locked.
@@ -331,22 +352,10 @@ service cloud.firestore {
     // ============================================
     match /complaints/{complaintId} {
       allow read, update: if isAdmin();
-      function isValidComplaint() {
-        let data = request.resource.data;
-        return data.keys().hasAll(['userId', 'ticketId', 'subject', 'description',
-                                   'priority', 'status', 'createdAt']) &&
-               data.userId is string &&
-               data.ticketId is string &&
-               data.subject is string &&
-               data.description is string &&
-               data.priority in ['Low', 'Medium', 'High'] &&
-               data.status == 'Pending' &&
-               data.userId == request.auth.uid;
-      }
-
-      allow create: if request.auth != null && isValidComplaint();
+      // Created exclusively by the createSupportTicket Cloud Function so
+      // ticket IDs come from a transactional counter (W4).
+      allow create: if false;
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow update: if false;
       allow delete: if false;
     }
 
@@ -355,21 +364,15 @@ service cloud.firestore {
     // ============================================
     match /feedbacks/{feedbackId} {
       allow read: if isAdmin();
-      function isValidFeedback() {
-        let data = request.resource.data;
-        return data.keys().hasAll(['userId', 'feedbackId', 'rating',
-                                   'message', 'createdAt']) &&
-               data.userId is string &&
-               data.feedbackId is string &&
-               data.rating is number &&
-               data.rating >= 1 && data.rating <= 5 &&
-               data.message is string &&
-               data.userId == request.auth.uid;
-      }
-
-      allow create: if request.auth != null && isValidFeedback();
+      // Created exclusively by the createSupportTicket Cloud Function (W4).
+      allow create: if false;
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
       allow update, delete: if false;
+    }
+
+    // Ticket-ID counter — server-only (createSupportTicket transaction).
+    match /counters/{counterId} {
+      allow read, write: if false;
     }
   }
 }
