@@ -78,3 +78,6 @@ coverage/
 test_reports/
 # E2E Test Results
 test_results/
+
+# Playwright MCP browser automation debug output (console logs, DOM snapshots)
+.playwright-mcp/
