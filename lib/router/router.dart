@@ -1,4 +1,6 @@
 // lib/router/router.dart
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -46,6 +48,26 @@ import '../screens/vehicle_registration_screen.dart';
 import '../screens/vehicle_view_screen.dart';
 import '../screens/weekly_schedule_screen.dart';
 import 'routes_name.dart';
+
+/// Bridges a Stream (Firebase auth state changes) to GoRouter's
+/// [Listenable]-based `refreshListenable`, so `redirect` re-evaluates the
+/// moment a user signs in/out — not just on the next navigation. Without
+/// this, a screen built while logged in stays mounted (querying Firestore
+/// with the stale uid) until the user happens to navigate again.
+class GoRouterRefreshStream extends ChangeNotifier {
+  late final StreamSubscription<dynamic> _subscription;
+
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
 
 class AppRouter {
   // Public routes that don't require authentication
@@ -96,6 +118,8 @@ class AppRouter {
 
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
+    refreshListenable:
+        GoRouterRefreshStream(FirebaseAuth.instance.authStateChanges()),
 
     // Global authentication redirect
     redirect: (context, state) async {
