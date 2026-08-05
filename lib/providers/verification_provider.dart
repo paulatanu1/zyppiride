@@ -103,7 +103,14 @@ class VerificationNotifier extends StateNotifier<VerificationState> {
       success: (eligibility) {
         state = state.copyWith(eligibility: eligibility);
       },
-      failure: (_) {},
+      failure: (exception) {
+        AppLogger.error(
+          'Eligibility check failed',
+          error: exception.message,
+          tag: 'VerificationNotifier',
+        );
+        state = state.copyWith(error: exception.message);
+      },
     );
   }
 

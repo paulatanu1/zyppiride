@@ -85,12 +85,23 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         return;
       }
 
+      final currentUid = FirebaseAuth.instance.currentUser?.uid;
+      if (currentUid == null) {
+        setState(() {
+          _errorMessage = 'Your session expired. Please sign in again.';
+        });
+        return;
+      }
+
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
       try {
-        await FirebaseFirestore.instance.collection(TestMode.usersCollection).doc(widget.userId).update({
+        // Always write to the authenticated user's own doc — never trust
+        // widget.userId (a router query param) for a write target, since
+        // this screen only requires auth, not that the ids match.
+        await FirebaseFirestore.instance.collection(TestMode.usersCollection).doc(currentUid).update({
           'role': _role,
           'fullName': _fullNameController.text.trim(),
           'dob': _dob,
@@ -101,10 +112,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         await fcm.subscribeToTopic('all_users');
         if (_role == 'User') {
           await fcm.subscribeToTopic('users');
-          await fcm.subscribeToTopic('user_${widget.userId}');
+          await fcm.subscribeToTopic('user_$currentUid');
         } else {
           await fcm.subscribeToTopic('drivers');
-          await fcm.subscribeToTopic('driver_${widget.userId}');
+          await fcm.subscribeToTopic('driver_$currentUid');
         }
 
         if (mounted) {

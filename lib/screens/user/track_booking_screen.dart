@@ -1414,12 +1414,12 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(dialogContext);
-              final success = await ref
-                  .read(bookingProvider.notifier)
-                  .cancelBooking(reason: 'Cancelled by user');
+              final notifier = ref.read(bookingProvider.notifier);
+              final success =
+                  await notifier.cancelBooking(reason: 'Cancelled by user');
 
+              if (!mounted) return;
               if (success) {
-                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -1430,6 +1430,16 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
                   ),
                 );
                 context.go('/user-dashboard');
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      ref.read(bookingProvider).error ?? 'Failed to cancel booking',
+                      style: TextStyle(fontFamily: 'Poppins'),
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
             },
             style: ElevatedButton.styleFrom(
@@ -1507,28 +1517,27 @@ class _TrackBookingScreenState extends ConsumerState<TrackBookingScreen>
             ElevatedButton(
               onPressed: () async {
                 Navigator.pop(dialogContext);
-                final success = await ref
-                    .read(bookingProvider.notifier)
-                    .rateBooking(
-                      booking.bookingId,
-                      rating.toDouble(),
-                      review: reviewController.text.isNotEmpty
-                          ? reviewController.text
-                          : null,
-                    );
+                final notifier = ref.read(bookingProvider.notifier);
+                final success = await notifier.rateBooking(
+                  booking.bookingId,
+                  rating.toDouble(),
+                  review: reviewController.text.isNotEmpty
+                      ? reviewController.text
+                      : null,
+                );
 
-                if (success) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Thank you for your feedback!',
-                        style: TextStyle(fontFamily: 'Poppins'),
-                      ),
-                      backgroundColor: Colors.green,
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Thank you for your feedback!'
+                          : ref.read(bookingProvider).error ?? 'Failed to submit rating',
+                      style: TextStyle(fontFamily: 'Poppins'),
                     ),
-                  );
-                }
+                    backgroundColor: success ? Colors.green : Colors.red,
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,

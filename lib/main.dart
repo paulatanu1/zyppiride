@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'providers/notification_provider.dart';
 import 'router/router.dart';
+import 'router/routes_name.dart';
 import 'services/notification_service.dart';
 
 /// Global scaffold messenger key — use this for all app-wide snackbars so they
@@ -101,7 +102,21 @@ class _MyAppState extends ConsumerState<MyApp> {
     // Initialize notifications after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(notificationProvider.notifier).initialize();
+      ref
+          .read(notificationProvider.notifier)
+          .setNotificationTapHandler(_handleNotificationTap);
     });
+  }
+
+  void _handleNotificationTap(Map<String, dynamic> data) {
+    switch (data['type']) {
+      case 'NEW_BOOKING_REQUEST':
+        AppRouter.router.goNamed(RoutesName.driverBookingDashboard);
+        break;
+      case 'RIDE_OTP':
+        AppRouter.router.goNamed(RoutesName.trackActiveBooking);
+        break;
+    }
   }
 
   @override

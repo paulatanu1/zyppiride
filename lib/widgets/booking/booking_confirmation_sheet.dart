@@ -457,6 +457,9 @@ class _BookingConfirmationSheetState
       distanceKm: widget.estimatedDistance,
       promoCode: _promoCode,
       promoDiscount: _promoDiscount,
+      isNightTime: FareCalculator.isNightTime(),
+      isPeakHour: FareCalculator.isPeakHour(),
+      minimumFare: widget.vehicle.pricing.minimumFare,
     );
 
     final breakdownItems = FareCalculator.getFareBreakdown(fareDetails);
@@ -605,6 +608,9 @@ class _BookingConfirmationSheetState
       distanceKm: widget.estimatedDistance,
       promoCode: _promoCode,
       promoDiscount: _promoDiscount,
+      isNightTime: FareCalculator.isNightTime(),
+      isPeakHour: FareCalculator.isPeakHour(),
+      minimumFare: widget.vehicle.pricing.minimumFare,
     );
     return FareCalculator.formatFare(fareDetails.totalFare);
   }

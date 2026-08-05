@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {onRequest, onCall, HttpsError} = require("firebase-functions/v2/https");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 admin.initializeApp();
@@ -49,8 +50,70 @@ exports.onBookingCreated = onDocumentCreated("bookings/{bookingId}", async (even
     logger.error("OTP FCM notification failed:", err);
   }
 
+  try {
+    await _sendNewBookingFcm(booking, bookingId);
+    logger.info("New-booking FCM notification sent for booking", bookingId);
+  } catch (err) {
+    logger.error("New-booking FCM notification failed:", err);
+  }
+
   return null;
 });
+
+/**
+ * Pushes a "new booking request" alert to the assigned driver's device via FCM.
+ *
+ * Without this, a driver whose app is backgrounded or closed never learns a
+ * booking arrived — they'd only see it if they happened to have the pending
+ * requests dashboard open (Firestore snapshot listener).
+ */
+async function _sendNewBookingFcm(booking, bookingId) {
+  const driverId = booking.driver?.driverId;
+  if (!driverId) {
+    logger.warn("No driver.driverId on booking — cannot send new-booking notification");
+    return;
+  }
+
+  const driverSnap = await admin.firestore().collection("users").doc(driverId).get();
+  const fcmToken = driverSnap.data()?.fcmToken;
+
+  if (!fcmToken) {
+    logger.info("No FCM token for driver", driverId, "— skipping new-booking push");
+    return;
+  }
+
+  const pickup = booking.pickupLocation?.address ?? "pickup";
+  const drop = booking.dropLocation?.address ?? "drop";
+  const fare = booking.fareDetails?.totalFare;
+
+  await admin.messaging().send({
+    token: fcmToken,
+    notification: {
+      title: "New Booking Request!",
+      body: fare != null ?
+        `${pickup} → ${drop} · ₹${fare}` :
+        `${pickup} → ${drop}`,
+    },
+    data: {
+      type: "NEW_BOOKING_REQUEST",
+      bookingId: bookingId,
+    },
+    android: {
+      priority: "high",
+      notification: {
+        channelId: "zyppi_ride_channel",
+      },
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: "default",
+          badge: 1,
+        },
+      },
+    },
+  });
+}
 
 /**
  * Pushes the ride OTP to the passenger's device via Firebase Cloud Messaging.
@@ -446,6 +509,42 @@ exports.createSupportTicket = onCall({enforceAppCheck: true}, async (request) =>
 
   logger.info(`createSupportTicket: ${data.kind} ${ticketId} for`, uid);
   return {ticketId};
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPIRE STALE PENDING BOOKINGS
+//
+// A `pending` booking no driver ever accepts previously sat forever —
+// BookingService.expireOldBookings() existed client-side but nothing ever
+// called it (it's a no-op without adminOverride, and only a trusted server
+// context should set that). This runs the same query/transition server-side
+// on a schedule so `canCreateBooking`/`getActiveBooking` stop treating an
+// abandoned pending booking as still active.
+// ─────────────────────────────────────────────────────────────────────────────
+exports.expireOldBookings = onSchedule("every 5 minutes", async () => {
+  const db = admin.firestore();
+  const cutoff = admin.firestore.Timestamp.fromMillis(Date.now() - 10 * 60 * 1000);
+
+  const staleBookings = await db.collection("bookings")
+      .where("status", "==", "pending")
+      .where("createdAt", "<", cutoff)
+      .get();
+
+  if (staleBookings.empty) {
+    return null;
+  }
+
+  const batch = db.batch();
+  for (const doc of staleBookings.docs) {
+    batch.update(doc.ref, {
+      status: "expired",
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+  await batch.commit();
+
+  logger.info(`expireOldBookings: expired ${staleBookings.size} booking(s)`);
+  return null;
 });
 
 exports.seedVehicleCatalog = onRequest(async (req, res) => {

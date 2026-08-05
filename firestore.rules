@@ -25,7 +25,7 @@ service cloud.firestore {
 
     // Check if user is trying to go online
     function isGoingOnline() {
-      return request.resource.data.isOnline == true &&
+      return request.resource.data.get('isOnline', false) == true &&
              (!('isOnline' in resource.data) || resource.data.isOnline == false);
     }
 

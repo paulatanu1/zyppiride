@@ -141,6 +141,7 @@ class _DriverBookingDashboardScreenState
                             _handleComplete(driverState.activeRide!),
                         onNavigate: () =>
                             _handleNavigate(driverState.activeRide!),
+                        onCancel: () => _handleDriverCancel(driverState.activeRide!),
                       ),
                     ],
                   ),
@@ -433,12 +434,14 @@ class _DriverBookingDashboardScreenState
 
     if (!confirmed) return;
 
-    final success =
-        await ref.read(driverBookingProvider.notifier).acceptBooking(booking.bookingId);
+    final notifier = ref.read(driverBookingProvider.notifier);
+    final success = await notifier.acceptBooking(booking.bookingId);
 
     if (mounted) {
       _showSnackBar(
-        success ? 'Booking accepted! Head to pickup location.' : 'Failed to accept booking',
+        success
+            ? 'Booking accepted! Head to pickup location.'
+            : ref.read(driverBookingProvider).error ?? 'Failed to accept booking',
         success ? Colors.green : Colors.red,
       );
     }
@@ -454,12 +457,38 @@ class _DriverBookingDashboardScreenState
 
     if (!confirmed) return;
 
-    final success =
-        await ref.read(driverBookingProvider.notifier).rejectBooking(booking.bookingId);
+    final notifier = ref.read(driverBookingProvider.notifier);
+    final success = await notifier.rejectBooking(booking.bookingId);
 
     if (mounted) {
       _showSnackBar(
-        success ? 'Booking rejected' : 'Failed to reject booking',
+        success
+            ? 'Booking rejected'
+            : ref.read(driverBookingProvider).error ?? 'Failed to reject booking',
+        success ? Colors.grey : Colors.red,
+      );
+    }
+  }
+
+  Future<void> _handleDriverCancel(Booking booking) async {
+    final confirmed = await _showConfirmDialog(
+      title: 'Cancel Trip',
+      message:
+          'Are you sure you want to cancel this trip? The rider will be notified.',
+      confirmText: 'Cancel Trip',
+      confirmColor: Colors.red,
+    );
+
+    if (!confirmed) return;
+
+    final notifier = ref.read(driverBookingProvider.notifier);
+    final success = await notifier.cancelAcceptedBooking(booking.bookingId);
+
+    if (mounted) {
+      _showSnackBar(
+        success
+            ? 'Trip cancelled'
+            : ref.read(driverBookingProvider).error ?? 'Failed to cancel trip',
         success ? Colors.grey : Colors.red,
       );
     }
@@ -477,7 +506,7 @@ class _DriverBookingDashboardScreenState
         _showSnackBar(
           success
               ? 'Marked as arrived. Ask customer for OTP to start trip.'
-              : 'Failed to update status',
+              : ref.read(driverBookingProvider).error ?? 'Failed to update status',
           success ? Colors.blue : Colors.red,
         );
       }
@@ -590,7 +619,10 @@ class _DriverBookingDashboardScreenState
         // Immediately prompt for cash collection
         await _showPaymentRecordDialog(booking);
       } else {
-        _showSnackBar('Failed to complete trip', Colors.red);
+        _showSnackBar(
+          ref.read(driverBookingProvider).error ?? 'Failed to complete trip',
+          Colors.red,
+        );
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);

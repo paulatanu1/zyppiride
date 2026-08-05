@@ -96,13 +96,20 @@ class DocumentVerificationService {
         'verificationSubmittedAt': FieldValue.serverTimestamp(),
       });
 
-      // Update all vehicles to submitted
+      // Update vehicles to submitted — but never regress a vehicle that's
+      // already 'approved'. Without this guard, a driver adding a new
+      // vehicle and resubmitting would knock every previously-approved
+      // vehicle back to 'submitted', silently blocking them from going
+      // online until an admin re-reviews docs that were never touched.
       final vehiclesSnapshot = await _firestore
           .collection(TestMode.vehiclesCollection)
           .where('userId', isEqualTo: userId)
           .get();
 
       for (final doc in vehiclesSnapshot.docs) {
+        final currentStatus =
+            (doc.data()['documentStatus'] as String?)?.toLowerCase();
+        if (currentStatus == 'approved') continue;
         batch.update(doc.reference, {
           'documentStatus': 'submitted',
           'submittedAt': FieldValue.serverTimestamp(),
@@ -318,10 +325,23 @@ class DocumentVerificationService {
         if (vehiclesSnapshot.docs.isNotEmpty) {
           final batch = _firestore.batch();
           for (final doc in vehiclesSnapshot.docs) {
-            batch.update(doc.reference, {
+            final update = <String, dynamic>{
               'documentStatus': status,
               'documentStatusUpdatedAt': FieldValue.serverTimestamp(),
-            });
+            };
+            // A driver online when their approval is revoked must not stay
+            // live/matchable — force them offline in the same write so
+            // there's no window where a rejected driver still shows online.
+            if (status == 'rejected') {
+              update['isOnline'] = false;
+            }
+            batch.update(doc.reference, update);
+          }
+          if (status == 'rejected') {
+            batch.update(
+              _firestore.collection(TestMode.usersCollection).doc(userId),
+              {'isOnline': false},
+            );
           }
           await batch.commit();
         }

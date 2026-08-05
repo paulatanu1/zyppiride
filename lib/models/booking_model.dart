@@ -287,7 +287,11 @@ class FareDetails {
     return defaultValue;
   }
 
-  /// Calculate fare from distance and pricing
+  /// Calculate fare from distance and pricing.
+  ///
+  /// [waitingMinutes] under [freeWaitingMinutes] are not charged. [isNightTime]
+  /// and [isPeakHour] apply the documented 10%/15% surcharges to the subtotal
+  /// before GST. [minimumFare], when set, floors the total fare.
   factory FareDetails.calculate({
     required double baseFare,
     required double perKmRate,
@@ -296,20 +300,39 @@ class FareDetails {
     int durationMinutes = 0,
     double waitingMinutes = 0,
     double waitingPerMinute = 2,
+    double freeWaitingMinutes = 3,
     double tollCharges = 0,
     double gstPercent = 5,
     double discount = 0,
     String? promoCode,
     double? promoDiscount,
+    bool isNightTime = false,
+    bool isPeakHour = false,
+    double nightSurchargePercent = 10,
+    double peakHourSurchargePercent = 15,
+    double minimumFare = 0,
   }) {
     final distanceFare = distanceKm * perKmRate;
     final timeFare = durationMinutes * perMinuteRate;
-    final waitingCharges = waitingMinutes * waitingPerMinute;
+    final chargeableWaitingMinutes =
+        (waitingMinutes - freeWaitingMinutes).clamp(0, double.infinity);
+    final waitingCharges = chargeableWaitingMinutes * waitingPerMinute;
 
-    final subtotal = baseFare + distanceFare + timeFare + waitingCharges + tollCharges;
+    var subtotal = baseFare + distanceFare + timeFare + waitingCharges + tollCharges;
+    if (isNightTime) {
+      subtotal += subtotal * (nightSurchargePercent / 100);
+    }
+    if (isPeakHour) {
+      subtotal += subtotal * (peakHourSurchargePercent / 100);
+    }
+
     final gstAmount = (subtotal * gstPercent) / 100;
     final totalDiscount = discount + (promoDiscount ?? 0);
-    final totalFare = subtotal + gstAmount - totalDiscount;
+    var totalFare = subtotal + gstAmount - totalDiscount;
+    totalFare = totalFare > 0 ? totalFare : 0;
+    if (totalFare < minimumFare) {
+      totalFare = minimumFare;
+    }
 
     return FareDetails(
       baseFare: baseFare,
@@ -319,7 +342,7 @@ class FareDetails {
       tollCharges: tollCharges,
       gstAmount: gstAmount,
       discount: totalDiscount,
-      totalFare: totalFare > 0 ? totalFare : 0,
+      totalFare: totalFare,
       promoCode: promoCode,
       promoDiscount: promoDiscount,
     );

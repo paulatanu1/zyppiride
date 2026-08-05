@@ -30,8 +30,26 @@ class DriverStatusService {
         );
       }
 
+      // firestore.rules only allows isOnline=true writes on vehicles whose
+      // own documentStatus is 'approved'. Firestore batches are all-or-nothing,
+      // so including even one unapproved vehicle would deny the ENTIRE batch —
+      // silently blocking the driver's already-approved vehicles from going
+      // online too. Going offline has no such restriction.
+      final targetDocs = isOnline
+          ? vehiclesSnapshot.docs
+              .where((doc) => doc.data()['documentStatus'] == 'approved')
+              .toList()
+          : vehiclesSnapshot.docs;
+
+      if (isOnline && targetDocs.isEmpty) {
+        AppLogger.warning('No approved vehicles found for driver $userId');
+        return Result.failure(
+          DatabaseException.notFound('No approved vehicles to go online with'),
+        );
+      }
+
       // Update online status for all vehicles
-      for (final doc in vehiclesSnapshot.docs) {
+      for (final doc in targetDocs) {
         batch.update(doc.reference, {
           'isOnline': isOnline,
           'lastOnlineAt': isOnline ? FieldValue.serverTimestamp() : null,

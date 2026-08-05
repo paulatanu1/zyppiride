@@ -1,4 +1,5 @@
 // lib/router/router.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +25,7 @@ import 'package:zyppi_ride/screens/user/user_dashboard.dart';
 import 'package:zyppi_ride/screens/user/user_profile_screen.dart';
 import 'package:zyppi_ride/screens/user/vehicle_details_screen.dart';
 
+import '../core/constants/test_mode.dart';
 import '../screens/active_vehicles_screen.dart';
 import '../screens/agreement_signing_screen.dart';
 import '../screens/auth_screen.dart';
@@ -55,7 +57,6 @@ class AppRouter {
     '/phone-auth',
     '/forgot-password',
     '/email-verification',
-    '/role-selection',
   ];
 
   // Check if route requires authentication
@@ -63,14 +64,57 @@ class AppRouter {
     return !_publicRoutes.any((route) => location.startsWith(route));
   }
 
+  // Driver-only vs user-only landing routes. Cross-navigation between these
+  // (e.g. a rider deep-linking into the driver dashboard) previously reached
+  // the wrong role's screens entirely — Firestore rules still block the
+  // underlying data reads/writes, but the UI itself would render broken.
+  static const List<String> _driverOnlyRoutes = [
+    '/mainDashboard',
+    '/driver-booking-dashboard',
+    '/driver-availability',
+  ];
+  static const List<String> _userOnlyRoutes = [
+    '/user-dashboard',
+  ];
+
+  // Cached per-uid so redirect (which fires on every navigation) doesn't
+  // re-read Firestore each time; invalidated whenever the uid changes.
+  static String? _cachedRoleUid;
+  static String? _cachedRole;
+
+  static Future<String?> _getRole(String uid) async {
+    if (_cachedRoleUid == uid && _cachedRole != null) return _cachedRole;
+    final doc = await FirebaseFirestore.instance
+        .collection(TestMode.usersCollection)
+        .doc(uid)
+        .get();
+    final role = doc.data()?['role'] as String?;
+    _cachedRoleUid = uid;
+    _cachedRole = role;
+    return role;
+  }
+
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
 
     // Global authentication redirect
-    redirect: (context, state) {
+    redirect: (context, state) async {
       final user = FirebaseAuth.instance.currentUser;
       final isLoggedIn = user != null;
       final currentPath = state.uri.path;
+
+      // A signed-in user landing back on the sign-in/sign-up screens (e.g.
+      // browser back button, a stray deep link) would otherwise re-render
+      // login/registration UI over a live session. Bounce through splash,
+      // which already knows how to route a logged-in user to the right
+      // place (dashboard, or role-selection if their profile is incomplete).
+      // Deliberately excludes phone-auth/email-verification/role-selection —
+      // those screens are legitimately visited while already signed in,
+      // mid-signup.
+      const reAuthRoutes = ['/login', '/auth', '/registration'];
+      if (isLoggedIn && reAuthRoutes.any((r) => currentPath.startsWith(r))) {
+        return '/splash';
+      }
 
       // Allow public routes without authentication
       if (!_isProtectedRoute(currentPath)) {
@@ -80,6 +124,32 @@ class AppRouter {
       // Redirect to login if not authenticated and trying to access protected route
       if (!isLoggedIn && _isProtectedRoute(currentPath)) {
         return '/login';
+      }
+
+      final wantsDriverRoute =
+          _driverOnlyRoutes.any((route) => currentPath.startsWith(route));
+      final wantsUserRoute =
+          _userOnlyRoutes.any((route) => currentPath.startsWith(route));
+
+      if (isLoggedIn && (wantsDriverRoute || wantsUserRoute)) {
+        // Fail open on lookup errors — the Firestore rules remain the real
+        // security boundary; this redirect only prevents a confusing wrong-
+        // role UI, so an unknown role should never trap the user mid-navigation.
+        String? role;
+        try {
+          role = await _getRole(user.uid);
+        } catch (_) {
+          return null;
+        }
+        final isDriver = role == 'Driver' || role == 'Vehicle Owner';
+        final isUser = role == 'User';
+
+        if (wantsDriverRoute && isUser) {
+          return '/user-dashboard';
+        }
+        if (wantsUserRoute && isDriver) {
+          return '/mainDashboard';
+        }
       }
 
       return null;
@@ -178,7 +248,7 @@ class AppRouter {
 
       GoRoute(
         path: '/vehicle-details',
-        name: 'vehicle-details',
+        name: RoutesName.vehicleDetails,
         builder: (context, state) {
           final vehicleId = state.uri.queryParameters['vehicleId'];
           return VehicleDetailsScreen(vehicleId: vehicleId);
@@ -229,7 +299,7 @@ class AppRouter {
 
       GoRoute(
         path: '/user-ride-history',
-        name: 'user-ride-history',
+        name: RoutesName.userRideHistory,
         builder: (context, state) => const user_ride_history.UserRideHistoryScreen(),
       ),
 
@@ -275,14 +345,14 @@ class AppRouter {
       // User Profile Screen (Modern Design)
       GoRoute(
         path: '/user-profile',
-        name: 'user-profile',
+        name: RoutesName.userProfile,
         builder: (context, state) => const UserProfileScreen(),
       ),
 
       // Driver Profile Screen (Modern Design)
       GoRoute(
         path: '/driver-profile',
-        name: 'driver-profile',
+        name: RoutesName.driverProfile,
         builder: (context, state) {
           final userId = state.uri.queryParameters['userId'] ??
               FirebaseAuth.instance.currentUser?.uid ?? '';

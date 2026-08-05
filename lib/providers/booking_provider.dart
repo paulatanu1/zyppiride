@@ -231,59 +231,53 @@ class BookingNotifier extends StateNotifier<BookingState> {
 
     state = state.copyWith(isLoading: true, clearError: true);
 
-    try {
-      final success = await _bookingService.cancelBooking(
-        state.activeBooking!.bookingId,
-        _userId!,
-        reason: reason,
-      );
+    final result = await _bookingService.cancelBooking(
+      state.activeBooking!.bookingId,
+      _userId!,
+      reason: reason,
+    );
 
-      if (success) {
-        state = state.copyWith(
-          isLoading: false,
-          clearActiveBooking: true,
-        );
-        // Refresh history
-        await loadBookingHistory(refresh: true);
+    final success = result.when(
+      success: (_) {
+        state = state.copyWith(isLoading: false, clearActiveBooking: true);
         return true;
-      } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Failed to cancel booking',
-        );
+      },
+      failure: (exception) {
+        state = state.copyWith(isLoading: false, error: exception.message);
         return false;
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'An error occurred while cancelling',
-      );
-      return false;
-    }
+      },
+    );
+
+    if (success) await loadBookingHistory(refresh: true);
+    return success;
   }
 
   /// Rate a completed booking
   Future<bool> rateBooking(String bookingId, double rating, {String? review}) async {
     if (_userId == null) return false;
 
-    try {
-      final success = await _bookingService.addUserRating(
-        bookingId,
-        _userId!,
-        rating,
-        review: review,
-      );
+    final result = await _bookingService.addUserRating(
+      bookingId,
+      _userId!,
+      rating,
+      review: review,
+    );
 
-      if (success) {
-        // Refresh history to show updated rating
-        await loadBookingHistory(refresh: true);
-      }
+    final success = result.when(
+      success: (_) {
+        state = state.copyWith(clearError: true);
+        return true;
+      },
+      failure: (exception) {
+        AppLogger.error('Error rating booking',
+            error: exception.message, tag: 'BookingNotifier');
+        state = state.copyWith(error: exception.message);
+        return false;
+      },
+    );
 
-      return success;
-    } catch (e) {
-      AppLogger.error('Error rating booking', error: e, tag: 'BookingNotifier');
-      return false;
-    }
+    if (success) await loadBookingHistory(refresh: true);
+    return success;
   }
 
   /// Load booking history with correct cursor-based pagination.
@@ -468,59 +462,92 @@ class DriverBookingNotifier extends StateNotifier<DriverBookingState> {
 
     state = state.copyWith(isLoading: true, clearError: true);
 
-    try {
-      final success = await _bookingService.acceptBooking(bookingId, _driverId!);
+    final result = await _bookingService.acceptBooking(bookingId, _driverId!);
 
-      if (success) {
-        await loadActiveRide();
+    final success = result.when(
+      success: (_) {
         state = state.copyWith(isLoading: false);
         return true;
-      } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Failed to accept booking',
-        );
+      },
+      failure: (exception) {
+        state = state.copyWith(isLoading: false, error: exception.message);
         return false;
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'An error occurred',
-      );
-      return false;
-    }
+      },
+    );
+
+    if (success) await loadActiveRide();
+    return success;
   }
 
   /// Reject a booking request
   Future<bool> rejectBooking(String bookingId, {String? reason}) async {
     if (_driverId == null) return false;
 
-    try {
-      return await _bookingService.rejectBooking(
-        bookingId,
-        _driverId!,
-        reason: reason,
-      );
-    } catch (e) {
-      return false;
+    final result = await _bookingService.rejectBooking(
+      bookingId,
+      _driverId!,
+      reason: reason,
+    );
+
+    return result.when(
+      success: (_) => true,
+      failure: (exception) {
+        state = state.copyWith(error: exception.message);
+        return false;
+      },
+    );
+  }
+
+  /// Cancel a booking already accepted (confirmed/driverArriving/arrived —
+  /// before the trip starts). Distinct from [rejectBooking], which only
+  /// covers pending requests.
+  Future<bool> cancelAcceptedBooking(String bookingId, {String? reason}) async {
+    if (_driverId == null) return false;
+
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    final result = await _bookingService.driverCancelBooking(
+      bookingId,
+      _driverId!,
+      reason: reason,
+    );
+
+    final success = result.when(
+      success: (_) {
+        state = state.copyWith(isLoading: false, clearActiveRide: true);
+        return true;
+      },
+      failure: (exception) {
+        state = state.copyWith(isLoading: false, error: exception.message);
+        return false;
+      },
+    );
+
+    if (success) {
+      await _locationService.stopTracking();
     }
+    return success;
   }
 
   /// Mark as arrived at pickup
   Future<bool> arrivedAtPickup(String bookingId) async {
     if (_driverId == null) return false;
 
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, clearError: true);
 
-    try {
-      final success = await _bookingService.driverArrived(bookingId, _driverId!);
-      await loadActiveRide();
-      state = state.copyWith(isLoading: false);
-      return success;
-    } catch (e) {
-      state = state.copyWith(isLoading: false);
-      return false;
-    }
+    final result = await _bookingService.driverArrived(bookingId, _driverId!);
+    await loadActiveRide();
+
+    return result.when(
+      success: (_) {
+        state = state.copyWith(isLoading: false);
+        return true;
+      },
+      failure: (exception) {
+        state = state.copyWith(isLoading: false, error: exception.message);
+        return false;
+      },
+    );
   }
 
   /// Start the trip with OTP verification.
@@ -575,37 +602,34 @@ class DriverBookingNotifier extends StateNotifier<DriverBookingState> {
   }) async {
     if (_driverId == null) return false;
 
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, clearError: true);
 
-    try {
-      // Stop location tracking before completing trip
-      await _locationService.stopTracking();
-      AppLogger.info('Stopped location tracking for completed trip', tag: 'DriverBooking');
+    // Stop location tracking before completing trip
+    await _locationService.stopTracking();
+    AppLogger.info('Stopped location tracking for completed trip', tag: 'DriverBooking');
 
-      final success = await _bookingService.completeTrip(
-        bookingId,
-        _driverId!,
-        actualDistance: actualDistance,
-        actualDuration: actualDuration,
-        waitingMinutes: waitingMinutes,
-        tollCharges: tollCharges,
-      );
+    final result = await _bookingService.completeTrip(
+      bookingId,
+      _driverId!,
+      actualDistance: actualDistance,
+      actualDuration: actualDuration,
+      waitingMinutes: waitingMinutes,
+      tollCharges: tollCharges,
+    );
 
-      if (success) {
-        state = state.copyWith(
-          isLoading: false,
-          clearActiveRide: true,
-        );
-        await loadRideHistory(refresh: true);
+    final success = result.when(
+      success: (_) {
+        state = state.copyWith(isLoading: false, clearActiveRide: true);
         return true;
-      }
+      },
+      failure: (exception) {
+        state = state.copyWith(isLoading: false, error: exception.message);
+        return false;
+      },
+    );
 
-      state = state.copyWith(isLoading: false);
-      return false;
-    } catch (e) {
-      state = state.copyWith(isLoading: false);
-      return false;
-    }
+    if (success) await loadRideHistory(refresh: true);
+    return success;
   }
 
   /// Record cash payment received after trip completion.
@@ -624,11 +648,19 @@ class DriverBookingNotifier extends StateNotifier<DriverBookingState> {
   Future<bool> rateUser(String bookingId, double rating, {String? review}) async {
     if (_driverId == null) return false;
 
-    return _bookingService.addDriverRating(
+    final result = await _bookingService.addDriverRating(
       bookingId,
       _driverId!,
       rating,
       review: review,
+    );
+
+    return result.when(
+      success: (_) => true,
+      failure: (exception) {
+        state = state.copyWith(error: exception.message);
+        return false;
+      },
     );
   }
 

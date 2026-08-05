@@ -729,10 +729,10 @@ class _UserDashboardState extends ConsumerState<UserDashboard>
   Widget _buildServiceGrid(String userId) {
     final services = [
       {'icon': Icons.local_taxi,           'title': 'Local Transport', 'desc': 'Quick city rides',     'route': RoutesName.localTransport,    'color': _kBrand},
-      // Outstation and Goods Transport are hidden until their booking flows
-      // are implemented (v2) — dead entry points fail Play review.
-      {'icon': Icons.fire_truck,           'title': 'Mini Truck',      'desc': 'Heavy load moving',     'route': RoutesName.miniTruckDelivery, 'color': _kError},
-      {'icon': Icons.two_wheeler,          'title': 'Bike Parcel',     'desc': 'Quick deliveries',      'route': RoutesName.bikeParcel,        'color': _kSuccess},
+      // Outstation, Goods Transport, Mini Truck, and Bike Parcel are hidden
+      // until their booking flows are implemented (v2) — the submit handlers
+      // are still TODO stubs that show a toast and create no booking, so
+      // these are dead entry points until then (also fails Play review).
       {'icon': Icons.emergency,            'title': 'Emergency',       'desc': '24/7 emergency',        'route': RoutesName.emergency,         'color': _kError},
     ];
 

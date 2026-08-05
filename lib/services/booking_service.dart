@@ -8,6 +8,7 @@ import '../core/utils/app_logger.dart';
 import '../core/utils/pagination.dart';
 import '../models/available_vehicle_model.dart';
 import '../models/booking_model.dart';
+import '../utils/fare_calculator.dart';
 
 /// Outcome of a server-side OTP verification call.
 /// Returned by [BookingService.startTrip] so the caller can surface the
@@ -97,6 +98,9 @@ class BookingService {
         distanceKm: request.estimatedDistance,
         promoCode: request.promoCode,
         promoDiscount: await _getPromoDiscount(request.promoCode),
+        isNightTime: FareCalculator.isNightTime(),
+        isPeakHour: FareCalculator.isPeakHour(),
+        minimumFare: vehicle.pricing.minimumFare,
       );
 
       // 4. Ride OTP is generated server-side by the onBookingCreated
@@ -411,7 +415,7 @@ class BookingService {
   // ============================================
 
   /// Update booking status
-  Future<bool> updateStatus(
+  Future<Result<void>> updateStatus(
     String bookingId,
     BookingStatus newStatus, {
     String? cancellationReason,
@@ -452,46 +456,64 @@ class BookingService {
       AppLogger.info('Booking $bookingId status updated to ${newStatus.name}',
           tag: 'BookingService');
 
-      return true;
+      return Result.success(null);
     } catch (e, stack) {
-      AppLogger.error('Failed to update booking status',
-          error: e, stackTrace: stack, tag: 'BookingService');
-      return false;
+      final exception = ErrorHandler.handle(e, stack);
+      AppLogger.logException(exception, context: 'updateStatus');
+      return Result.failure(exception);
     }
   }
 
   /// Driver accepts booking
-  Future<bool> acceptBooking(String bookingId, String driverId) async {
+  Future<Result<void>> acceptBooking(String bookingId, String driverId) async {
     try {
       // Verify this booking belongs to this driver
       final booking = await getBooking(bookingId);
-      if (booking == null || booking.driver.driverId != driverId) {
-        return false;
+      if (booking == null) {
+        return Result.failure(DatabaseException.notFound('Booking'));
+      }
+      if (booking.driver.driverId != driverId) {
+        return Result.failure(
+          const AuthException(message: 'This booking is not assigned to you'),
+        );
       }
 
       if (booking.status != BookingStatus.pending) {
-        return false;
+        return Result.failure(
+          ValidationException(
+            message: 'Booking is no longer pending (status: ${booking.status.name})',
+          ),
+        );
       }
 
       return await updateStatus(bookingId, BookingStatus.confirmed);
     } catch (e, stack) {
-      AppLogger.error('Failed to accept booking',
-          error: e, stackTrace: stack, tag: 'BookingService');
-      return false;
+      final exception = ErrorHandler.handle(e, stack);
+      AppLogger.logException(exception, context: 'acceptBooking');
+      return Result.failure(exception);
     }
   }
 
   /// Driver rejects booking
-  Future<bool> rejectBooking(String bookingId, String driverId,
+  Future<Result<void>> rejectBooking(String bookingId, String driverId,
       {String? reason}) async {
     try {
       final booking = await getBooking(bookingId);
-      if (booking == null || booking.driver.driverId != driverId) {
-        return false;
+      if (booking == null) {
+        return Result.failure(DatabaseException.notFound('Booking'));
+      }
+      if (booking.driver.driverId != driverId) {
+        return Result.failure(
+          const AuthException(message: 'This booking is not assigned to you'),
+        );
       }
 
       if (booking.status != BookingStatus.pending) {
-        return false;
+        return Result.failure(
+          ValidationException(
+            message: 'Booking is no longer pending (status: ${booking.status.name})',
+          ),
+        );
       }
 
       await _bookingsRef.doc(bookingId).update({
@@ -502,32 +524,94 @@ class BookingService {
         'updatedAt': Timestamp.now(),
       });
 
-      return true;
+      return Result.success(null);
     } catch (e, stack) {
-      AppLogger.error('Failed to reject booking',
-          error: e, stackTrace: stack, tag: 'BookingService');
-      return false;
+      final exception = ErrorHandler.handle(e, stack);
+      AppLogger.logException(exception, context: 'rejectBooking');
+      return Result.failure(exception);
     }
   }
 
   /// Driver starts trip (arrived at pickup)
-  Future<bool> driverArrived(String bookingId, String driverId) async {
+  Future<Result<void>> driverArrived(String bookingId, String driverId) async {
     try {
       final booking = await getBooking(bookingId);
-      if (booking == null || booking.driver.driverId != driverId) {
-        return false;
+      if (booking == null) {
+        return Result.failure(DatabaseException.notFound('Booking'));
+      }
+      if (booking.driver.driverId != driverId) {
+        return Result.failure(
+          const AuthException(message: 'This booking is not assigned to you'),
+        );
       }
 
       if (booking.status != BookingStatus.confirmed &&
           booking.status != BookingStatus.driverArriving) {
-        return false;
+        return Result.failure(
+          ValidationException(
+            message: 'Cannot mark arrived from status ${booking.status.name}',
+          ),
+        );
       }
 
       return await updateStatus(bookingId, BookingStatus.arrived);
     } catch (e, stack) {
-      AppLogger.error('Failed to update driver arrived',
-          error: e, stackTrace: stack, tag: 'BookingService');
-      return false;
+      final exception = ErrorHandler.handle(e, stack);
+      AppLogger.logException(exception, context: 'driverArrived');
+      return Result.failure(exception);
+    }
+  }
+
+  /// Driver cancels a booking they already accepted.
+  ///
+  /// Distinct from [rejectBooking] (pending-only, before acceptance): this
+  /// covers confirmed/driverArriving/arrived — after the driver committed to
+  /// the ride but before the trip started. firestore.rules' isDriverTransitionValid
+  /// permits this exact set of source statuses to move to 'cancelled'; once
+  /// inProgress, the trip must be completed rather than cancelled.
+  Future<Result<void>> driverCancelBooking(
+    String bookingId,
+    String driverId, {
+    String? reason,
+  }) async {
+    try {
+      final booking = await getBooking(bookingId);
+      if (booking == null) {
+        return Result.failure(DatabaseException.notFound('Booking'));
+      }
+      if (booking.driver.driverId != driverId) {
+        return Result.failure(
+          const AuthException(message: 'This booking is not assigned to you'),
+        );
+      }
+
+      const cancellableStatuses = {
+        BookingStatus.confirmed,
+        BookingStatus.driverArriving,
+        BookingStatus.arrived,
+      };
+      if (!cancellableStatuses.contains(booking.status)) {
+        return Result.failure(
+          ValidationException(
+            message: 'Cannot cancel from status ${booking.status.name}',
+          ),
+        );
+      }
+
+      await _bookingsRef.doc(bookingId).update({
+        'status': BookingStatus.cancelled.name,
+        'cancellationReason': reason ?? 'Cancelled by driver',
+        'cancelledBy': 'driver',
+        'cancelledAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+      });
+
+      AppLogger.info('Booking cancelled by driver: $bookingId', tag: 'BookingService');
+      return Result.success(null);
+    } catch (e, stack) {
+      final exception = ErrorHandler.handle(e, stack);
+      AppLogger.logException(exception, context: 'driverCancelBooking');
+      return Result.failure(exception);
     }
   }
 
@@ -588,7 +672,7 @@ class BookingService {
   }
 
   /// Complete the trip
-  Future<bool> completeTrip(
+  Future<Result<void>> completeTrip(
     String bookingId,
     String driverId, {
     double? actualDistance,
@@ -598,12 +682,21 @@ class BookingService {
   }) async {
     try {
       final booking = await getBooking(bookingId);
-      if (booking == null || booking.driver.driverId != driverId) {
-        return false;
+      if (booking == null) {
+        return Result.failure(DatabaseException.notFound('Booking'));
+      }
+      if (booking.driver.driverId != driverId) {
+        return Result.failure(
+          const AuthException(message: 'This booking is not assigned to you'),
+        );
       }
 
       if (booking.status != BookingStatus.inProgress) {
-        return false;
+        return Result.failure(
+          ValidationException(
+            message: 'Cannot complete trip from status ${booking.status.name}',
+          ),
+        );
       }
 
       // Recalculate fare if actual values differ
@@ -630,6 +723,9 @@ class BookingService {
             tollCharges: tollCharges ?? 0,
             promoCode: booking.fareDetails.promoCode,
             promoDiscount: booking.fareDetails.promoDiscount,
+            isNightTime: FareCalculator.isNightTime(),
+            isPeakHour: FareCalculator.isPeakHour(),
+            minimumFare: vehicle.pricing.minimumFare,
           );
 
           updateData['fareDetails'] = newFare.toMap();
@@ -642,30 +738,39 @@ class BookingService {
 
       AppLogger.info('Trip completed: $bookingId', tag: 'BookingService');
 
-      return true;
+      return Result.success(null);
     } catch (e, stack) {
-      AppLogger.error('Failed to complete trip',
-          error: e, stackTrace: stack, tag: 'BookingService');
-      return false;
+      final exception = ErrorHandler.handle(e, stack);
+      AppLogger.logException(exception, context: 'completeTrip');
+      return Result.failure(exception);
     }
   }
 
   /// User cancels booking
-  Future<bool> cancelBooking(
+  Future<Result<void>> cancelBooking(
     String bookingId,
     String userId, {
     String? reason,
   }) async {
     try {
       final booking = await getBooking(bookingId);
-      if (booking == null || booking.userId != userId) {
-        return false;
+      if (booking == null) {
+        return Result.failure(DatabaseException.notFound('Booking'));
+      }
+      if (booking.userId != userId) {
+        return Result.failure(
+          const AuthException(message: 'This booking does not belong to you'),
+        );
       }
 
       if (!booking.canCancel) {
         AppLogger.warning('Booking $bookingId cannot be cancelled',
             tag: 'BookingService');
-        return false;
+        return Result.failure(
+          ValidationException(
+            message: 'Booking can no longer be cancelled (status: ${booking.status.name})',
+          ),
+        );
       }
 
       // Calculate cancellation fee if applicable
@@ -686,16 +791,16 @@ class BookingService {
 
       AppLogger.info('Booking cancelled: $bookingId', tag: 'BookingService');
 
-      return true;
+      return Result.success(null);
     } catch (e, stack) {
-      AppLogger.error('Failed to cancel booking',
-          error: e, stackTrace: stack, tag: 'BookingService');
-      return false;
+      final exception = ErrorHandler.handle(e, stack);
+      AppLogger.logException(exception, context: 'cancelBooking');
+      return Result.failure(exception);
     }
   }
 
   /// Update payment status
-  Future<bool> updatePaymentStatus(
+  Future<Result<void>> updatePaymentStatus(
     String bookingId,
     PaymentStatus status, {
     String? transactionId,
@@ -711,11 +816,11 @@ class BookingService {
       }
 
       await _bookingsRef.doc(bookingId).update(updateData);
-      return true;
+      return Result.success(null);
     } catch (e, stack) {
-      AppLogger.error('Failed to update payment status',
-          error: e, stackTrace: stack, tag: 'BookingService');
-      return false;
+      final exception = ErrorHandler.handle(e, stack);
+      AppLogger.logException(exception, context: 'updatePaymentStatus');
+      return Result.failure(exception);
     }
   }
 
@@ -727,37 +832,45 @@ class BookingService {
     required double amountReceived,
   }) async {
     try {
-      final booking = await getBooking(bookingId);
-      if (booking == null) {
-        return Result.failure(DatabaseException.notFound('Booking'));
-      }
-      if (booking.driver.driverId != driverId) {
-        return Result.failure(
-          const AuthException(message: 'Only the assigned driver can record payment'),
-        );
-      }
-      if (booking.status != BookingStatus.completed) {
-        return Result.failure(
-          ValidationException(message: 'Payment can only be recorded on a completed trip'),
-        );
-      }
+      final docRef = _bookingsRef.doc(bookingId);
 
-      final totalFare = booking.fareDetails.totalFare;
-      final alreadyReceived = booking.amountReceived ?? 0.0;
-      final remaining = (totalFare - alreadyReceived - amountReceived).clamp(0.0, totalFare);
-      final newTotal = alreadyReceived + amountReceived;
-      final isPaid = remaining <= 0;
+      // Read-modify-write must be atomic: a double-tap or a client retry
+      // after a timed-out (but server-applied) request must not credit the
+      // same payment twice.
+      await _firestore.runTransaction((tx) async {
+        final snap = await tx.get(docRef);
+        if (!snap.exists) {
+          throw DatabaseException.notFound('Booking');
+        }
+        final booking = Booking.fromFirestore(snap);
 
-      await _bookingsRef.doc(bookingId).update({
-        'amountReceived': newTotal,
-        'remainingAmount': remaining,
-        'paymentStatus': isPaid
-            ? PaymentStatus.completed.name
-            : PaymentStatus.pending.name,
-        'paymentReceivedAt': Timestamp.now(),
-        'paymentReceivedBy': driverId,
-        'paymentRecordedManually': true,
-        'updatedAt': Timestamp.now(),
+        if (booking.driver.driverId != driverId) {
+          throw const AuthException(
+              message: 'Only the assigned driver can record payment');
+        }
+        if (booking.status != BookingStatus.completed) {
+          throw ValidationException(
+              message: 'Payment can only be recorded on a completed trip');
+        }
+
+        final totalFare = booking.fareDetails.totalFare;
+        final alreadyReceived = booking.amountReceived ?? 0.0;
+        final remaining =
+            (totalFare - alreadyReceived - amountReceived).clamp(0.0, totalFare);
+        final newTotal = alreadyReceived + amountReceived;
+        final isPaid = remaining <= 0;
+
+        tx.update(docRef, {
+          'amountReceived': newTotal,
+          'remainingAmount': remaining,
+          'paymentStatus': isPaid
+              ? PaymentStatus.completed.name
+              : PaymentStatus.pending.name,
+          'paymentReceivedAt': Timestamp.now(),
+          'paymentReceivedBy': driverId,
+          'paymentRecordedManually': true,
+          'updatedAt': Timestamp.now(),
+        });
       });
 
       AppLogger.success('Payment recorded: ₹$amountReceived for $bookingId', tag: 'BookingService');
@@ -770,7 +883,7 @@ class BookingService {
   }
 
   /// Add user rating and review
-  Future<bool> addUserRating(
+  Future<Result<void>> addUserRating(
     String bookingId,
     String userId,
     double rating, {
@@ -778,12 +891,19 @@ class BookingService {
   }) async {
     try {
       final booking = await getBooking(bookingId);
-      if (booking == null || booking.userId != userId) {
-        return false;
+      if (booking == null) {
+        return Result.failure(DatabaseException.notFound('Booking'));
+      }
+      if (booking.userId != userId) {
+        return Result.failure(
+          const AuthException(message: 'This booking does not belong to you'),
+        );
       }
 
       if (!booking.canRate) {
-        return false;
+        return Result.failure(
+          ValidationException(message: 'This booking cannot be rated'),
+        );
       }
 
       await _bookingsRef.doc(bookingId).update({
@@ -795,16 +915,16 @@ class BookingService {
       // Update driver's average rating (simplified)
       await _updateDriverRating(booking.driver.driverId, rating);
 
-      return true;
+      return Result.success(null);
     } catch (e, stack) {
-      AppLogger.error('Failed to add user rating',
-          error: e, stackTrace: stack, tag: 'BookingService');
-      return false;
+      final exception = ErrorHandler.handle(e, stack);
+      AppLogger.logException(exception, context: 'addUserRating');
+      return Result.failure(exception);
     }
   }
 
   /// Add driver rating for user
-  Future<bool> addDriverRating(
+  Future<Result<void>> addDriverRating(
     String bookingId,
     String driverId,
     double rating, {
@@ -812,12 +932,19 @@ class BookingService {
   }) async {
     try {
       final booking = await getBooking(bookingId);
-      if (booking == null || booking.driver.driverId != driverId) {
-        return false;
+      if (booking == null) {
+        return Result.failure(DatabaseException.notFound('Booking'));
+      }
+      if (booking.driver.driverId != driverId) {
+        return Result.failure(
+          const AuthException(message: 'This booking is not assigned to you'),
+        );
       }
 
       if (booking.status != BookingStatus.completed) {
-        return false;
+        return Result.failure(
+          ValidationException(message: 'Can only rate a completed trip'),
+        );
       }
 
       await _bookingsRef.doc(bookingId).update({
@@ -826,11 +953,11 @@ class BookingService {
         'updatedAt': Timestamp.now(),
       });
 
-      return true;
+      return Result.success(null);
     } catch (e, stack) {
-      AppLogger.error('Failed to add driver rating',
-          error: e, stackTrace: stack, tag: 'BookingService');
-      return false;
+      final exception = ErrorHandler.handle(e, stack);
+      AppLogger.logException(exception, context: 'addDriverRating');
+      return Result.failure(exception);
     }
   }
 

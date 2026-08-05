@@ -9,6 +9,7 @@ class ActiveRideCard extends StatelessWidget {
   final VoidCallback? onStartTrip;
   final VoidCallback? onComplete;
   final VoidCallback? onNavigate;
+  final VoidCallback? onCancel;
   final bool isLoading;
   final String? otpInput;
   final ValueChanged<String>? onOtpChanged;
@@ -20,10 +21,18 @@ class ActiveRideCard extends StatelessWidget {
     this.onStartTrip,
     this.onComplete,
     this.onNavigate,
+    this.onCancel,
     this.isLoading = false,
     this.otpInput,
     this.onOtpChanged,
   });
+
+  // Once the trip has started, the driver must complete it rather than
+  // cancel — matches firestore.rules' isDriverTransitionValid.
+  bool get _canCancel =>
+      booking.status == BookingStatus.confirmed ||
+      booking.status == BookingStatus.driverArriving ||
+      booking.status == BookingStatus.arrived;
 
   @override
   Widget build(BuildContext context) {
@@ -275,9 +284,9 @@ class ActiveRideCard extends StatelessWidget {
                       child: TextField(
                         onChanged: onOtpChanged,
                         keyboardType: TextInputType.number,
-                        maxLength: 4,
+                        maxLength: 6,
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontFamily: 'Poppins', 
+                        style: TextStyle(fontFamily: 'Poppins',
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -285,7 +294,7 @@ class ActiveRideCard extends StatelessWidget {
                         ),
                         decoration: InputDecoration(
                           counterText: '',
-                          hintText: '----',
+                          hintText: '------',
                           hintStyle: TextStyle(fontFamily: 'Poppins', 
                             color: Colors.white.withValues(alpha: 0.5),
                             letterSpacing: 8,
@@ -387,6 +396,22 @@ class ActiveRideCard extends StatelessWidget {
               ],
             ),
           ),
+
+          if (_canCancel && onCancel != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: TextButton.icon(
+                onPressed: isLoading ? null : onCancel,
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white.withValues(alpha: 0.85),
+                ),
+                icon: const Icon(Icons.close, size: 18),
+                label: Text(
+                  'Cancel Trip',
+                  style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
         ],
       ),
     );

@@ -17,11 +17,14 @@ class RoutesName {
 
   // Profile & Settings
   static const String profile = 'profile';
+  static const String userProfile = 'user-profile';
+  static const String driverProfile = 'driver-profile';
   static const String notifications = 'notifications';
   static const String savedAddresses = 'saved-addresses';
 
   // Vehicle Services
   static const String reserveVehicle = 'reserve-vehicle';
+  static const String vehicleDetails = 'vehicle-details';
   static const String bookGoodsCarrier = 'book-goods-carrier';
   static const String vehicleList = 'vehicle-list';
   static const String vehicleRegistration = 'vehicle-registration';
@@ -29,7 +32,8 @@ class RoutesName {
   static const String vehicleEdit = 'vehicle-edit';
 
   // Booking & Tracking
-  static const String trackActiveBooking = 'track-active-booking';
+  static const String trackActiveBooking = 'track-booking';
+  static const String userRideHistory = 'user-ride-history';
   static const String rideHistory = 'ride-history';
   static const String deliveryRequests = 'delivery-requests';
   static const String activeVehicles = 'active-vehicles';
